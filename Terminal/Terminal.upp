@@ -41,9 +41,6 @@ file
 	src.tpp,
 	srcdoc.tpp,
 	Info readonly separator,
-	ReadMe.md,
-	Specs.md,
-	Copying,
 	Version;
 
 mainconfig
