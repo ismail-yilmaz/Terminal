@@ -130,7 +130,7 @@ Thanks to Ultimate++ team, it is possible to run U++ GUI applications from withi
 
 ## [Specifications](#specs)
 
-For more information on the supported terminal sequences, modes, extensions, etc., see [the technical specifications document](./Specs.md).
+For more information on the supported terminal sequences, modes, extensions, etc., see [the technical specifications document](./Terminal/Specs.md).
 
 ## [Examples](#examples)
 
