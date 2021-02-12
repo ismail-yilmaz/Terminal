@@ -43,6 +43,3 @@ file
 	Info readonly separator,
 	Version;
 
-mainconfig
-	"" = "GUI";
-
