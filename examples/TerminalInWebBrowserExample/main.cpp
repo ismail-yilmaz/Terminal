@@ -8,13 +8,7 @@
 // for the new pseudoconsole API support. To enable this feature, you
 // need to set the WIN10 flag in TheIDE's main package configurations
 // dialog. (i.e. "TURTLEGUI WIN10")
-
-#ifdef flagTURTLEGUI
 #include <Turtle/Turtle.h>
-#else
-#include <CtrlLib/CtrlLib.h>
-#endif
-
 #include <Terminal/Terminal.h>
 
 #ifdef PLATFORM_POSIX
@@ -60,8 +54,6 @@ void AppMainLoop()
 	TerminalExample().Run();
 }
 
-#ifdef flagTURTLEGUI
-
 CONSOLE_APP_MAIN
 {
 
@@ -73,17 +65,7 @@ CONSOLE_APP_MAIN
 
 	TurtleServer guiserver;
 	guiserver.Host("localhost");
-	guiserver.Port(8888);
+	guiserver.HtmlPort(8888);
 	guiserver.MaxConnections(15);
 	RunTurtleGui(guiserver, AppMainLoop);
 }
-
-#else
-
-GUI_APP_MAIN
-{
-	AppMainLoop();
-}
-
-#endif
-
