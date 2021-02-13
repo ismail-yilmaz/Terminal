@@ -1,6 +1,7 @@
-# Terminal Package for Ultimate++
 
-Terminal package is a flexible, easy-to-use yet powerful cross-platform virtual terminal emulation widget and library written in C/C++ for [Ultimate++](https://www.ultimatepp.org/).  
+# Terminal Package for U++
+
+Terminal package is a flexible, easy-to-use yet powerful cross-platform virtual terminal emulation widget and library written in C/C++ for [U++](https://www.ultimatepp.org/).  
 
 Terminal package is designed from the ground up with modularity and maintainability in mind, and it is not based on the existing terminal emulation libraries.
 
@@ -20,7 +21,7 @@ Terminal package is designed from the ground up with modularity and maintainabil
 
 ## [Requirements](#requirements)
 
-- Ultimate++ (ver. >= 2020.1)
+- U++ (ver. >= 2020.1)
 - POSIX (GNU/Linux, FreeBSD, etc.), Windows, or MacOS
 - A decent C/C++ compiler that supports at least C++14. (GCC/CLANG/MinGW/MSC)
 - Snacks & beer.
@@ -29,18 +30,18 @@ Terminal package is designed from the ground up with modularity and maintainabil
 
 There are three ways to install the source code of Ultimate++ terminal widget:
 
-1. The package is immediately available via [UppHub](https://www.ultimatepp.org/app$ide$UppHub_en-us.html), the 3rd-party source package management system of Ultimate++. *This is the simplest and recommended method.* (Requires U++ ver. > 2020.2, or nighty builds.)
-2. Clone or download this repository and set it up as an U++ *assembly* or *nest*.  You can find more information on Ultimate++ packages, assemblies and nests, [here](https://www.ultimatepp.org/app$ide$PackagesAssembliesAndNests$en-us.html).
-3. Ultimate++ terminal widget is also available via the [upp-components](https://github.com/ismail-yilmaz/upp-components) repo, which is a collection of general-purpose packages for U++.*
+1. The package is immediately available via [UppHub](https://www.ultimatepp.org/app$ide$UppHub_en-us.html), the 3rd-party source package management system of U++. *This is the simplest and recommended method.* (Requires U++ ver. > 2020.2, or nighty builds.)
+2. Clone or download this repository and set it up as an U++ *assembly* or *nest*.  You can find more information on U++ packages, assemblies and nests, [here](https://www.ultimatepp.org/app$ide$PackagesAssembliesAndNests$en-us.html).
+3. U++ terminal widget is also available via the [upp-components](https://github.com/ismail-yilmaz/upp-components) repo, which is a collection of general-purpose packages for U++.*
 
 ##  [Version](#version)  
   
-`Terminal` package loosely follows the release cycles of Ultimate++. Releases are tagged twice a year. Currently it is tagged as `2020.2` (ver 0.4).
+`Terminal` package loosely follows the release cycles of U++. Releases are tagged twice a year. Currently it is tagged as `2020.2` (ver 0.4).
 
 ## [Highlights](#highlights)
 
 - **Terminal package completely separates the virtual terminal from the pseudo-terminal process (pty)**.
-As a result, Terminal package and TerminalCtrl, are not bound by any platform-specific pty implementation. Instead, they are decoupled, and an optional pty process class, PtyProcess, is provided with tha package as the default option. In this way, using TerminalCtrl on any platform supported by Ultimate++, directly as a front-end for some other terminal based services, such as SSH or TELNET, etc., has become possible. This point is demonstrated with one of the provided  examples: While the PtyProcess class is available on POSIX-compliant operating systems and on Microsoft Windows (tm) 10, Terminal package can be compiled, run and used on the other versions of Windows or on other supported platforms as an SSH terminal. (See the *Examples* section.)
+As a result, Terminal package and TerminalCtrl, are not bound by any platform-specific pty implementation. Instead, they are decoupled, and an optional pty process class, PtyProcess, is provided with tha package as the default option. In this way, using TerminalCtrl on any platform supported by U++, directly as a front-end for some other terminal based services, such as SSH or TELNET, etc., has become possible. This point is demonstrated with one of the provided  examples: While the PtyProcess class is available on POSIX-compliant operating systems and on Microsoft Windows (tm) 10, Terminal package can be compiled, run and used on the other versions of Windows or on other supported platforms as an SSH terminal. (See the *Examples* section.)
 
 - **Terminal package is designed with simplicity in mind.**
 A fully-fledged terminal emulation requires less than 50 sLoC. In fact, the first basic example provided with the package is only a single .cpp file with 29 sLoC, and it can run complex/heavy applications with mouse tracking and embedded images support, such as [GNU Emacs](https://www.gnu.org/software/emacs/), [vim](https://github.com/vim/vim) text editor, [Lynx](https://lynx.browser.org/), [GNUPlot](http://www.gnuplot.info/), [tmux](https://github.com/tmux/tmux/wiki), [Ranger](https://github.com/ranger/ranger), a vim inspired file manager with inline image preview support, or [mapscii](https://github.com/rastapasta/mapscii), an OpenStreetMap implementation for [xterm](https://invisible-island.net/xterm/) compatible virtual terminal emulator, or even [Jexer](https://jexer.sourceforge.io/), a java-based modern and slick text user interface (TUI) and windowing system for modern terminal emulators, and [xterm Window Manager,](https://gitlab.com/klamonte/xtermwm) with ease.
@@ -48,7 +49,7 @@ A fully-fledged terminal emulation requires less than 50 sLoC. In fact, the firs
 - **Terminal package combines simplicity with configurability.** 
 Although it is easy to use, and requires very little coding, TerminalCtrl, is by no means restrictive. It it highly configurable.
 
-- **TerminalCtrl is a regular Ultimate++ GUI widget.**
+- **TerminalCtrl is a regular U++ widget.**
 It is derived from Upp::Ctrl, and is following the same basic rule: *Everthing belongs somewhere*. It supports most of the generic Ctrl methods where applicable or makes sense. Of course, If you are determined enough, you can even do some “interesting” things, such as embedding Terminal instances into TreeCtrl nodes or Arrayctrl rows. ;)
 
 - ***Everything belongs somewhere* rule runs through the heart of Terminal package.**
@@ -58,10 +59,10 @@ There are no manual memory allocations/deallocations, no new/delete pairs, and n
 TerminalCtrl is a true color (24-bit/16M color) virtual terminal emulator. It supports RGB, CMY, CMYK, and  indexed (256-color) palettes via SGR extended colors sequences. 
 
 - **TerminalCtrl supports inline images.**
-It has a flexible infrastructure and support for inline images and image manipulation in general. It can handle [sixel graphics](https://en.wikipedia.org/wiki/Sixel?oldformat=true) with 4/16/256 colors, or high/true color.  It also supports JPG, PNG, BMP raster image formats, or raw RGB images via [iTerm2's inline images protocol](https://iterm2.com/documentation-images.html),  and [jexer image protocol](https://gitlab.com/klamonte/jexer/-/wiki_pages/jexer-images), a simple and useful wire protocol which allows terminals to display popular true color image formats. In fact, since TerminalCtrl uses the common raster decoding api of Ultimate++, theoretically it can display any raster image that has a registered decoder.  Terminal ctrl uses Upp::Display objects to display the embedded images. Client code can set the image display to one of the predefined display objects that'll process or manipulate the images before they are displayed (stretch/scale/colorize/flip/add text, etc., you name it), and the changes will immediately take place. Moreover, developers can create their own cell displays tailored for their specific needs. TerminalCtrl also supports an external image viewing mode, where the image data is handed to client code for rendering and external viewing.
+It has a flexible infrastructure and support for inline images and image manipulation in general. It can handle [sixel graphics](https://en.wikipedia.org/wiki/Sixel?oldformat=true) with 4/16/256 colors, or high/true color.  It also supports JPG, PNG, BMP raster image formats, or raw RGB images via [iTerm2's inline images protocol](https://iterm2.com/documentation-images.html),  and [jexer image protocol](https://gitlab.com/klamonte/jexer/-/wiki_pages/jexer-images), a simple and useful wire protocol which allows terminals to display popular true color image formats. In fact, since TerminalCtrl uses the common raster decoding api of U++, theoretically it can display any raster image that has a registered decoder.  Terminal ctrl uses Upp::Display objects to display the embedded images. Client code can set the image display to one of the predefined display objects that'll process or manipulate the images before they are displayed (stretch/scale/colorize/flip/add text, etc., you name it), and the changes will immediately take place. Moreover, developers can create their own cell displays tailored for their specific needs. TerminalCtrl also supports an external image viewing mode, where the image data is handed to client code for rendering and external viewing.
 
 - **TerminalCtrl can also run inside a web browser such as Firefox and Chromium, or their derivatives.**
-Thanks to Ultimate++ team, it is possible to run U++ GUI applications from within a web browser that supports HTML-5 canvas and websockets. And TerminalCtrl is no exception. Applications using TerminalCtrl widget can basically turn into a remote terminal that can be accessed via any decent web browser (even from a smartphone!) if compiled with the TURTLE flag. (See the *Examples* section).
+Thanks to U++ team, it is possible to run U++ GUI applications from within a web browser that supports HTML-5 canvas and websockets. And TerminalCtrl is no exception. Applications using TerminalCtrl widget can basically turn into a remote terminal that can be accessed via any decent web browser (even from a smartphone!) if compiled with the TURTLE flag. (See the *Examples* section).
 
 - **Terminal package has a `BSD 3-Clause license`**.
 
@@ -70,7 +71,7 @@ Thanks to Ultimate++ team, it is possible to run U++ GUI applications from withi
 
 ## [Features](#features)
 
-- Supports whatever platform Ultimate++ supports. (Linux, Windows, MacOS).
+- Supports whatever platform U++ supports. (Linux, Windows, MacOS).
 - Supports both POSIX pty and Windows (tm) 10 pseudoconsole APIs via a unified, basic interface, using the PtyProcess class. (Note: Windows 10 support is still experimental.)
 - Supports VT52/VT1xx/VT2xx, partial VT4XX/5XX, and xterm emulation modes.
 - Supports user configurable device conformance levels (1, 2, 3, 4, and 0 as VT52 emulation).
@@ -124,7 +125,7 @@ Thanks to Ultimate++ team, it is possible to run U++ GUI applications from withi
 - Supports bell notifications.
 - Supports VT1xx LEDs.
 - Supports size hint.
-- Supports Ultimate++ style data serialization (binary serialization, JSONization, XMLization).
+- Supports U++ style data serialization (binary serialization, JSONization, XMLization).
 - Supports per-widget customization (i.e no global variables or properties are used).
 - Includes a Terminal.usc file for TheIDE’s layout editor.
 
@@ -182,7 +183,7 @@ struct TerminalExample : TopWindow {
 		term.WhenTitle  = [=](String s)        { Title(s);           };
 		term.WhenOutput = [=](String s)        { pty.Write(s);       };
 		term.WhenLink   = [=](const String& s) { PromptOK(DeQtf(s)); };
-		term.WhenResize	= [=]()   { pty.SetSize(term.GetPageSize()); };
+		term.WhenResize = [=]()                { pty.SetSize(term.GetPageSize()); };
 		term.InlineImages().Hyperlinks().WindowOps();
 		pty.Start(tshell, Environment(), GetHomeDirectory());
 		SetTimeCallback(-1, [=] ()

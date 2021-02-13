@@ -41,5 +41,6 @@ file
 	src.tpp,
 	srcdoc.tpp,
 	Info readonly separator,
+	Copying,
 	Version;
 
