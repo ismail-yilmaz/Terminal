@@ -1,4 +1,4 @@
-description "A pseudo-terminal process implementation\377";
+description "A cross-platform pseudo-terminal process implementation for U++\377";
 
 acceptflags
 	WINPTY;
