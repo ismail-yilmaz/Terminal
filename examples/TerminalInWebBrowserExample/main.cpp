@@ -1,20 +1,22 @@
+#include <Turtle/Turtle.h>
+#include <Terminal/Terminal.h>
+#include <PtyProcess/PtyProcess.h>
+
 // This example demonstrates a simple, cross-platform (POSIX/Windows)
 // terminal example, running on the U++ Turtle backend.Turtle allows
 // U++ GUI applications to run on modern web browsers  that  support
 // HTML-5 canvas and websockets. Turtle can be switched on or off by
 // a compile-time flag.
 
-// On Windows, the PtyProcess class requires at least Windows 10 (tm)
-// for the new pseudoconsole API support. To enable this feature, you
-// need to set the WIN10 flag in TheIDE's main package configurations
-// dialog. (i.e. "TURTLEGUI WIN10")
-#include <Turtle/Turtle.h>
-#include <Terminal/Terminal.h>
+// On Windows platform, PtyProcess class can use one of two backends:
+// WinPty or the Windows 10 (tm) pseudoconsole  API. These  mutually
+// exclusive backends can be enabled by setting WINPTY or WIN10 flag
+// via TheIDE's main package configuration dialog. (E.g: "WIN10")
 
 #ifdef PLATFORM_POSIX
-const char *tshell = "/bin/bash";
+const char *tshell = "SHELL";
 #elif PLATFORM_WIN32
-const char *tshell = "cmd.exe"; // Alternatively, you can use powershell...
+const char *tshell = "ComSpec"; // Alternatively you can use powershell...
 #endif
 
 using namespace Upp;
@@ -35,7 +37,7 @@ struct TerminalExample : TopWindow {
 		term.InlineImages().Hyperlinks().WindowOps();
 		
 		SetTimeCallback(-1, [=] { PutGet(); });
-		pty.Start(tshell, Environment(), GetHomeDirectory());
+		pty.Start(GetEnv(tshell), Environment(), GetHomeDirectory());
 	}
 	
 	void PutGet(String out = Null)

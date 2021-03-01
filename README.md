@@ -41,7 +41,7 @@ There are three ways to install the source code of Ultimate++ terminal widget:
 ## [Highlights](#highlights)
 
 - **Terminal package completely separates the virtual terminal from the pseudo-terminal process (pty)**.
-As a result, Terminal package and TerminalCtrl, are not bound by any platform-specific pty implementation. Instead, they are decoupled, and an optional pty process class, PtyProcess, is provided with tha package as the default option. In this way, using TerminalCtrl on any platform supported by U++, directly as a front-end for some other terminal based services, such as SSH or TELNET, etc., has become possible. This point is demonstrated with one of the provided  examples: While the PtyProcess class is available on POSIX-compliant operating systems and on Microsoft Windows (tm) 10, Terminal package can be compiled, run and used on the other versions of Windows or on other supported platforms as an SSH terminal. (See the *Examples* section.)
+As a result, Terminal package and TerminalCtrl, are not bound by any platform-specific pty implementation. Instead, they are decoupled, and an optional pty process class, `PtyProcess` which encapsulates `POSIX`, `Windows 10` and [winpty](https://github.com/rprichard/winpty) pseudoconsole APIs, is provided with tha package simply as the default option. In this way, using TerminalCtrl on any platform supported by U++, directly as a front-end for some other terminal based services, such as SSH or TELNET, etc., has become possible. For example, U++ terminal package can be compiled, run and used on supported platforms as a pure SSH2 terminal. (See the *Examples* section.)
 
 - **Terminal package is designed with simplicity in mind.**
 A fully-fledged terminal emulation requires less than 50 sLoC. In fact, the first basic example provided with the package is only a single .cpp file with 29 sLoC, and it can run complex/heavy applications with mouse tracking and embedded images support, such as [GNU Emacs](https://www.gnu.org/software/emacs/), [vim](https://github.com/vim/vim) text editor, [Lynx](https://lynx.browser.org/), [GNUPlot](http://www.gnuplot.info/), [tmux](https://github.com/tmux/tmux/wiki), [Ranger](https://github.com/ranger/ranger), a vim inspired file manager with inline image preview support, or [mapscii](https://github.com/rastapasta/mapscii), an OpenStreetMap implementation for [xterm](https://invisible-island.net/xterm/) compatible virtual terminal emulator, or even [Jexer](https://jexer.sourceforge.io/), a java-based modern and slick text user interface (TUI) and windowing system for modern terminal emulators, and [xterm Window Manager,](https://gitlab.com/klamonte/xtermwm) with ease.
@@ -72,7 +72,7 @@ Thanks to U++ team, it is possible to run U++ GUI applications from within a web
 ## [Features](#features)
 
 - Supports whatever platform U++ supports. (Linux, Windows, MacOS).
-- Supports both POSIX pty and Windows (tm) 10 pseudoconsole APIs via a unified, basic interface, using the PtyProcess class. (Note: Windows 10 support is still experimental.)
+- Supports `POSIX`, `Windows (tm) 10`, and `winpty` pseudoconsole APIs via a unified, basic interface, using the PtyProcess class.
 - Supports VT52/VT1xx/VT2xx, partial VT4XX/5XX, and xterm emulation modes.
 - Supports user configurable device conformance levels (1, 2, 3, 4, and 0 as VT52 emulation).
 - Supports both 7-bit and 8-bit I/O.
@@ -154,21 +154,22 @@ This example demonstrates the basic usage of the TerminalCtrl and its interactio
 
 ```C++    	
 #include <Terminal/Terminal.h>
+#include <PtyProcess/PtyProcess.h>
 
 using namespace Upp;
 
 // This example demonstrates a simple, cross-platform (POSIX/Windows)
 // terminal example.
 
-// On Windows, the PtyProcess class requires at least Windows 10 (tm)
-// for the new pseudoconsole API support. To enable this feature, you
-// need to set the WIN10 flag in TheIDE's main package configurations
-// dialog. (i.e. "GUI WIN10")
+// On Windows platform, PtyProcess class can utilize two backends:
+// WinPty or the Windows 10 (tm) pseudoconsole  API. These  mutually
+// exclusive backends can be enabled by setting WINPTY or WIN10 flag
+// via TheIDE's main package configuration dialog. (E.g: "GUI WIN10")
 
 #ifdef PLATFORM_POSIX
-const char *tshell = "/bin/bash";
+const char *tshell = "SHELL";
 #elif PLATFORM_WIN32
-const char *tshell = "cmd.exe"; // Alternatively you can use powershell...
+const char *tshell = "ComSpec"; // Alternatively you can use powershell...
 #endif
 
 struct TerminalExample : TopWindow {
@@ -185,7 +186,7 @@ struct TerminalExample : TopWindow {
 		term.WhenLink   = [=](const String& s) { PromptOK(DeQtf(s)); };
 		term.WhenResize = [=]()                { pty.SetSize(term.GetPageSize()); };
 		term.InlineImages().Hyperlinks().WindowOps();
-		pty.Start(tshell, Environment(), GetHomeDirectory());
+		pty.Start(GetEnv(tshell), Environment(), GetHomeDirectory());
 		SetTimeCallback(-1, [=] ()
 		{
 			term.WriteUtf8(pty.Get());
@@ -221,6 +222,7 @@ The screenshots below are taken from some of the basic examples provided with th
 - [Jexer](https://jexer.sourceforge.io/), a modern text user interface (TUI) and [xterm Window Manager](https://gitlab.com/klamonte/xtermwm) for terminal emulators, are heavily used as a test-bed for polishing the inline images support for TerminalCtrl. And hopefully it will continue to be a test bed for future versions of the Terminal package. (Thanks [Autumn Lamonte](https://gitlab.com/klamonte)!)  
   
 - img2sixel of [libsixel](https://github.com/saitoha/libsixel/) is used heavily for testing the sixel images support of TerminalCtrl.  
+- [winpty](https://github.com/rprichard/winpty), a Windows software package providing an interface similar to a Unix pty-master for communicating with Windows console programs, is utilized as an alternative backend for PtyProcess class on Windows platform. (Thanks [Ryan Prichard!](https://github.com/rprichard))
     
 
 ##  [License](#license)
@@ -253,3 +255,4 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
+
