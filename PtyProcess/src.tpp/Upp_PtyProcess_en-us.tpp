@@ -12,12 +12,10 @@ topic "PtyProcess";
 [{_} 
 [ {{10000@(113.42.0) [s0;%% [*@7;4 PtyProcess]]}}&]
 [s0; &]
-[s1;:Upp`:`:PtyProcess`:`:class: [@(0.0.255)3 class][3 _][*3 PtyProcess][3 _:_][@(0.0.255)3 publ
-ic][3 _][*@3;3 AProcess]&]
-[s6;%% Requires POSIX or at least Windows 10 or [^https`:`/`/github`.com`/rprichard`/winpty^ W
-inPty].&]
+[s1;:Upp`:`:PtyProcess`:`:class: [*@(0.0.255)3 class][*3 _PtyProcess_:_][*@(0.0.255)3 public
+][*3 _][*@3;3 AProcess]&]
 [s2;%% This class represents a pseudo`-terminal process on a local 
-machine.&]
+POSIX or Windows machine.&]
 [s3; &]
 [ {{10000F(128)G(128)@1 [s0;%% [* Public Method List]]}}&]
 [s3; &]
