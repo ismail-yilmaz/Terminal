@@ -126,17 +126,17 @@ void TerminalCtrl::ReportDynamicColor(int opcode, const Color& c)
 
 void TerminalCtrl::SetProgrammableColors(const VTInStream::Sequence& seq, int opcode)
 {
-	if(!dynamiccolors || seq.parameters.GetCount() <= 1)
+	if(!dynamiccolors || seq.parameters.GetCount() < 2)
 		return;
-	
-	auto args = SubRange(seq.parameters, 1, seq.parameters.GetCount());
-	
+
 	int changed_colors = 0;
 
-	for(int i = 0; (i + 1) < args.GetCount(); i += 2) {
-		int j = StrInt(args[i]);
-		const String& s = args[i + 1];
-		if(opcode == 4) { // ANSI + dtterm colors
+	// OSC 4;color;spec or OSC [10|11|17|19];spec
+
+	for(int i = opcode == 4 ? 1 : 0; i < seq.parameters.GetCount(); i += 2) {
+		int    j = seq.GetInt(i + 1);
+		String s = seq.GetStr(i + 2);
+		if(opcode == 4) { // ANSI + aixterm colors
 			if(j >= 0 && j < ANSI_COLOR_COUNT) {
 				if(s.IsEqual("?")) {
 					ReportANSIColor(opcode, j, colortable[j]);
@@ -173,7 +173,7 @@ void TerminalCtrl::SetProgrammableColors(const VTInStream::Sequence& seq, int op
 
 void TerminalCtrl::ResetProgrammableColors(const VTInStream::Sequence& seq, int opcode)
 {
-	if(!dynamiccolors || seq.parameters.GetCount() <= 1)
+	if(!dynamiccolors || seq.parameters.GetCount() < 2)
 		return;
 	
 	auto args = SubRange(seq.parameters, 1, seq.parameters.GetCount());
@@ -187,7 +187,7 @@ void TerminalCtrl::ResetProgrammableColors(const VTInStream::Sequence& seq, int 
 	
 	int changed_colors = 0;
 	
-	if(opcode == 104) { // ANSI + dtterm colors
+	if(opcode == 104) { // ANSI + aixterm colors
 		for(const String& s : args) {
 			int i = StrInt(s);
 			if(i >= 0 && i < ANSI_COLOR_COUNT) {
