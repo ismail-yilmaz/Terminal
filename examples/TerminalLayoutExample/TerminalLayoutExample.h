@@ -38,6 +38,9 @@ private:
 	void	FileMenu(Bar& bar);
 	void	ViewMenu(Bar& bar);
 	void	ContextMenu(Bar& bar);
+
+    void    FontZoom(int n);
+    void    LineSpacing(int n);
 	
 private:
 	PtyProcess pty;
