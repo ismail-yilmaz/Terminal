@@ -41,10 +41,25 @@ private:
 
     void    FontZoom(int n);
     void    LineSpacing(int n);
-	
+    void    EnterCodePoint();
+    
 private:
-	PtyProcess pty;
-	MenuBar mainmenu;
+    PtyProcess pty;
+    MenuBar mainmenu;
+};
+
+// Helper popup for unicode codepoint input.
+
+class EditCodePoint : public EditString {
+public:
+    EditCodePoint(TerminalExample& t) : app(t) {}
+
+    void    PopUp();
+    bool    Key(dword key, int count) override;
+    void    LostFocus() override;
+
+private:
+    TerminalExample& app;
 };
 
 #endif
