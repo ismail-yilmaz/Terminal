@@ -36,7 +36,7 @@ There are three ways to install the source code of Ultimate++ terminal widget:
 
 ##  [Version](#version)  
   
-`Terminal` package loosely follows the release cycles of U++. Releases are tagged twice a year. Currently it is tagged as `2020.2` (ver 0.4).
+`Terminal` package loosely follows the release cycles of U++. Releases are tagged twice a year. Currently it is tagged as `2021.1` (v 0.5).
 
 ## [Highlights](#highlights)
 
