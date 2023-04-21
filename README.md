@@ -229,7 +229,7 @@ The screenshots below are taken from some of the basic examples provided with th
 
 ##  [License](#license)
 ```
-Copyright (c) 2019-2022, İsmail Yılmaz
+Copyright (c) 2019-2023, İsmail Yılmaz
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
