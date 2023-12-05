@@ -21,7 +21,7 @@ Terminal package is designed from the ground up with modularity and maintainabil
 
 ## [Requirements](#requirements)
 
-- U++ (ver. >= 2020.1)
+- U++ (ver. >= 2022.2)
 - POSIX (GNU/Linux, FreeBSD, etc.), Windows, or MacOS
 - A decent C/C++ compiler that supports at least C++14. (GCC/CLANG/MinGW/MSC)
 - Snacks & beer.
@@ -30,13 +30,13 @@ Terminal package is designed from the ground up with modularity and maintainabil
 
 There are three ways to install the source code of Ultimate++ terminal widget:
 
-1. The package is immediately available via [UppHub](https://www.ultimatepp.org/app$ide$UppHub_en-us.html), the 3rd-party source package management system of U++. *This is the simplest and recommended method.* (Requires U++ ver. > 2020.2, or nighty builds.)
+1. The package is immediately available via [UppHub](https://www.ultimatepp.org/app$ide$UppHub_en-us.html), the 3rd-party source package management system of U++. *This is the simplest and recommended method.* (Requires U++ ver. > 2022.2, or nighty builds.)
 2. Clone or download this repository and set it up as an U++ *assembly* or *nest*.  You can find more information on U++ packages, assemblies and nests, [here](https://www.ultimatepp.org/app$ide$PackagesAssembliesAndNests$en-us.html).
 3. U++ terminal widget is also available via the [upp-components](https://github.com/ismail-yilmaz/upp-components) repo, which is a collection of general-purpose packages for U++.*
 
 ##  [Version](#version)  
   
-`Terminal` package loosely follows the release cycles of U++. Releases are tagged twice a year. Currently it is tagged as `2021.1` (v 0.5).
+`Terminal` package loosely follows the release cycles of U++. Releases are tagged twice a year. Currently it is tagged as `2023.2` (v 0.8).
 
 ## [Highlights](#highlights)
 
