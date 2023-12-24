@@ -574,8 +574,14 @@ void TerminalCtrl::VTMouseEvent(Point pt, dword event, dword keyflags, int zdelt
 {
 	int  mouseevent = 0;
 
+	// Some interactive applications, particularly those using a Text User Interface (TUI),
+	// do not utilize the alternate buffer for drawing their interface (e.g., Far Manager on Windows).
+	// This behavior leads to offset mouse position reports because the scroll(bar) position is updated
+	// when the history or scrollback buffer is enabled. To address this issue, a workaround is implemented
+	// by refraining from calculating the scrolled position with VT mouse events.
+	
 	if(!modes[XTSGRPXMM])
-		pt = ClientToPagePos(pt) + 1;
+		pt = ClientToPagePos(pt, true) + 1;
 
 	switch(event) {
 	case LEFTUP:
@@ -670,10 +676,10 @@ bool TerminalCtrl::IsMouseTracking(dword keyflags) const
 		 || modes[XTDRAGM]);
 }
 
-Point TerminalCtrl::ClientToPagePos(Point pt) const
+Point TerminalCtrl::ClientToPagePos(Point pt, bool ignoresb) const
 {
 	Sizef csz = GetCellSize();
-	return (Point) Pointf(pt.x / csz.cx, pt.y / csz.cy + GetSbPos());
+	return (Point) Pointf(pt.x / csz.cx, pt.y / csz.cy + (ignoresb ? 0 : GetSbPos()));
 }
 
 Point TerminalCtrl::SelectionToPagePos(Point pt) const
