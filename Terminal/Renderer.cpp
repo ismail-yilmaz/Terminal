@@ -249,7 +249,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 		w.DrawRect(caretrect, InvertColor);
 
 	// Hint new size.
-	if(sizehint && hinting)
+	if(sizehint && hinting && IsVisible())
 		PaintSizeHint(w);
 
 	w.End();
