@@ -87,7 +87,7 @@ public:
     Gate<PasteClip&>     WhenClip;
     Event<const String&> WhenLink;
     Event<const String&> WhenImage;
-    Event<VTLine&>       WhenPaintLine;
+    Event<VectorMap<int, VTLine>&> WhenHighlight;
     
     // Window Ops support.
     Event<bool>          WhenWindowMinimize;

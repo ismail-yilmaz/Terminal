@@ -785,15 +785,11 @@ WString TerminalCtrl::GetSelectedText() const
 
 void TerminalCtrl::GetLineSelection(const Point& pt, Point& pl, Point& ph) const
 {
-	pl = ph = pt;
+	Tuple<int, int> span = page->GetLineSpan(pt.y);
 	pl.x = 0;
+	pl.y = span.a;
 	ph.x = GetPageSize().cx;
-	int cy = page->GetLineCount();
-	
-	while(pl.y > 0 && page->FetchLine(pl.y - 1).IsWrapped())
-		pl.y--;
-	while(ph.y < cy && page->FetchLine(ph.y).IsWrapped())
-		ph.y++;
+	ph.y = span.b;
 }
 
 bool TerminalCtrl::GetWordSelection(const Point& pt, Point& pl, Point& ph) const
