@@ -1259,6 +1259,13 @@ onst]&]
 [s2; Returns true if there is a selection.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:Goto`(int`):%- [@(0.0.255) void] [* Goto]([@(0.0.255) int] 
+[*@3 pos])&]
+[s2; Scrolls into position [%-*@3 pos]. Position is zero`-based. This 
+method does nothing if the terminal is switched to the alternate 
+page.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:IsMouseOverImage`(`)const:%- [@(0.0.255) bool]_[* IsMouseOver
 Image]()_[@(0.0.255) const]&]
 [s2; Returns true if the mouse pointer is hovering over an inline 

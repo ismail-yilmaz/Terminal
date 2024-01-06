@@ -307,6 +307,8 @@ public:
     void            ImagesBar(Bar& menu);
     void            OptionsBar(Bar& menu);
 
+    void            Goto(int pos)                                   { if(!IsAlternatePage()) sb.Set(clamp(pos, 0, page->GetLineCount() - 1)); }
+
     void            Layout() override                               { SyncSize(true); SyncSb(); }
 
     void            Paint(Draw& w)  override                        { Paint0(w); }
