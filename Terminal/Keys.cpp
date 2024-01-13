@@ -110,7 +110,10 @@ bool TerminalCtrl::ProcessPCStyleFunctionKey(const FunctionKey& k, dword modkeys
 	}
 	else
 	if(k.type == FunctionKey::EditPad && k.altcode) {
-		PutCSI(k.altcode, count); // CSI H and CSI F
+		if(modes[DECKPAM])
+			PutSS3(k.altcode, count);
+		else
+			PutCSI(k.altcode, count); // CSI H and CSI F
 		return true;
 	}
 
