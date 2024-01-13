@@ -264,7 +264,6 @@ bool TerminalCtrl::NavKey(dword key, int count)
 {
 	if(!keynavigation)
 		return false;
-	
 	switch(key) {
 	case K_SHIFT_CTRL_UP:
 		sb.PrevLine();
@@ -320,12 +319,14 @@ bool TerminalCtrl::Key(dword key, int count)
 		return true;
 #endif
 
+	SyncSb(true);
+	
 	if(key == K_RETURN) {
 		PutEol();
 	}
 	else {
 		// Handle character.
-		if(!shiftkey && key >= ' ' && key < 65536) {
+		if(!shiftkey && key >= ' ' && key < K_CHAR_LIM) {
 			if(!ProcessKey(key, ctrlkey, altkey, count))
 				return false;
 		}
@@ -409,7 +410,6 @@ bool TerminalCtrl::Key(dword key, int count)
 End:
 	if(hidemousecursor)
 		mousehidden = true;
-	
 	return true;
 }
 }

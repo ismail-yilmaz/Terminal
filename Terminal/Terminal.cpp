@@ -30,8 +30,9 @@ TerminalCtrl::TerminalCtrl()
 , keynavigation(true)
 , userdefinedkeys(false)
 , userdefinedkeyslocked(true)
-, pcstylefunctionkeys(false)
+, pcstylefunctionkeys(true)
 , streamfill(false)
+, scrolltoend(true)
 {
 	Unicode();
 	SetLevel(LEVEL_4);
@@ -231,16 +232,22 @@ void TerminalCtrl::RefreshSizeHint()
 	Refresh(GetViewRect().CenterRect(GetSizeHint().b).Inflated(12));
 }
 
-void TerminalCtrl::SyncSb()
+void TerminalCtrl::SyncSb(bool forcescroll)
 {
 	if(IsAlternatePage())
 		return;
 
+	int  pcy = sb.GetPage();
+	int  tcy = sb.GetTotal();
+	
+	if(!forcescroll)
+		forcescroll = (scrolltoend || (sb + pcy == tcy)) && !ignorescroll;
+	
 	sb.SetTotal(page->GetLineCount());
 	sb.SetPage(page->GetSize().cy);
 	sb.SetLine(1);
-
-	if(!ignorescroll)
+	
+	if(forcescroll)
 		sb.End();
 }
 
@@ -248,14 +255,13 @@ void TerminalCtrl::Scroll()
 {
 	// It is possible to  have  an  alternate screen buffer with a history  buffer.
 	// Some terminal  emulators already  come  with  this feature enabled. Terminal
-	// ctrl can  also support this  feature out-of-the-boz, as it uses  the  VTPage
+	// ctrl can  also support this  feature out-of-the-box, as it uses  the  VTPage
 	// class for both its default and alternate screen buffers. Thus the difference
 	// is only semantic and practical. At the  moment, however, this feature is n0t
 	// enabled. This may change in the future.
 
 	if(IsAlternatePage())
 		return;
-
 	Refresh();
 	PlaceCaret();
 }

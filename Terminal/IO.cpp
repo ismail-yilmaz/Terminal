@@ -399,6 +399,7 @@ void TerminalCtrl::Serialize(Stream& s)
 		s % dpage;
 		s % cts;
 		s % overridetracking;
+		s % scrolltoend;
 	}
 
 	if(s.IsLoading()) {
@@ -430,6 +431,7 @@ void TerminalCtrl::Jsonize(JsonIO& jio)
         ("PCStyleFunctionKeys", pcstylefunctionkeys)
         ("UDK",                 userdefinedkeys)
         ("LockUDK",             userdefinedkeyslocked)
+        ("ScrollToEnd",         scrolltoend)
         ("AlternateScroll",     alternatescroll)
         ("WheelStep",           wheelstep)
         ("AutoHideMouseCursor", hidemousecursor)

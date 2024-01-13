@@ -199,6 +199,10 @@ public:
     bool            HasScrollBar() const                            { return sb.IsChild();          }
     TerminalCtrl&   SetScrollBarStyle(const ScrollBar::Style& s)    { sb.SetStyle(s); return *this; }
 
+    TerminalCtrl&   ScrollToEnd(bool b = true)                      { scrolltoend = b; return *this; }
+    TerminalCtrl&   NoScrollToEnd()                                 { return ScrollToEnd(false); }
+    bool            IsScrollingToEnd() const                        { return scrolltoend; }
+
     TerminalCtrl&   AlternateScroll(bool b = true)                  { alternatescroll = b; return *this; }
     TerminalCtrl&   NoAlternateScroll()                             { return AlternateScroll(false); }
     bool            HasAlternateScroll() const                      { return alternatescroll; }
@@ -312,7 +316,7 @@ public:
 
     void            Goto(int pos)                                   { if(!IsAlternatePage()) sb.Set(clamp(pos, 0, page->GetLineCount() - 1)); }
     void            Find(const WString& s);
-    void			Find(const String& s)                           { Find(s.ToWString()); }
+    void            Find(const String& s)                           { Find(s.ToWString()); }
     
     void            Layout() override                               { SyncSize(true); SyncSb(); }
 
@@ -393,7 +397,7 @@ private:
     void        Blink(bool b);
 
     void        Scroll();
-    void        SyncSb();
+    void        SyncSb(bool forcescroll = false);
 
     void        SyncSize(bool notify = true);
 
@@ -537,6 +541,7 @@ private:
     bool        reversewrap;
     bool        keynavigation;
     bool        legacycharsets;
+    bool        scrolltoend;
     bool        alternatescroll;
     bool        pcstylefunctionkeys;
     bool        userdefinedkeys;

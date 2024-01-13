@@ -743,6 +743,25 @@ _[@(0.0.255) const]&]
 [s2; Returns true if the scrollbar is visible.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:ScrollToEnd`(bool`):%- TerminalCtrl[@(0.0.255) `&] 
+[* ScrollToEnd]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2; Enables or disables the automatic scrolling of the page to the 
+end of buffer. By defaulti the terminal will scroll to the end 
+of page when there is new output. Returns `*this for method chaining. 
+Does not affect the alternate buffer.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:NoScrollToEnd`(`):%- TerminalCtrl[@(0.0.255) `&] 
+[* DontScrollToEnd]()&]
+[s2; Disables the scrolling of the page to the end of buffer. Same 
+as ScrollToEnd(false). Returns `*this for method chaining.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:IsScrollingToEnd`(`)const:%- [@(0.0.255) bool] 
+[* IsScrollingToEnd]() [@(0.0.255) const]&]
+[s2; Returns true if the page scrolls when there is new output.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:SetScrollBarStyle`(const Upp`:`:ScrollBar`:`:Style`&`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T
 erminalCtrl][@(0.0.255) `&]_[* SetScrollBarStyle]([@(0.0.255) const]_[_^Upp`:`:ScrollBar`:`:Style^ S
 crollBar`::Style][@(0.0.255) `&]_[*@3 s])&]
@@ -1085,7 +1104,7 @@ is enabled.&]
 [s5;:Upp`:`:TerminalCtrl`:`:PCStyleFunctionKeys`(bool`):%- [_^Upp`:`:TerminalCtrl^ Term
 inalCtrl][@(0.0.255) `&]_[* PCStyleFunctionKeys]([@(0.0.255) bool]_[*@3 b]_`=_[@(0.0.255) t
 rue])&]
-[s2; Enables or disables the PC`-style function keys feature. Disabled 
+[s2; Enables or disables the PC`-style function keys feature. Enabled 
 by default. Returns `*this for method chaining.&]
 [s3; &]
 [s4;%- &]
