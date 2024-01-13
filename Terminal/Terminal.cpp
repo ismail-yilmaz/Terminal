@@ -249,6 +249,10 @@ void TerminalCtrl::SyncSb(bool forcescroll)
 	
 	if(forcescroll)
 		sb.End();
+	else {
+		Refresh();
+		PlaceCaret();
+	}
 }
 
 void TerminalCtrl::Scroll()
@@ -262,6 +266,7 @@ void TerminalCtrl::Scroll()
 
 	if(IsAlternatePage())
 		return;
+
 	Refresh();
 	PlaceCaret();
 }
