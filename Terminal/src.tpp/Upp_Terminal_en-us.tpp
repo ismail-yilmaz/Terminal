@@ -1454,8 +1454,23 @@ hyperlink cache to [%-*@3 maxcount]. The default [%-*@3 maxcount
 ]is 100.000 entries. The maximum length of a single entry can 
 be at most 2084 bytes.&]
 [s3; &]
+[ {{10000F(128)G(128)@1 [s0; [* Protected Method List]]}}&]
 [s3;%- &]
-[ {{10000F(128)G(128)@1 [s0; [* Constructor detail]]}}&]
+[s5;:Upp`:`:TerminalCtrl`:`:PreParse`(`):%- [@(0.0.255) virtual void] 
+[* PreParse]()&]
+[s2; Called right before the main parser or the echo parser starts 
+parsing the input. If the client code overrides this method, 
+it must call the base version in the method body.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:PostParse`(`):%- [@(0.0.255) virtual void] 
+[* PostParse]()&]
+[s2; Called right after the main parser or the echo parser finishes 
+parsing the input. If the client code overrides this method, 
+it must call the base version in the method body. .&]
+[s3;%- &]
+[s3;%- &]
+[ {{10000F(128)G(128)@1 [s0; [* Constructor Detail]]}}&]
 [s3;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:TerminalCtrl`(`):%- [* TerminalCtrl]()&]
 [s2; Default constructor.&]

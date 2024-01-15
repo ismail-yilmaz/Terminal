@@ -383,12 +383,12 @@ public:
     static void     ClearHyperlinkCache();
     static void     SetHyperlinkCacheMaxSize(int maxcount);
 
+    virtual void    PreParse()                                      { }
+    virtual void    PostParse()                                     { ScheduleRefresh(); }
+
 private:
     void        InitParser(VTInStream& vts);
     
-    void        PreParse()                                      { /*ScheduleRefresh();*/ }
-    void        PostParse()                                     { ScheduleRefresh(); }
-
     void        SyncPage(bool notify = true);
     void        SwapPage();
 

@@ -250,6 +250,7 @@ void TerminalCtrl::SyncSb(bool forcescroll)
 	if(forcescroll)
 		sb.End();
 	else {
+		// This is to keep the display up-to-date (refreshed) on no-autoscrolling mode.
 		Refresh();
 		PlaceCaret();
 	}

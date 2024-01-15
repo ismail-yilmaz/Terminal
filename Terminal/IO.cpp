@@ -343,11 +343,13 @@ TerminalCtrl& TerminalCtrl::PutEol()
 
 TerminalCtrl& TerminalCtrl::Echo(const String& s)
 {
-	VTInStream echoparser;
-	InitParser(echoparser);
-	PreParse();
-	echoparser.Parse(s, IsUtf8Mode());
-	PostParse();
+	if(s.GetLength()) {
+		VTInStream echoparser;
+		InitParser(echoparser);
+		PreParse();
+		echoparser.Parse(s, IsUtf8Mode());
+		PostParse();
+	}
 	return *this;
 }
 
