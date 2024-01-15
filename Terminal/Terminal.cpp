@@ -912,6 +912,9 @@ void TerminalCtrl::HighlightHyperlink(Point pt)
 
 void TerminalCtrl::Find(const WString& s)
 {
+	if(s.IsEmpty())
+		return;
+	
 	int i = 0;
 	while(i < page->GetLineCount()) {
 		VectorMap<int, WString> m;
