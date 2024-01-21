@@ -346,13 +346,15 @@ public:
     Image           MouseEvent(int event, Point pt, int zdelta, dword keyflags) override;
     void            VTMouseEvent(Point pt, dword event, dword keyflags, int zdelta = 0);
 
-    bool            IsMouseOverImage() const                        { Point pt = GetMouseViewPos(); return IsMouseOverImage(ClientToPagePos(pt)); }
-    bool            IsMouseOverHyperlink() const                    { Point pt = GetMouseViewPos(); return IsMouseOverHyperlink(ClientToPagePos(pt)); }
+    bool            IsMouseOverImage() const                        { return IsMouseOverImage(GetMousePagePos()); }
+    bool            IsMouseOverHyperlink() const                    { return IsMouseOverHyperlink(GetMousePagePos()); }
 
     bool            IsTracking() const                              { return IsMouseTracking(GetMouseFlags()); }
     TerminalCtrl&   OverrideTracking(dword modifiers)               { overridetracking = modifiers; return *this; }
 
-    const VTCell&   GetCellAtMousePos() const                       { Point pt = GetMouseViewPos(); return page->FetchCell(ClientToPagePos(pt));; }
+    Point           GetMousePagePos() const                         { Point pt = GetMouseViewPos(); return ClientToPagePos(pt); }
+
+    const VTCell&   GetCellAtMousePos() const                       { return page->FetchCell(GetMousePagePos()); }
     const VTCell&   GetCellAtCursorPos() const                      { return page->GetCell(); };
 
     String          GetHyperlinkUri()                               { return GetHyperlinkURI(mousepos, true); }
