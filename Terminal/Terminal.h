@@ -294,7 +294,10 @@ public:
 
     Size            PageSizeToClient(Size sz) const                 { return AddFrameSize(sz * GetCellSize()); }
     Size            PageSizeToClient(int col, int row) const        { return PageSizeToClient(Size(col, row)); }
-
+    
+    int             PagePosToIndex(Point pt) const                  { return pt.y * GetPageSize().cx + pt.x;  }
+    int             PagePosToIndex(int col, int row) const          { return PagePosToIndex(Point(col, row)); }
+   
     Size            GetMinSize() const override                     { return PageSizeToClient(Size(2, 2)); }
     Size            GetStdSize() const override                     { return PageSizeToClient(Size(80, 24)); }
     Size            GetMaxSize() const override                     { return PageSizeToClient(Size(132, 24)); }
@@ -353,6 +356,7 @@ public:
     TerminalCtrl&   OverrideTracking(dword modifiers)               { overridetracking = modifiers; return *this; }
 
     Point           GetMousePagePos() const                         { Point pt = GetMouseViewPos(); return ClientToPagePos(pt); }
+    int             GetMousePagePosAsIndex() const                  { return PagePosToIndex(GetMousePagePos()); }
 
     const VTCell&   GetCellAtMousePos() const                       { return page->FetchCell(GetMousePagePos()); }
     const VTCell&   GetCellAtCursorPos() const                      { return page->GetCell(); };
@@ -485,8 +489,10 @@ private:
 
     void        Paint0(Draw& w, bool print = false);
     void        PaintSizeHint(Draw& w);
-    void        PaintImages(Draw& w, ImageParts& parts, const Size& csz);
 
+    void        PaintImages(Draw& w, ImageParts& parts, const Size& csz);
+    void        CollectImage(ImageParts& ip, int x, int y, const VTCell& cell, const Size& sz);
+    
     void        RenderImage(const ImageString& simg, bool scroll);
     const InlineImage& GetCachedImageData(dword id, const ImageString& simg, const Size& csz);
 
