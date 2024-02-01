@@ -1320,6 +1320,13 @@ page area. Note that the result can be a negative point or point
 outside the page area.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:GetMousePagePosAsIndex`(`)const:%- [@(0.0.255) int] 
+[* GetMousePagePosAsIndex]() [@(0.0.255) const]&]
+[s2; Returns the position of mouse relative to the terminal`'s page 
+area as an [/ index]. Note that the result can be a negative point 
+or point outside the page area.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:IsMouseOverImage`(`)const:%- [@(0.0.255) bool]_[* IsMouseOver
 Image]()_[@(0.0.255) const]&]
 [s2; Returns true if the mouse pointer is hovering over an inline 

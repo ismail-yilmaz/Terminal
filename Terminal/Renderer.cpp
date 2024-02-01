@@ -82,7 +82,7 @@ void sTextRenderer::Flush()
 	for(int i = 0; i < cache.GetCount(); i++) {
 		Chrs& c = cache[i];
 		if(c.x.GetCount()) {
-			const Tuple2<dword, Color>& fc = cache.GetKey(i);
+			const Tuple<dword, Color>& fc = cache.GetKey(i);
 			int x = c.x[0], cx = c.x.Top();
 			for(int i = 0; i < c.x.GetCount() - 1; i++)
 				c.x[i] = c.x[i + 1] - c.x[i];
@@ -112,7 +112,7 @@ void sTextRenderer::DrawChar(const VTCell& cell, const CellPaintData& data)
 		Flush();
 		y = p.y;
 	}
-	
+
 	Chrs *c = &cache.GetAdd(MakeTuple(cell.sgr, data.ink));
 	
 	if(c->x.GetCount() && c->x.Top() > p.x || (cell.IsUnderlined() || cell.IsHyperlink()) && cache.GetCount() > 1) {
@@ -172,7 +172,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 					// Render the background rectangles.
 					sRectRenderer rr(w, bkg, nobackground);
 					for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
-						const VTCell& cell = line[j];
+						const VTCell& cell = line.Get(j, GetAttrs());
 						CellPaintData& data = linepaintdata[j];
 						data.highlight = IsSelected(Point(j,i));
 						data.show |= cell.IsHyperlink() && cell.data == activelink;
@@ -200,7 +200,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 						CellPaintData& data = linepaintdata[j];
 						data.pos = { x + padding.cx, y + padding.cy };
 						data.show = !blinking;
-						tr.DrawChar(line[j], data);
+						tr.DrawChar(line.Get(j, GetAttrs()), data);
 					}
 					icount = tr.GetImageCount();
 					lcount = tr.GetLinkCount();
@@ -211,7 +211,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 						ImageParts ip;
 						for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
 							if(line[j].IsImage())
-								CollectImage(ip, x, y, line[j], csz);
+								CollectImage(ip, x, y, line.Get(j, GetAttrs()), csz);
 						}
 						PaintImages(w, ip, csz);
 					}
