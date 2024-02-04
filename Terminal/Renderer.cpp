@@ -54,6 +54,7 @@ void sRectRenderer::DrawRect(const VTCell& cell, const CellPaintData& data)
 class sTextRenderer {
 	Draw&       w;
 	Font        font;
+	bool        canlink;
 	int         y, icount = 0, lcount = 0;
 	struct Chrs : Moveable<Chrs> {
 		Vector<int> x;
@@ -68,7 +69,7 @@ public:
 	void DrawChar(const VTCell& cell, const CellPaintData& data);
 	void Flush();
 
-	sTextRenderer(Draw& w, Font f) : w(w), font(f) { y = Null; }
+	sTextRenderer(Draw& w, Font f, bool l) : w(w), font(f), canlink(l) { y = Null; }
 	~sTextRenderer()                               { Flush();  }
 };
 
@@ -96,7 +97,7 @@ void sTextRenderer::Flush()
 				int h = font.GetDescent() - 2;
 				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_SOLID, fc.b);
 			}
-			if(fc.a & VTCell::SGR_HYPERLINK) {
+			if(canlink && fc.a & VTCell::SGR_HYPERLINK) {
 				int h = font.GetAscent() + 2;
 				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_DOT, InvertColor);
 			}
@@ -195,7 +196,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 				int icount = 0, lcount = 0;
 				{
 					// Render the text by combining non-contiguous chunks of chars.
-					sTextRenderer tr(w, GetFont());
+					sTextRenderer tr(w, GetFont(), hyperlinks);
 					for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
 						CellPaintData& data = linepaintdata[j];
 						data.pos = { x + padding.cx, y + padding.cy };
@@ -217,7 +218,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 					}
 				}
 			};
-			if(WhenHighlight) {
+			if(highlight) {
 					LTIMING("TerminalCtrl::WhenHighlight");
 					VectorMap<int, VTLine> hl;
 					page->FetchLine(i, hl);

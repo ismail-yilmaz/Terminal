@@ -33,6 +33,7 @@ TerminalCtrl::TerminalCtrl()
 , pcstylefunctionkeys(true)
 , streamfill(false)
 , scrolltoend(true)
+, highlight(false)
 {
 	Unicode();
 	SetLevel(LEVEL_4);

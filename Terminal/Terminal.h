@@ -278,6 +278,10 @@ public:
     TerminalCtrl&   NoPCStyleFunctionKeys()                         { return PCStyleFunctionKeys(false); }
     bool            HasPCStyleFunctionKeys() const                  { return pcstylefunctionkeys; }
     
+    TerminalCtrl&   EnableHighlight(bool b = true)                  { highlight = b; return *this; }
+    TerminalCtrl&   DisableHighlight()                              { return EnableHighlight(false); }
+    bool            IsHighlightEnabled() const                      { return highlight; }
+    
     TerminalCtrl&   SetImageDisplay(const Display& d)               { imgdisplay = &d; return *this; }
     const Display&  GetImageDisplay() const                         { return *imgdisplay; }
 
@@ -435,7 +439,7 @@ private:
 
     bool        IsMouseTracking(dword keyflags) const;
     bool        IsMouseOverImage(Point pt) const                { return !IsSelected(pt) && page->FetchCell(pt).IsImage(); }
-    bool        IsMouseOverHyperlink(Point pt) const            { return !IsSelected(pt) && page->FetchCell(pt).IsHyperlink(); }
+    bool        IsMouseOverHyperlink(Point pt) const            { return hyperlinks && !IsSelected(pt) && page->FetchCell(pt).IsHyperlink(); }
 
     void        HighlightHyperlink(Point pt);
 
@@ -570,6 +574,7 @@ private:
     bool        adjustcolors;
     bool        lightcolors;
     bool        hidemousecursor;
+    bool        highlight;
 
 // Down beloe is the emulator stuff, formerley knonw as "Console"...
 

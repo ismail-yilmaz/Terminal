@@ -402,6 +402,7 @@ void TerminalCtrl::Serialize(Stream& s)
 		s % cts;
 		s % overridetracking;
 		s % scrolltoend;
+		s % highlight;
 	}
 
 	if(s.IsLoading()) {
@@ -455,6 +456,7 @@ void TerminalCtrl::Jsonize(JsonIO& jio)
         ("LightColors",         lightcolors)
         ("AdjustColorstoTheme", adjustcolors)
         ("TransparentBackground", nobackground)
+        ("Highlight",           highlight)
         ("ColorTable",          cts);
         
     if(jio.IsLoading()) {
