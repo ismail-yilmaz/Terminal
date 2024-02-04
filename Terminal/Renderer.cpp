@@ -90,17 +90,18 @@ void sTextRenderer::Flush()
 			c.x.Top() = c.width.Top();
 			font.Bold(fc.a & VTCell::SGR_BOLD)
 			    .Italic(fc.a & VTCell::SGR_ITALIC)
-				.Underline(fc.a & VTCell::SGR_UNDERLINE)
-				.Strikeout(fc.a & VTCell::SGR_STRIKEOUT);
-			w.DrawText(x, y, c.text, font, fc.b, c.x);
+				.Strikeout(fc.a & VTCell::SGR_STRIKEOUT)
+				.Underline(fc.a & VTCell::SGR_UNDERLINE);
 			if(fc.a & VTCell::SGR_OVERLINE) {
 				int h = font.GetDescent() - 2;
 				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_SOLID, fc.b);
 			}
 			if(canlink && fc.a & VTCell::SGR_HYPERLINK) {
 				int h = font.GetAscent() + 2;
-				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_DOT, InvertColor);
+				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_DOT, fc.b);
+				font.NoUnderline();
 			}
+			w.DrawText(x, y, c.text, font, fc.b, c.x);
 		}
 	}
 	cache.Clear();
