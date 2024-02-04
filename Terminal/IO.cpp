@@ -49,6 +49,7 @@ void TerminalCtrl::Reset(bool full)
 		gsets_backup.Reset();
 		cellattrs_backup = Null;
 		dpage.WhenUpdate();
+		parser.Reset();
 	}
 	else {
 		apage.Discard();
