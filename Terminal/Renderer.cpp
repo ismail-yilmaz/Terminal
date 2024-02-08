@@ -226,6 +226,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 					WhenHighlight(hl);
 					for(const auto& h : ~hl)
 						PaintLine(h.value, h.key);
+					i = hl.TopKey();
 			}
 			else
 				PaintLine(line, i);
