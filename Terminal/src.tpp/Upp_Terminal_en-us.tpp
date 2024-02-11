@@ -143,6 +143,11 @@ input (or terminal output) is passed onto a pty or any other
 process, using this event.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenScroll:%- Event<> [* WhenScroll]&]
+[s2; This event is dispatched when the content of TerminalCtrl is 
+scrolled. .&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenLED:%- [_^Upp`:`:Event^ Event]<[@(0.0.255) int], 
 [@(0.0.255) bool]>_[* WhenLED]&]
 [s2; This event is dispatched when the host attempts to toggle key 
@@ -1294,23 +1299,27 @@ onst]&]
 [s2; Returns true if there is a selection.&]
 [s3;%- &]
 [s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`):%- [@(0.0.255) void] 
-[* Find]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s])&]
-[s5;:Upp`:`:TerminalCtrl`:`:Find`(const String`&`):%- [@(0.0.255) void] 
-[* Find]([@(0.0.255) const] String[@(0.0.255) `&] [*@3 s])&]
-[s2; These methods allow the client code to search for a string [%-*@3 s] 
-in the terminal`'s buffer. They will not directly perform any 
-search but call the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
-henSearch ]method for the each line. Client code can add any 
-type of  text searching mechanism by defining the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
-henSearch ]h method.&]
-[s3;%- &]
-[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:Goto`(int`):%- [@(0.0.255) void] [* Goto]([@(0.0.255) int] 
 [*@3 pos])&]
 [s2; Scrolls into position [%-*@3 pos]. Position is zero`-based. This 
 method does nothing if the terminal is switched to the alternate 
 page.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`,bool`):%- [@(0.0.255) void] 
+[* Find]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) bool] 
+[*@3 visibleonly] [@(0.0.255) `=] [@(0.0.255) false])&]
+[s5;:Upp`:`:TerminalCtrl`:`:Find`(const String`&`,bool`):%- [@(0.0.255) void] 
+[* Find]([@(0.0.255) const] String[@(0.0.255) `&] [*@3 s], [@(0.0.255) bool] 
+[*@3 visibleonly] [@(0.0.255) `=] [@(0.0.255) false])&]
+[s2; These methods allow the client code to search for a string [%-*@3 s] 
+in the terminal`'s buffer. [%-*@3 visibleonly] toggle can be used 
+to restrict the search to the visible screen. Otherwise the search 
+will cover the whole buffer. They will not directly perform any 
+search but call the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
+henSearch ]method for the each line. Client code can add any 
+type of  text searching mechanism by defining the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
+henSearch ]h method.&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:GetMousePagePos`(`)const:%- Point [* GetMousePagePos]() 

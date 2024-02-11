@@ -83,6 +83,7 @@ public:
     Event<Bar&>          WhenBar;
     Event<String>        WhenTitle;
     Event<String>        WhenOutput;
+    Event<>              WhenScroll;
     Event<int, bool>     WhenLED;
     Gate<PasteClip&>     WhenClip;
     Event<const String&> WhenLink;
@@ -322,8 +323,8 @@ public:
     void            OptionsBar(Bar& menu);
 
     void            Goto(int pos)                                   { if(!IsAlternatePage()) sb.Set(clamp(pos, 0, page->GetLineCount() - 1)); }
-    void            Find(const WString& s);
-    void            Find(const String& s)                           { Find(s.ToWString()); }
+    void            Find(const WString& s, bool visibleonly = false);
+    void            Find(const String& s, bool visibleonly = false) { Find(s.ToWString(), visibleonly); }
     
     void            Layout() override                               { SyncSize(true); SyncSb(); }
 
@@ -393,9 +394,14 @@ public:
     static void     ClearHyperlinkCache();
     static void     SetHyperlinkCacheMaxSize(int maxcount);
 
+protected:
     virtual void    PreParse()                                      { }
     virtual void    PostParse()                                     { ScheduleRefresh(); }
 
+    const VTPage&   GetPage() const                                 { return *page; }
+    const VTCell&   GetAttrs() const                                { return cellattrs;  }
+    int             GetSbPos() const                                { return IsAlternatePage() ? 0 : sb; }
+    
 private:
     void        InitParser(VTInStream& vts);
     
@@ -419,7 +425,6 @@ private:
     Rect        GetCaretRect();
     void        PlaceCaret(bool scroll = false);
 
-    int         GetSbPos() const                                { return IsAlternatePage() ? 0 : sb; }
 
     Point       GetCursorPos() const                            { return --page->GetPos(); /* VT cursor position is 1-based */ }
 
@@ -699,8 +704,6 @@ private:
     bool        streamfill:1;
 
 private:
-    const VTCell&   GetAttrs() const                            { return cellattrs;  }
-
     void        SetPageSize(Size sz)                            { page->SetSize(sz); }
     VTPage&     GetDefaultPage()                                { return dpage; }
     bool        IsDefaultPage() const                           { return page == &dpage; }

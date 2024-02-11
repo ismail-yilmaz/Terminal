@@ -308,15 +308,15 @@ bool TerminalCtrl::Key(dword key, int count)
 		return true;
 
 	if(key & K_KEYUP)	// We don't really need to handle key-ups...
-		return true;
+		return false;
 
 #ifdef PLATFORM_COCOA
 	if(findarg(key & ~(K_CTRL|K_ALT|K_SHIFT|K_OPTION), K_CTRL_KEY, K_ALT_KEY, K_SHIFT_KEY, K_OPTION_KEY) >= 0)
-		return true;
+		return false;
 	key &= ~K_OPTION;
 #else
 	if(findarg(key & ~(K_CTRL|K_ALT|K_SHIFT), K_CTRL_KEY, K_ALT_KEY, K_SHIFT_KEY) >= 0)
-		return true;
+		return false;
 #endif
 
 	SyncSb(true);

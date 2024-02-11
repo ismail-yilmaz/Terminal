@@ -269,6 +269,7 @@ void TerminalCtrl::Scroll()
 	if(IsAlternatePage())
 		return;
 
+	WhenScroll();
 	Refresh();
 	PlaceCaret();
 }
@@ -912,13 +913,23 @@ void TerminalCtrl::HighlightHyperlink(Point pt)
 	}
 }
 
-void TerminalCtrl::Find(const WString& s)
+void TerminalCtrl::Find(const WString& s, bool visibleonly)
 {
 	if(s.IsEmpty())
 		return;
 	
-	int i = 0;
-	while(i < page->GetLineCount()) {
+	int i = 0, y = 0;
+
+	if(visibleonly) {
+		i = GetSbPos();
+		y = min(i + GetPageSize().cy, page->GetLineCount());
+	}
+	else {
+		i = 0;
+		y = page->GetLineCount();
+	}
+
+	while(i < y) {
 		VectorMap<int, WString> m;
 		i = page->FetchLine(i, m) + 1;
 		if(!WhenSearch(m, s))
