@@ -190,6 +190,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 						data.pos = {x, y};
 						if(j == psz.cx - 1)
 							data.size.cx = wsz.cx - x;
+
 						data.show |= data.highlight;
 						rr.DrawRect(cell, data);
 					}

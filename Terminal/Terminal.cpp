@@ -918,6 +918,8 @@ void TerminalCtrl::Find(const WString& s, bool visibleonly)
 	if(s.IsEmpty())
 		return;
 	
+	RTIMING("TerminalCtrl::Find");
+	
 	int i = 0, y = 0;
 
 	if(visibleonly) {
@@ -932,9 +934,10 @@ void TerminalCtrl::Find(const WString& s, bool visibleonly)
 	while(i < y) {
 		VectorMap<int, WString> m;
 		i = page->FetchLine(i, m) + 1;
-		if(!WhenSearch(m, s))
+		if(m.IsEmpty() || !WhenSearch(m, s))
 			return;
 	}
+	
 }
 
 void TerminalCtrl::StdBar(Bar& menu)

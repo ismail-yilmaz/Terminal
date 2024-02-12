@@ -324,7 +324,6 @@ public:
 
     void            Goto(int pos)                                   { if(!IsAlternatePage()) sb.Set(clamp(pos, 0, page->GetLineCount() - 1)); }
     void            Find(const WString& s, bool visibleonly = false);
-    void            Find(const String& s, bool visibleonly = false) { Find(s.ToWString(), visibleonly); }
     
     void            Layout() override                               { SyncSize(true); SyncSb(); }
 

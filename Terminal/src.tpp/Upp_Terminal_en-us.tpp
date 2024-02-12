@@ -1309,14 +1309,11 @@ page.&]
 [s5;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`,bool`):%- [@(0.0.255) void] 
 [* Find]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) bool] 
 [*@3 visibleonly] [@(0.0.255) `=] [@(0.0.255) false])&]
-[s5;:Upp`:`:TerminalCtrl`:`:Find`(const String`&`,bool`):%- [@(0.0.255) void] 
-[* Find]([@(0.0.255) const] String[@(0.0.255) `&] [*@3 s], [@(0.0.255) bool] 
-[*@3 visibleonly] [@(0.0.255) `=] [@(0.0.255) false])&]
-[s2; These methods allow the client code to search for a string [%-*@3 s] 
-in the terminal`'s buffer. [%-*@3 visibleonly] toggle can be used 
-to restrict the search to the visible screen. Otherwise the search 
-will cover the whole buffer. They will not directly perform any 
-search but call the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
+[s2; This method allows the client code to search for a unicode string 
+[%-*@3 s] in the terminal`'s buffer. [%-*@3 visibleonly] toggle can 
+be used to restrict the search to the visible screen. Otherwise 
+the search will cover the whole buffer. This method will not 
+directly perform any search but call the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
 henSearch ]method for the each line. Client code can add any 
 type of  text searching mechanism by defining the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
 henSearch ]h method.&]
