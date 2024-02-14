@@ -1319,15 +1319,7 @@ of the rows to search. This method will not directly perform
 any search but call the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
 henSearch ]method for the each line. Client code can add any 
 type of  text searching mechanism by defining the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
-henSearch ]h method.&]
-[s2; &]
-[s2; Additional notes:&]
-[s2;i150;O0; This method [/ does ]automatic bounds checking.&]
-[s2;i150;O0; The terminal buffer can consist of wrapped lines and 
-TerminalCtrl takes this into account. For example, when the [%-*@3 begin] 
-is 0, and the [%-*@3 end] is 2 and the first row is a wrapped, 
-single line thats spans across 2 rows, then TerminalCtrl will 
-treat the 3rd row as the second row to search.&]
+henSearch ]h method. This method [/ does ]automatic bounds checking.&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`,bool`):%- [@(0.0.255) void] 
