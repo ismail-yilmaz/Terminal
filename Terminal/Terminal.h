@@ -323,6 +323,7 @@ public:
     void            OptionsBar(Bar& menu);
 
     void            Goto(int pos)                                   { if(!IsAlternatePage()) sb.Set(clamp(pos, 0, page->GetLineCount() - 1)); }
+    void            Find(const WString& s, int begin, int end, bool visibleonly = false);
     void            Find(const WString& s, bool visibleonly = false);
     
     void            Layout() override                               { SyncSize(true); SyncSb(); }

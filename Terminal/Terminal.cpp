@@ -913,31 +913,33 @@ void TerminalCtrl::HighlightHyperlink(Point pt)
 	}
 }
 
-void TerminalCtrl::Find(const WString& s, bool visibleonly)
+void TerminalCtrl::Find(const WString& s, int begin, int end, bool visibleonly)
 {
-	if(s.IsEmpty())
+	if(s.IsEmpty() || begin >= end)
 		return;
-	
-	RTIMING("TerminalCtrl::Find");
-	
-	int i = 0, y = 0;
 
+	LTIMING("TerminalCtrl::Find");
+		
 	if(visibleonly) {
-		i = GetSbPos();
-		y = min(i + GetPageSize().cy, page->GetLineCount());
+		begin = GetSbPos() + max(begin, 0);
+		end   = min(end, min(begin + GetPageSize().cy, page->GetLineCount()));
 	}
 	else {
-		i = 0;
-		y = page->GetLineCount();
+		begin = max(begin, 0);
+		end   = min(end, page->GetLineCount());
 	}
-
-	while(i < y) {
+	
+	while(begin < end) {
 		VectorMap<int, WString> m;
-		i = page->FetchLine(i, m) + 1;
+		begin = page->FetchLine(begin, m) + 1;
 		if(m.IsEmpty() || !WhenSearch(m, s))
 			return;
 	}
-	
+}
+
+void TerminalCtrl::Find(const WString& s, bool visibleonly)
+{
+	Find(s, 0, page->GetLineCount(), visibleonly);
 }
 
 void TerminalCtrl::StdBar(Bar& menu)

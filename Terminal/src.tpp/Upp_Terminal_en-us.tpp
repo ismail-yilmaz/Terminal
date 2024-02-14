@@ -1306,14 +1306,38 @@ method does nothing if the terminal is switched to the alternate
 page.&]
 [s3;%- &]
 [s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`,bool`):%- [@(0.0.255) void] 
-[* Find]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) bool] 
-[*@3 visibleonly] [@(0.0.255) `=] [@(0.0.255) false])&]
+[s5;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`,int`,int`,bool`):%- [@(0.0.255) void
+] [* Find]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) int] 
+[*@3 begin], [@(0.0.255) int] [*@3 end], [@(0.0.255) bool] [*@3 visibleonly] 
+[@(0.0.255) `=] [@(0.0.255) false])&]
 [s2; This method allows the client code to search for a unicode string 
 [%-*@3 s] in the terminal`'s buffer. [%-*@3 visibleonly] toggle can 
 be used to restrict the search to the visible screen. Otherwise 
-the search will cover the whole buffer. This method will not 
-directly perform any search but call the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
+the search will include the history buffer. [%-*@3 begin] and [%-*@3 end] 
+parameters are [/ 0`-based] and specify the lower and upper bounds 
+of the rows to search. This method will not directly perform 
+any search but call the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
+henSearch ]method for the each line. Client code can add any 
+type of  text searching mechanism by defining the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
+henSearch ]h method.&]
+[s2; &]
+[s2; Additional notes:&]
+[s2;i150;O0; This method [/ does ]automatic bounds checking.&]
+[s2;i150;O0; The terminal buffer can consist of wrapped lines and 
+TerminalCtrl takes this into account. For example, when the [%-*@3 begin] 
+is 0, and the [%-*@3 end] is 2 and the first row is a wrapped, 
+single line thats spans across 2 rows, then TerminalCtrl will 
+treat the 3rd row as the second row to search.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`,bool`):%- [@(0.0.255) void] 
+[* Find]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) bool] 
+[*@3 visibleonly] [@(0.0.255) `=] [@(0.0.255) false])&]
+[s2; Overload of Find method. Allows the client code to search for 
+a unicode string [%-*@3 s] in the terminal`'s buffer. [%-*@3 visibleonly] 
+toggle can be used to restrict the search to the visible screen. 
+Otherwise the search will include the history buffer. This method 
+will not directly perform any search but call the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
 henSearch ]method for the each line. Client code can add any 
 type of  text searching mechanism by defining the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
 henSearch ]h method.&]
