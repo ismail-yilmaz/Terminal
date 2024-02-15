@@ -952,7 +952,7 @@ void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly
 		LTIMING("TerminalCtrl::Search (ST)");
 		while(begin < end)
 			if(ScanBuffer(begin, begin))
-				return;
+				break;
 	}
 
 	searching = false;
