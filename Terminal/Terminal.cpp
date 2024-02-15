@@ -913,13 +913,13 @@ void TerminalCtrl::HighlightHyperlink(Point pt)
 	}
 }
 
-void TerminalCtrl::Find(const WString& s, int begin, int end, bool visibleonly)
+void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly, bool co)
 {
-	if(s.IsEmpty() || begin >= end)
+	if(searching || s.IsEmpty() || begin >= end)
 		return;
-
-	LTIMING("TerminalCtrl::Find");
-		
+	
+	searching = true;
+	
 	if(visibleonly) {
 		begin = GetSbPos() + max(begin, 0);
 		end   = min(end, min(begin + GetPageSize().cy, page->GetLineCount()));
@@ -929,17 +929,53 @@ void TerminalCtrl::Find(const WString& s, int begin, int end, bool visibleonly)
 		end   = min(end, page->GetLineCount());
 	}
 	
-	while(begin < end) {
+	auto ScanBuffer = [this, &s](int i, int& o) {
 		VectorMap<int, WString> m;
-		begin = page->FetchLine(begin, m) + 1;
-		if(m.IsEmpty() || !WhenSearch(m, s))
-			return;
+		o = page->FetchLine(i, m) + 1;
+		return m.IsEmpty() || !WhenSearch(m, s);
+	};
+
+	if(co) {
+		LTIMING("TerminalCtrl::Search (MT)");
+		Vector<int> cache;
+		while(begin < end) {
+			auto t = page->GetLineSpan(begin);
+			cache.Add(t.a);
+			begin = t.b + 1;
+		}
+		CoFor(cache.GetCount(), [&](int i) {
+			if(ScanBuffer(cache[i], i))
+				return;
+		});
 	}
+	else {
+		LTIMING("TerminalCtrl::Search (ST)");
+		while(begin < end)
+			if(ScanBuffer(begin, begin))
+				return;
+	}
+
+	searching = false;
+}
+
+void TerminalCtrl::Find(const WString& s, int begin, int end, bool visibleonly)
+{
+	Search(s, begin, end, visibleonly);
 }
 
 void TerminalCtrl::Find(const WString& s, bool visibleonly)
 {
 	Find(s, 0, page->GetLineCount(), visibleonly);
+}
+
+void TerminalCtrl::CoFind(const WString& s, int begin, int end, bool visibleonly)
+{
+	Search(s, begin, end, visibleonly, true);
+}
+
+void TerminalCtrl::CoFind(const WString& s, bool visibleonly)
+{
+	CoFind(s, 0, page->GetLineCount(), visibleonly);
 }
 
 void TerminalCtrl::StdBar(Bar& menu)

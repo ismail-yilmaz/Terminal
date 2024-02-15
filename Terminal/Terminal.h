@@ -325,6 +325,9 @@ public:
     void            Goto(int pos)                                   { if(!IsAlternatePage()) sb.Set(clamp(pos, 0, page->GetLineCount() - 1)); }
     void            Find(const WString& s, int begin, int end, bool visibleonly = false);
     void            Find(const WString& s, bool visibleonly = false);
+    void            CoFind(const WString& s, int begin, int end, bool visibleonly = false);
+    void            CoFind(const WString& s, bool visibleonly = false);
+    bool            IsSearching() const                             { return searching; }
     
     void            Layout() override                               { SyncSize(true); SyncSb(); }
 
@@ -450,6 +453,8 @@ private:
 
     String      GetHyperlinkURI(Point pt, bool modifier);
     Image       GetInlineImage(Point pt, bool modifier);
+    
+    void        Search(const WString& s, int begin, int end, bool visibleonly = false, bool co = false);
 
 private:
     using       ImagePart  = Tuple<dword, Point, Rect>;
@@ -542,6 +547,7 @@ private:
     bool        multiclick       = false;
     bool        ignorescroll     = false;
     bool        mousehidden      = false;
+    bool        searching        = false;
     bool        resizing         = false;
     bool        hinting          = false;
     bool        blinking         = false;
