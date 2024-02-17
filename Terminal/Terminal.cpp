@@ -5,6 +5,16 @@
 
 namespace Upp {
 
+bool sDefaultCellFilter(const VTCell& cell)
+{
+	return !cell.IsImage() && (IsLeNum(cell) || findarg(cell, '_', '-') >= 0);
+}
+
+bool IsWCh(const VTCell& cell, bool line_wrap, TerminalCtrl::CellFilter *f = nullptr)
+{
+	return (cell == 0 && line_wrap) || cell == 1 || (f ? f(cell) : sDefaultCellFilter(cell));
+}
+
 TerminalCtrl::TerminalCtrl()
 : page(&dpage)
 , legacycharsets(false)
@@ -34,6 +44,7 @@ TerminalCtrl::TerminalCtrl()
 , streamfill(false)
 , scrolltoend(true)
 , highlight(false)
+, cellfilter(&sDefaultCellFilter)
 {
 	Unicode();
 	SetLevel(LEVEL_4);
@@ -810,34 +821,28 @@ void TerminalCtrl::GetLineSelection(const Point& pt, Point& pl, Point& ph) const
 bool TerminalCtrl::GetWordSelection(const Point& pt, Point& pl, Point& ph) const
 {
 	pl = ph = pt;
-
+	
 	const VTLine& line = page->FetchLine(pt.y);
 	if(!line.IsVoid()) {
 		const VTCell& cell = line[pt.x];
-		if(!cell.IsImage() && (cell.chr == 1 || cell.chr >= 32)) {
+		if(IsWCh(cell, line.IsWrapped(), cellfilter)) {
 			ph.x++;
-			if(IsLeNum(cell.chr) || cell.chr == '_') {
-				GetWordPosL(line, pl);
-				GetWordPosH(line, ph);
-			}
+			GetWordPosL(line, pl);
+			GetWordPosH(line, ph);
 			return true;
 		}
 	}
+
 	return false;
 }
 
-bool IsWCh(const VTCell& cell, bool line_wrap)
-{
-	return !cell.IsImage()
-		&& (IsLeNum(cell) || findarg(cell, 1, '_', '-') >= 0 || (cell == 0 && line_wrap));
-}
 
 void TerminalCtrl::GetWordPosL(const VTLine& line, Point& pl) const
 {
 	bool stopped = false;
 	bool wrapped = line.IsWrapped();
 
-	while(pl.x > 0 && !(stopped = !IsWCh(line[pl.x - 1], wrapped)))
+	while(pl.x > 0 && !(stopped = !IsWCh(line[pl.x - 1], wrapped, cellfilter)))
 		pl.x--;
 
 	if(pl.x == 0 && !stopped) {
@@ -855,7 +860,7 @@ void TerminalCtrl::GetWordPosH(const VTLine& line, Point& ph) const
 	bool stopped = false;
 	bool wrapped = line.IsWrapped();
 
-	while(ph.x < line.GetCount() && !(stopped = !IsWCh(line[ph.x], wrapped)))
+	while(ph.x < line.GetCount() && !(stopped = !IsWCh(line[ph.x], wrapped, cellfilter)))
 		ph.x++;
 
 	if(ph.x == line.GetCount() && !stopped) {

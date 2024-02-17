@@ -74,6 +74,8 @@ public:
         operator    Value() const                               { return RichValue<TerminalCtrl::InlineImage>(*this); }
     };
 
+    typedef bool (CellFilter)(const VTCell&);
+    
     TerminalCtrl();
     virtual ~TerminalCtrl();
 
@@ -314,6 +316,8 @@ public:
     void            SelectAll(bool history = false);
     bool            IsSelection() const                             { return !IsNull(anchor) && anchor != selpos && seltype != SEL_NONE; }
 
+    TerminalCtrl&   SetWordSelectionFilter(CellFilter* filter)      { cellfilter = filter; return *this; }
+    
     String          GetSelectionData(const String& fmt) const override;
     
     void            StdBar(Bar& menu);
@@ -404,6 +408,29 @@ protected:
     const VTPage&   GetPage() const                                 { return *page; }
     const VTCell&   GetAttrs() const                                { return cellattrs;  }
     int             GetSbPos() const                                { return IsAlternatePage() ? 0 : sb; }
+
+    // Selector stuff...
+    enum TextSelectionTypes : dword {
+        SEL_NONE    = 0,
+        SEL_TEXT    = 1,
+        SEL_RECT    = 2,
+        SEL_WORD    = 3,
+        SEL_LINE    = 4
+    };
+
+    Rect        GetSelectionRect() const;
+    WString     GetSelectedText() const;
+      
+    void        SetSelection(Point  pl, Point ph, dword selflag);
+    bool        GetSelection(Point& pl, Point& ph) const;
+    void        GetLineSelection(const Point& pt, Point& pl, Point& ph) const;
+    bool        GetWordSelection(const Point& pt, Point& pl, Point& ph) const;
+
+    void        ClearSelection();
+    bool        IsSelected(Point pt) const;
+
+    Point       ClientToPagePos(Point pt, bool ignoresb = false) const;
+    Point       SelectionToPagePos(Point pt) const;
     
 private:
     void        InitParser(VTInStream& vts);
@@ -431,19 +458,10 @@ private:
 
     Point       GetCursorPos() const                            { return --page->GetPos(); /* VT cursor position is 1-based */ }
 
-    Point       ClientToPagePos(Point pt, bool ignoresb = false) const;
-    Point       SelectionToPagePos(Point pt) const;
-
-    void        SetSelection(Point  pl, Point ph, dword selflag);
-    bool        GetSelection(Point& pl, Point& ph) const;
-    Rect        GetSelectionRect() const;
-    void        ClearSelection();
-    bool        IsSelected(Point pt) const;
-    WString     GetSelectedText() const;
-    void        GetLineSelection(const Point& pt, Point& pl, Point& ph) const;
-    bool        GetWordSelection(const Point& pt, Point& pl, Point& ph) const;
     void        GetWordPosL(const VTLine& line, Point& pl) const;
     void        GetWordPosH(const VTLine& line, Point& ph) const;
+    bool        IsWord(VTCell& ch, bool iswrapped);
+    
 
     bool        IsMouseTracking(dword keyflags) const;
     bool        IsMouseOverImage(Point pt) const                { return !IsSelected(pt) && page->FetchCell(pt).IsImage(); }
@@ -514,14 +532,6 @@ private:
     String      GetCachedHyperlink(dword id, const String& data = Null);
 
 private:
-    enum TextSelectionTypes : dword {
-        SEL_NONE    = 0,
-        SEL_TEXT    = 1,
-        SEL_RECT    = 2,
-        SEL_WORD    = 3,
-        SEL_LINE    = 4
-    };
-    
     enum ModifierKeyFlags : dword {
         MKEY_NONE   = 0,
         MKEY_ESCAPE = 1,
@@ -543,6 +553,7 @@ private:
     Rect        caretrect;
     Point       anchor           = Null;
     Point       selpos           = Null;
+    CellFilter* cellfilter       = nullptr;
     dword       seltype          = SEL_NONE;
     bool        multiclick       = false;
     bool        ignorescroll     = false;
