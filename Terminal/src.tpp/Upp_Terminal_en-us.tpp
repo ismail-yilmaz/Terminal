@@ -1331,7 +1331,7 @@ of the rows to search. These methods will not directly perform
 any search but call the  [%-*@3 fn ]function for the each line 
 (a line can be consisted of multiple rows due to wrapping). Client 
 code can add any type of  text searching mechanism by defining 
-the [%-*@3 fn ]function. Returning false from [%-*@3 fn ]will cancel 
+the [%-*@3 fn ]function. Returning true from [%-*@3 fn ]will cancel 
 the search. These methods [/ do ]automatic bounds checking and 
 will [/ return immediately ]if a search is already in progress.&]
 [s2; &]
@@ -1343,7 +1343,7 @@ position(s) of the line (row) in the buffer and the values represent
 the WString version of the corresponding line(s) as 0`-based 
 indices: If the map contains multiple rows (i.e. count > 1), they 
 should be treated as a [/ wrapped], single and continous line. 
-Returning false will halt the search at the current position.&]
+Returning true will halt the search at the current position.&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:CoFind`(const WString`&`,bool`,Gate`):%- [@(0.0.255) void] 
@@ -1368,7 +1368,7 @@ any search but call the  [%-*@3 fn ]function for the each line
 (a line can be consisted of multiple rows due to wrapping). It 
 is up to the client code to handle serialization (e.g. using 
 mutex).  Client code can add any type of  text searching mechanism 
-by defining the [%-*@3 fn ]function. Returning false from [%-*@3 fn 
+by defining the [%-*@3 fn ]function. Returning true from [%-*@3 fn 
 ]will cancel the search. These methods [/ do ]automatic bounds 
 checking and will [/ return immediately ]if a search is already 
 in progress. Note that for searching short`-ranges (or simple 
@@ -1383,7 +1383,7 @@ position(s) of the line (row) in the buffer and the values represent
 the WString version of the corresponding line(s) as 0`-based 
 indices: If the map contains multiple rows (i.e. count > 1), they 
 should be treated as a [/ wrapped], single and continous line. 
-Returning false will halt the search at the current position.&]
+Returning true will halt the search at the current position.&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:IsSearching`(`)const:%- [@(0.0.255) bool] 

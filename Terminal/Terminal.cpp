@@ -943,7 +943,7 @@ void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly
 	auto ScanBuffer = [this, &s, &fn](int i, int& o) {
 		VectorMap<int, WString> m;
 		o = page->FetchLine(i, m) + 1;
-		return m.IsEmpty() || !fn(m, s);
+		return m.IsEmpty() || fn(m, s);
 	};
 
 	if(co) {
