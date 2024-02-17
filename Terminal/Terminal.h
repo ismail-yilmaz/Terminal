@@ -317,6 +317,7 @@ public:
     bool            IsSelection() const                             { return !IsNull(anchor) && anchor != selpos && seltype != SEL_NONE; }
 
     TerminalCtrl&   SetWordSelectionFilter(CellFilter* filter)      { cellfilter = filter; return *this; }
+    CellFilter*     GetWordSelectionFilter() const;
     
     String          GetSelectionData(const String& fmt) const override;
     

@@ -174,6 +174,11 @@ String TerminalCtrl::GetSelectionData(const String& fmt) const
 	return IsSelection() ? GetTextClip(GetSelectedText().ToString(), fmt) : Null;
 }
 
+TerminalCtrl::CellFilter *TerminalCtrl::GetWordSelectionFilter() const
+{
+	return cellfilter ? cellfilter : &sDefaultCellFilter;
+}
+
 void TerminalCtrl::SyncSize(bool notify)
 {
 	// Apparently, the window minimize event on Windows "really" minimizes

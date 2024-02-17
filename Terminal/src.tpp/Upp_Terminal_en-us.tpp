@@ -1313,6 +1313,13 @@ properties of the cells. E.g. selecting only italic or bold,
 or underlined blocks etc. is possible.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:GetWordSelectionFilter`(`)const:%- CellFilter 
+[@(0.0.255) `*][* GetWordSelectionFilter]() [@(0.0.255) const]&]
+[s2; Returns a pointer to the current word selection filter function. 
+See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:SetWordSelectionFilter`(CellFilter`*`)^ S
+etWordSelectionFilter] method.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:Goto`(int`):%- [@(0.0.255) void] [* Goto]([@(0.0.255) int] 
 [*@3 pos])&]
 [s2; Scrolls into position [%-*@3 pos]. Position is zero`-based. This 
