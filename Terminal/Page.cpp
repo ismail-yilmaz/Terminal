@@ -948,7 +948,9 @@ VTPage& VTPage::EraseLine(dword flags)
 {
 	LLOG("EraseLine(" << flags << ")");
 	
-	lines[cursor.y - 1].FillLine(cellattrs, flags);
+	VTLine& l = lines[cursor.y - 1];
+	l.FillLine(cellattrs, flags);
+	l.Unwrap();
 	ClearEol();
 	return *this;
 }
@@ -957,7 +959,9 @@ VTPage& VTPage::EraseLeft(dword flags)
 {
 	LLOG("EraseLeft(" << flags << ")");
 	
-	lines[cursor.y - 1].FillLeft(cursor.x, cellattrs, flags);
+	VTLine& l =	lines[cursor.y - 1];
+	l.FillLeft(cursor.x, cellattrs, flags);
+	l.Unwrap();
 	ClearEol();
 	return *this;
 }
@@ -966,7 +970,9 @@ VTPage& VTPage::EraseRight(dword flags)
 {
 	LLOG("EraseRight(" << flags << ")");
 	
-	lines[cursor.y - 1].FillRight(cursor.x, cellattrs, flags);
+	VTLine& l =	lines[cursor.y - 1];
+	l.FillRight(cursor.x, cellattrs, flags);
+	l.Unwrap();
 	ClearEol();
 	return *this;
 }
@@ -976,8 +982,11 @@ VTPage& VTPage::ErasePage(dword flags)
 	LLOG("ErasePage(" << flags << ")");
 	
 	Rect r = GetView();
-	for(int i = r.top; i <= r.bottom; i++)
-		lines[i - 1].FillLine(cellattrs, flags);
+	for(int i = r.top; i <= r.bottom; i++) {
+		VTLine& l = lines[i - 1];
+		l.FillLine(cellattrs, flags);
+		l.Unwrap();
+	}
 	ClearEol();
 	return *this;
 }
@@ -986,8 +995,11 @@ VTPage& VTPage::EraseBefore(dword flags)
 {
 	LLOG("EraseBefore(" << flags << ")");
 	
-	for(int i = 1; i < cursor.y; i++)
-		lines[i - 1].FillLine(cellattrs, flags);
+	for(int i = 1; i < cursor.y; i++) {
+		VTLine& l =	lines[i - 1];
+		l.FillLine(cellattrs, flags);
+		l.Unwrap();
+	}
 	return EraseLeft(flags);
 }
 
@@ -995,8 +1007,11 @@ VTPage& VTPage::EraseAfter(dword flags)
 {
 	LLOG("EraseAfter(" << flags << ")");
 	
-	for(int i = cursor.y + 1; i <= size.cy; i++)
-		lines[i - 1].FillLine(cellattrs, flags);
+	for(int i = cursor.y + 1; i <= size.cy; i++) {
+		VTLine& l =  lines[i - 1];
+		l.FillLine(cellattrs, flags);
+		l.Unwrap();
+	}
 	return EraseRight(flags);
 }
 
