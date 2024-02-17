@@ -923,7 +923,8 @@ void TerminalCtrl::HighlightHyperlink(Point pt)
 	}
 }
 
-void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly, bool co)
+void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly, bool co,
+                                   Gate<const VectorMap<int, WString>&, const WString&> fn)
 {
 	if(searching || s.IsEmpty() || begin >= end)
 		return;
@@ -939,10 +940,10 @@ void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly
 		end   = min(end, page->GetLineCount());
 	}
 	
-	auto ScanBuffer = [this, &s](int i, int& o) {
+	auto ScanBuffer = [this, &s, &fn](int i, int& o) {
 		VectorMap<int, WString> m;
 		o = page->FetchLine(i, m) + 1;
-		return m.IsEmpty() || !WhenSearch(m, s);
+		return m.IsEmpty() || !fn(m, s);
 	};
 
 	if(co) {
@@ -968,24 +969,28 @@ void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly
 	searching = false;
 }
 
-void TerminalCtrl::Find(const WString& s, int begin, int end, bool visibleonly)
+void TerminalCtrl::Find(const WString& s, int begin, int end, bool visibleonly,
+                         Gate<const VectorMap<int, WString>&, const WString&> fn)
 {
-	Search(s, begin, end, visibleonly);
+	Search(s, begin, end, visibleonly, false, fn);
 }
 
-void TerminalCtrl::Find(const WString& s, bool visibleonly)
+void TerminalCtrl::Find(const WString& s, bool visibleonly,
+     Gate<const VectorMap<int, WString>&, const WString&> fn)
 {
-	Find(s, 0, page->GetLineCount(), visibleonly);
+	Search(s, 0, page->GetLineCount(), visibleonly, false, fn);
 }
 
-void TerminalCtrl::CoFind(const WString& s, int begin, int end, bool visibleonly)
+void TerminalCtrl::CoFind(const WString& s, int begin, int end, bool visibleonly,
+                           Gate<const VectorMap<int, WString>&, const WString&> fn)
 {
-	Search(s, begin, end, visibleonly, true);
+	Search(s, begin, end, visibleonly, true, fn);
 }
 
-void TerminalCtrl::CoFind(const WString& s, bool visibleonly)
+void TerminalCtrl::CoFind(const WString& s, bool visibleonly,
+       Gate<const VectorMap<int, WString>&, const WString&> fn)
 {
-	CoFind(s, 0, page->GetLineCount(), visibleonly);
+	Search(s, 0, page->GetLineCount(), visibleonly, true, fn);
 }
 
 void TerminalCtrl::StdBar(Bar& menu)

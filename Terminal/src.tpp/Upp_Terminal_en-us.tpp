@@ -216,22 +216,6 @@ continous line. The main purpose of this event is to allow custom
 text highlighting by the client code.&]
 [s3;%- &]
 [s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:WhenSearch:%- Gate<[@(0.0.255) const] VectorMap<[@(0.0.255) i
-nt], WString>[@(0.0.255) `&], [@(0.0.255) const] WString[@(0.0.255) `&]> 
-[* WhenSearch]&]
-[s2; If defined, this event will be dispatched whenever a find method 
-is called. It is NOOP by default. Client code can supply a text 
-search mechanism by defining this event. It passes 2 parameters 
-to the client code. The first parameter is a constant reference 
-to a VectorMap. Similar to WhenHighlight method, the keys of 
-this map represent the vertical position(s) of the line (row) 
-in the buffer and the values represent the WString version of 
-the corresponding line(s) as 0`-based indices: If the map contains 
-multiple lines (i.e. count > 1), they should be treated as a 
-[/ wrapped], single and continous line. Returning false will halt 
-the search at the current position.&]
-[s3;%- &]
-[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenWindowMinimize:%- [_^Upp`:`:Event^ Event]<[@(0.0.255) boo
 l]>_[* WhenWindowMinimize]&]
 [s6;%- This event is a part of xterm`'s window ops extension.&]
@@ -1327,34 +1311,52 @@ method does nothing if the terminal is switched to the alternate
 page.&]
 [s3;%- &]
 [s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`,int`,int`,bool`):%- [@(0.0.255) void
-] [* Find]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) int] 
-[*@3 begin], [@(0.0.255) int] [*@3 end], [@(0.0.255) bool] [*@3 visibleonly] 
-[@(0.0.255) `=] [@(0.0.255) false])&]
-[s0;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`,bool`):%- [@(0.0.255) void] 
+[s5;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`,bool`,Gate`):%- [@(0.0.255) void] 
 [* Find]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) bool] 
-[*@3 visibleonly] [@(0.0.255) `=] [@(0.0.255) false])&]
-[s2; This method allows the client code to search for a unicode string 
-[%-*@3 s] in the terminal`'s buffer. [%-*@3 visibleonly] toggle can 
-be used to restrict the search to the visible screen. Otherwise 
+[*@3 visibleonly] [@(0.0.255) `=] [@(0.0.255) false], Gate<[@(0.0.255) const] 
+VectorMap<[@(0.0.255) int], WString>[@(0.0.255) `&], [@(0.0.255) const] 
+WString[@(0.0.255) `&]> [*@3 fn])&]
+[s5;:Upp`:`:TerminalCtrl`:`:Find`(const WString`&`,int`,int`,bool`,Gate`):%- [@(0.0.255) v
+oid] [* Find]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) int] 
+[*@3 begin], [@(0.0.255) int] [*@3 end], [@(0.0.255) bool] [*@3 visibleonly] 
+[@(0.0.255) `=] [@(0.0.255) false], Gate<[@(0.0.255) const] VectorMap<[@(0.0.255) int], 
+WString>[@(0.0.255) `&], [@(0.0.255) const] WString[@(0.0.255) `&]> 
+ [*@3 fn])&]
+[s2; These methods allow the client code to search for a unicode 
+string [%-*@3 s] in the terminal`'s buffer. [%-*@3 visibleonly] toggle 
+can be used to restrict the search to the visible screen. Otherwise 
 the search will include the history buffer. [%-*@3 begin] and [%-*@3 end] 
 parameters are [/ 0`-based] and specify the lower and upper bounds 
-of the rows to search. This method will not directly perform 
-any search but call the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
-henSearch ]method for the each line (a line can be consisted 
-of multiple rows due to wrapping). Client code can add any type 
-of  text searching mechanism by defining the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
-henSearch] method.This method [/ does ]automatic bounds checking 
-and will [/ return immediately ]if a search is already in progress.&]
+of the rows to search. These methods will not directly perform 
+any search but call the  [%-*@3 fn ]function for the each line 
+(a line can be consisted of multiple rows due to wrapping). Client 
+code can add any type of  text searching mechanism by defining 
+the [%-*@3 fn ]function. Returning false from [%-*@3 fn ]will cancel 
+the search. These methods [/ do ]automatic bounds checking and 
+will [/ return immediately ]if a search is already in progress.&]
+[s2; &]
+[s2; [%-*@3 fn] function passes 2 parameters to the client code. The 
+first parameter is a constant reference to a VectorMap. Similar 
+to [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenHighlight^ W
+henHighlight ]method, the keys of this map represent the vertical 
+position(s) of the line (row) in the buffer and the values represent 
+the WString version of the corresponding line(s) as 0`-based 
+indices: If the map contains multiple rows (i.e. count > 1), they 
+should be treated as a [/ wrapped], single and continous line. 
+Returning false will halt the search at the current position.&]
 [s3;%- &]
 [s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:CoFind`(const WString`&`,int`,int`,bool`):%- [@(0.0.255) vo
-id] [* CoFind]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) int] 
-[*@3 begin], [@(0.0.255) int] [*@3 end], [@(0.0.255) bool] [*@3 visibleonly] 
-[@(0.0.255) `=] [@(0.0.255) false])&]
-[s5;:Upp`:`:TerminalCtrl`:`:CoFind`(const WString`&`,bool`):%- [@(0.0.255) void] 
+[s5;:Upp`:`:TerminalCtrl`:`:CoFind`(const WString`&`,bool`,Gate`):%- [@(0.0.255) void] 
 [* CoFind]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) bool] 
-[*@3 visibleonly] [@(0.0.255) `=] [@(0.0.255) false])&]
+[*@3 visibleonly] [@(0.0.255) `=] [@(0.0.255) false], Gate<[@(0.0.255) const] 
+VectorMap<[@(0.0.255) int], WString>[@(0.0.255) `&], [@(0.0.255) const] 
+WString[@(0.0.255) `&]>  [*@3 fn])&]
+[s5;:Upp`:`:TerminalCtrl`:`:CoFind`(const WString`&`,int`,int`,bool`,Gate`):%- [@(0.0.255) v
+oid] [* CoFind]([@(0.0.255) const] WString[@(0.0.255) `&] [*@3 s], [@(0.0.255) int] 
+[*@3 begin], [@(0.0.255) int] [*@3 end], [@(0.0.255) bool] [*@3 visibleonly] 
+[@(0.0.255) `=] [@(0.0.255) false], Gate<[@(0.0.255) const] VectorMap<[@(0.0.255) int], 
+WString>[@(0.0.255) `&], [@(0.0.255) const] WString[@(0.0.255) `&]> 
+ [*@3 fn])&]
 [s2; Multithreaded versions of Find methods. These methods allow 
 the client code to search for a unicode string [%-*@3 s] in the 
 terminal`'s buffer in parallel. [%-*@3 visibleonly] toggle can 
@@ -1362,16 +1364,26 @@ be used to restrict the search to the visible screen. Otherwise
 the search will include the history buffer. [%-*@3 begin] and [%-*@3 end] 
 parameters are [/ 0`-based] and specify the lower and upper bounds 
 of the rows to search. These methods will not directly perform 
-any search but each worker thread will call the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
-henSearch ]method for the each line (a line can be consisted 
-of multiple rows due to wrapping). It is up to the client code 
-to handle serialization (e.g. using mutex). Client code can add 
-any type of  text searching mechanism by defining the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenSearch^ W
-henSearch ]method. This method [/ does ]automatic bounds checking 
-and will [/ return immediately ]if a search is already in progress. 
-Note that for searching short`-ranges (or simple searchs, i.e. 
-no regex or complex pattern matching) the single threaded Find 
-methods are almost always faster.&]
+any search but call the  [%-*@3 fn ]function for the each line 
+(a line can be consisted of multiple rows due to wrapping). It 
+is up to the client code to handle serialization (e.g. using 
+mutex).  Client code can add any type of  text searching mechanism 
+by defining the [%-*@3 fn ]function. Returning false from [%-*@3 fn 
+]will cancel the search. These methods [/ do ]automatic bounds 
+checking and will [/ return immediately ]if a search is already 
+in progress. Note that for searching short`-ranges (or simple 
+searchs, i.e. no regex or complex pattern matching) the single 
+threaded Find methods are almost always faster.&]
+[s2; &]
+[s2; [%-*@3 fn] function passes 2 parameters to the client code. The 
+first parameter is a constant reference to a VectorMap. Similar 
+to [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenHighlight^ W
+henHighlight ]method, the keys of this map represent the vertical 
+position(s) of the line (row) in the buffer and the values represent 
+the WString version of the corresponding line(s) as 0`-based 
+indices: If the map contains multiple rows (i.e. count > 1), they 
+should be treated as a [/ wrapped], single and continous line. 
+Returning false will halt the search at the current position.&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:IsSearching`(`)const:%- [@(0.0.255) bool] 

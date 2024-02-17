@@ -90,10 +90,8 @@ public:
     Gate<PasteClip&>     WhenClip;
     Event<const String&> WhenLink;
     Event<const String&> WhenImage;
-    
-    
+  
     Event<VectorMap<int, VTLine>&> WhenHighlight;
-    Gate<const VectorMap<int, WString>&, const WString&> WhenSearch;
     
     // Window Ops support.
     Event<bool>          WhenWindowMinimize;
@@ -328,10 +326,18 @@ public:
     void            OptionsBar(Bar& menu);
 
     void            Goto(int pos)                                   { if(!IsAlternatePage()) sb.Set(clamp(pos, 0, page->GetLineCount() - 1)); }
-    void            Find(const WString& s, int begin, int end, bool visibleonly = false);
-    void            Find(const WString& s, bool visibleonly = false);
-    void            CoFind(const WString& s, int begin, int end, bool visibleonly = false);
-    void            CoFind(const WString& s, bool visibleonly = false);
+
+    void            Find(const WString& s, bool visibleonly,
+                                    Gate<const VectorMap<int, WString>&, const WString&> fn);
+    void            Find(const WString& s, int begin, int end, bool visibleonly,
+                                    Gate<const VectorMap<int, WString>&, const WString&> fn);
+
+    void            CoFind(const WString& s, bool visibleonly,
+                                    Gate<const VectorMap<int, WString>&, const WString&> fn);
+    void            CoFind(const WString& s, int begin, int end, bool visibleonly,
+                                    Gate<const VectorMap<int, WString>&, const WString&> fn);
+
+    
     bool            IsSearching() const                             { return searching; }
     
     void            Layout() override                               { SyncSize(true); SyncSb(); }
@@ -473,7 +479,8 @@ private:
     String      GetHyperlinkURI(Point pt, bool modifier);
     Image       GetInlineImage(Point pt, bool modifier);
     
-    void        Search(const WString& s, int begin, int end, bool visibleonly = false, bool co = false);
+    void        Search(const WString& s, int begin, int end, bool visibleonly, bool co,
+                                  Gate<const VectorMap<int, WString>&, const WString&> fn);
 
 private:
     using       ImagePart  = Tuple<dword, Point, Rect>;
