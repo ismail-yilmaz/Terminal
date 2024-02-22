@@ -396,10 +396,6 @@ bool TerminalCtrl::Key(dword key, int count)
 					if(key >= K_3 && key <= K_8) {
 						key = '[' + (key - K_3);
 					}
-					else
-					if(key < K_DELTA + 65535) {
-						key &= ~K_DELTA;
-					}
 				}
 			}
 			if(key > K_DELTA || !ProcessKey(key, ctrlkey, altkey, count))
