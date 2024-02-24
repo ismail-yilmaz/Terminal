@@ -413,7 +413,8 @@ protected:
     const VTPage&   GetPage() const                                 { return *page; }
     const VTCell&   GetAttrs() const                                { return cellattrs;  }
     int             GetSbPos() const                                { return IsAlternatePage() ? 0 : sb; }
-
+    Point           GetCursorPos() const                            { return --page->GetPos(); /* VT cursor position is 1-based */ }
+    
     // Selector stuff...
     enum TextSelectionTypes : dword {
         SEL_NONE    = 0,
@@ -459,9 +460,6 @@ private:
 
     Rect        GetCaretRect();
     void        PlaceCaret(bool scroll = false);
-
-
-    Point       GetCursorPos() const                            { return --page->GetPos(); /* VT cursor position is 1-based */ }
 
     void        GetWordPosL(const VTLine& line, Point& pl) const;
     void        GetWordPosH(const VTLine& line, Point& ph) const;

@@ -44,7 +44,6 @@ TerminalCtrl::TerminalCtrl()
 , streamfill(false)
 , scrolltoend(true)
 , highlight(false)
-, cellfilter(&sDefaultCellFilter)
 {
 	Unicode();
 	SetLevel(LEVEL_4);
