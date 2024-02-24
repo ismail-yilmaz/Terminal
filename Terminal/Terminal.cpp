@@ -10,7 +10,7 @@ bool sDefaultCellFilter(const VTCell& cell)
 	return !cell.IsImage() && (IsLeNum(cell) || findarg(cell, '_', '-') >= 0);
 }
 
-bool IsWCh(const VTCell& cell, bool line_wrap, TerminalCtrl::CellFilter *f = nullptr)
+bool IsWCh(const VTCell& cell, bool line_wrap, Gate<const VTCell&> f = Null)
 {
 	return (cell == 0 && line_wrap) || cell == 1 || (f ? f(cell) : sDefaultCellFilter(cell));
 }
@@ -174,9 +174,15 @@ String TerminalCtrl::GetSelectionData(const String& fmt) const
 	return IsSelection() ? GetTextClip(GetSelectedText().ToString(), fmt) : Null;
 }
 
-TerminalCtrl::CellFilter *TerminalCtrl::GetWordSelectionFilter() const
+TerminalCtrl& TerminalCtrl::SetWordSelectionFilter(Gate<const VTCell&> filter)
 {
-	return cellfilter ? cellfilter : &sDefaultCellFilter;
+	cellfilter = filter;
+	return *this;
+}
+
+Gate<const VTCell&> TerminalCtrl::GetWordSelectionFilter() const
+{
+	return cellfilter;
 }
 
 void TerminalCtrl::SyncSize(bool notify)

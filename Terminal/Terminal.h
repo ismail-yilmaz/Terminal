@@ -74,8 +74,6 @@ public:
         operator    Value() const                               { return RichValue<TerminalCtrl::InlineImage>(*this); }
     };
 
-    typedef bool (CellFilter)(const VTCell&);
-    
     TerminalCtrl();
     virtual ~TerminalCtrl();
 
@@ -314,8 +312,8 @@ public:
     void            SelectAll(bool history = false);
     bool            IsSelection() const                             { return !IsNull(anchor) && anchor != selpos && seltype != SEL_NONE; }
 
-    TerminalCtrl&   SetWordSelectionFilter(CellFilter* filter)      { cellfilter = filter; return *this; }
-    CellFilter*     GetWordSelectionFilter() const;
+    TerminalCtrl&   SetWordSelectionFilter(Gate<const VTCell&> filter);
+    Gate<const VTCell&> GetWordSelectionFilter() const;
     
     String          GetSelectionData(const String& fmt) const override;
     
@@ -552,6 +550,7 @@ private:
         CLIP_WRITE  = 2
     };
 
+    Gate<const VTCell&> cellfilter;
     const Display *imgdisplay;
     VScrollBar  sb;
     Scroller    scroller;
@@ -561,7 +560,6 @@ private:
     Rect        caretrect;
     Point       anchor           = Null;
     Point       selpos           = Null;
-    CellFilter* cellfilter       = nullptr;
     dword       seltype          = SEL_NONE;
     bool        multiclick       = false;
     bool        ignorescroll     = false;

@@ -1283,25 +1283,25 @@ onst]&]
 [s2; Returns true if there is a selection.&]
 [s3;%- &]
 [s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:SetWordSelectionFilter`(CellFilter`*`):%- TerminalCtrl[@(0.0.255) `&
-] [* SetWordSelectionFilter](CellFilter [@(0.0.255) `*][*@3 filter])&]
+[s5;:Upp`:`:TerminalCtrl`:`:SetWordSelectionFilter`(Gate`):%- TerminalCtrl[@(0.0.255) `&
+] [* SetWordSelectionFilter](Gate<[@(0.0.255) const] VTCell[@(0.0.255) `&]> 
+[*@3 filter])&]
 [s2; Allows client code to set up a custom filter for word selection. 
-[%-*@3 filter] is a CellFilter type, which is a function pointer 
-of a function that takes a VTCell as its parameter and returns 
-a boolean value. Client code should return true for the cells 
-that are eligible to be selected and otherwise return false. 
-Client code is responsible for the life time of the filter object. 
-Note that since this is a cell level filter, it can also select 
-`"words`" (read: continuous blocks of cells) by inspecting the 
-properties of the cells. E.g. selecting only italic or bold, 
-or underlined blocks etc. is possible.&]
+[%-*@3 filter] is a callback function that takes a VTCell as its 
+parameter and returns a boolean value. Client code should return 
+true for the cells that are eligible to be selected and otherwise 
+return false. Returns `*this for method chaining. Note that since 
+this is a cell level filter, it can also select `"words`" (read: 
+continuous blocks of cells) by inspecting the properties of the 
+cells. E.g. selecting only italic or bold, or underlined blocks 
+etc. is possible.&]
 [s3;%- &]
 [s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:GetWordSelectionFilter`(`)const:%- CellFilter 
-[@(0.0.255) `*][* GetWordSelectionFilter]() [@(0.0.255) const]&]
-[s2; Returns a pointer to the current word selection filter function. 
+[s5;:Upp`:`:TerminalCtrl`:`:GetWordSelectionFilter`(`)const:%- Gate<[@(0.0.255) const] 
+VTCell[@(0.0.255) `&]> [* GetWordSelectionFilter]() [@(0.0.255) const]&]
+[s2; Returns a callback of the current word selection filter function. 
 See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:SetWordSelectionFilter`(CellFilter`*`)^ S
-etWordSelectionFilter] method.&]
+etWordSelectionFilter] method. .&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:Goto`(int`):%- [@(0.0.255) void] [* Goto]([@(0.0.255) int] 
