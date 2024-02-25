@@ -10,7 +10,7 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 	if(key & K_KEYUP)
 		return;
 	
-	int cx = GetPageSize().cx;
+	Size psz = GetPageSize();
 	int cy = GetPage().GetLineCount() - 1;
 
 	switch(key) {
@@ -36,28 +36,34 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 		seltype = SEL_RECT;
 		break;
 	case K_UP:
-		cursor.y = clamp(cursor.y - 1, 0, cy);
+		cursor.y = max(0, cursor.y - 1);
 		break;
 	case K_DOWN:
-		cursor.y = clamp(cursor.y + 1, 0, cy);
+		cursor.y = min(cy, cursor.y + 1);
 		break;
 	case K_LEFT:
-		cursor.x = clamp(cursor.x - 1, 0, cx);
+		cursor.x = max(0, cursor.x - 1);
 		break;
 	case K_RIGHT:
-		cursor.x = clamp(cursor.x + 1, 0, cx);
+		cursor.x = min(psz.cx, cursor.x + 1);
 		break;
 	case K_SHIFT_LEFT:
 		cursor.x = 0;
 		break;
 	case K_SHIFT_RIGHT:
-		cursor.x = cx;
+		cursor.x = psz.cx;
 		break;
 	case K_HOME:
 		cursor = { 0, 0 };
 		break;
 	case K_END:
-		cursor = { cx, cy };
+		cursor = { psz.cx, psz.cy };
+		break;
+	case K_PAGEUP:
+		cursor.y = max(0, cursor.y - psz.cy);
+		break;
+	case K_PAGEDOWN:
+		cursor.y = min(cy, cursor.y + psz.cy);
 		break;
 	default:
 		return;
@@ -345,6 +351,7 @@ bool TerminalCtrl::NavKey(dword key, int count)
 {
 	if(!keynavigation)
 		return false;
+
 	switch(key) {
 	case K_SHIFT_CTRL_UP:
 		sb.PrevLine();
