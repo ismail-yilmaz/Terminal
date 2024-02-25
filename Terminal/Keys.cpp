@@ -57,7 +57,7 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 		cursor = { 0, 0 };
 		break;
 	case K_END:
-		cursor = { psz.cx, psz.cy };
+		cursor = { psz.cx, cy };
 		break;
 	case K_PAGEUP:
 		cursor.y = max(0, cursor.y - psz.cy);
@@ -73,7 +73,19 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 		anchor = selpos = cursor;
 	else
 	if(seltype == SEL_WORD) {
-		GetWordSelection(cursor, anchor, selpos);
+		while(!GetWordSelection(cursor, anchor, selpos)) { // Skip text and space.
+			if(key == K_LEFT) {
+				cursor.x = max(cursor.x - 1, 0);
+			}
+			else
+			if(key == K_RIGHT) {
+				cursor.x = min(cursor.x + 1, psz.cx);
+			}
+			else
+				break;
+			if(cursor.x == 0 || cursor.x == psz.cx)
+				break;
+		}
 		if(key == K_LEFT)
 			cursor = anchor;
 		else
