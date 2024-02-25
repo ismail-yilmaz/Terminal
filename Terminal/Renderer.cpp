@@ -235,7 +235,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 	}
 
 	// Paint a steady (non-blinking) caret, if enabled.
-	if(modes[DECTCEM] && HasFocus() && (print || !caret.IsBlinking()))
+	if(IsSelectorMode() || (modes[DECTCEM] && HasFocus() && (print || !caret.IsBlinking())))
 		w.DrawRect(caretrect, InvertColor);
 
 	// Hint new size.

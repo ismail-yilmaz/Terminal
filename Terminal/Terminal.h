@@ -389,6 +389,12 @@ public:
     void            RefreshDisplay();
 
     Rect            GetCaret() const override                       { return caret.IsBlinking() ? caretrect : Null; }
+    
+    void            BeginSelectorMode();
+    void            EndSelectorMode();
+    bool            IsSelectorMode() const                          { return selectormode; }
+    
+    virtual void    ProcessSelectorKey(dword key, int count);
 
     Image           CursorImage(Point p, dword keyflags) override;
 
@@ -414,6 +420,7 @@ protected:
     const VTCell&   GetAttrs() const                                { return cellattrs;  }
     int             GetSbPos() const                                { return IsAlternatePage() ? 0 : sb; }
     Point           GetCursorPos() const                            { return --page->GetPos(); /* VT cursor position is 1-based */ }
+    Rect            MakeCaretRect(Point pt, const VTCell& cell) const;
     
     // Selector stuff...
     enum TextSelectionTypes : dword {
@@ -458,7 +465,8 @@ private:
     Tuple<String, Size> GetSizeHint();
     void        RefreshSizeHint();
 
-    Rect        GetCaretRect();
+    Rect        GetCaretRect() const;
+    Rect        GetSelectorCaretRect() const;
     void        PlaceCaret(bool scroll = false);
 
     void        GetWordPosL(const VTLine& line, Point& pl) const;
@@ -558,7 +566,10 @@ private:
     Rect        caretrect;
     Point       anchor           = Null;
     Point       selpos           = Null;
+    Point       cursor           = Null;
     dword       seltype          = SEL_NONE;
+    bool        selectormode     = false;
+    bool        selecting        = false;
     bool        multiclick       = false;
     bool        ignorescroll     = false;
     bool        mousehidden      = false;
@@ -871,7 +882,7 @@ public:
     };
 
 private:
-    Caret       caret;
+    Caret       caret, caretbackup;
 
 public:
     // Terminal legacy character sets ("G-set") support.

@@ -1500,6 +1500,32 @@ method. It refreshes only the damaged lines, and does some extra
 stuff.&]
 [s3; &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:BeginSelectorMode`(`):%- [@(0.0.255) void] 
+[* BeginSelectorMode]()&]
+[s2; Starts keyboard selection session. Allows users to navigate 
+the terminal`'s buffer with keys and select text without using 
+a mouse. Plaint text, word and rectangle selections are available. 
+TerminalCtrl will be in selector mode unless EndSelectorMode 
+method is explicitly called.By default the [C Escape ]key ends 
+the session. See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:EndSelectorMode`(`)^ E
+ndSelectorMode], [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:IsSelectorMode`(`)const^ I
+sSelectorMode].&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:EndSelectorMode`(`):%- [@(0.0.255) void] 
+[* EndSelectorMode]()&]
+[s2;  End the selector mode. See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:BeginSelectorMode`(`)^ B
+eginSelectorMode], [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:IsSelectorMode`(`)const^ I
+sSelectorMode].&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:IsSelectorMode`(`)const:%- [@(0.0.255) bool] 
+[* IsSelectorMode]() [@(0.0.255) const]&]
+[s2; Returns true if the terminal is in selector mode. See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:BeginSelectorMode`(`)^ B
+eginSelectorMode], [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:EndSelectorMode`(`)^ E
+ndSelectorMode].&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:Serialize`(Upp`:`:Stream`&`)override:%- [@(0.0.255) void]_[* S
 erialize]([_^Upp`:`:Stream^ Stream][@(0.0.255) `&]_[*@3 s])_override&]
 [s2; Serializes the current configuration of TerminalCtrl to [%-*@3 s].&]

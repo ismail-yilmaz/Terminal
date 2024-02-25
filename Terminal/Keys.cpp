@@ -5,6 +5,87 @@
 
 namespace Upp {
 
+void TerminalCtrl::ProcessSelectorKey(dword key, int count)
+{
+	if(key & K_KEYUP)
+		return;
+	
+	int cx = GetPageSize().cx;
+	int cy = GetPage().GetLineCount() - 1;
+
+	switch(key) {
+	case K_ESCAPE:
+		EndSelectorMode();
+		return;
+	case K_RETURN:
+		selecting = true;
+		break;
+	case K_CTRL_C:
+		if(IsSelection()) Copy();
+		return;
+	case K_BACKSPACE:
+		selecting = false;
+		break;
+	case K_CTRL_T:
+		seltype = SEL_TEXT;
+		break;
+	case K_CTRL_W:
+		seltype = SEL_WORD;
+		break;
+	case K_CTRL_R:
+		seltype = SEL_RECT;
+		break;
+	case K_UP:
+		cursor.y = clamp(cursor.y - 1, 0, cy);
+		break;
+	case K_DOWN:
+		cursor.y = clamp(cursor.y + 1, 0, cy);
+		break;
+	case K_LEFT:
+		cursor.x = clamp(cursor.x - 1, 0, cx);
+		break;
+	case K_RIGHT:
+		cursor.x = clamp(cursor.x + 1, 0, cx);
+		break;
+	case K_SHIFT_LEFT:
+		cursor.x = 0;
+		break;
+	case K_SHIFT_RIGHT:
+		cursor.x = cx;
+		break;
+	case K_HOME:
+		cursor = { 0, 0 };
+		break;
+	case K_END:
+		cursor = { cx, cy };
+		break;
+	default:
+		return;
+	}
+
+	if(!selecting)
+		anchor = selpos = cursor;
+	else
+	if(seltype == SEL_WORD) {
+		GetWordSelection(cursor, anchor, selpos);
+		if(key == K_LEFT)
+			cursor = anchor;
+		else
+		if(key == K_RIGHT)
+			cursor = selpos;
+	}
+	else
+		selpos = cursor;
+
+	Goto(cursor.y);
+
+	if(IsSelection())
+		SetSelection(anchor, selpos, seltype);
+
+	PlaceCaret();
+	Refresh();
+}
+
 bool TerminalCtrl::ProcessKey(dword key, bool ctrlkey, bool altkey, int count)
 {
 	if((key = EncodeCodepoint(key, gsets.Get(key, IsLevel2()))) == DEFAULTCHAR)
@@ -293,6 +374,11 @@ bool TerminalCtrl::Key(dword key, int count)
 {
 	if(IsReadOnly()	|| (!modes[DECARM] && count > 1))
 		return MenuBar::Scan(WhenBar, key);
+
+	if(IsSelectorMode()) {
+		ProcessSelectorKey(key, count);
+		return true;
+	}
 
 	bool ctrlkey  = key & K_CTRL;
 	bool altkey   = key & K_ALT;

@@ -87,13 +87,18 @@ void TerminalCtrl::PlaceCaret(bool scroll)
 {
 	Rect oldrect = caretrect;
 
-	if(!modes[DECTCEM]) {
-		caretrect = Null;
-		if(!caret.IsBlinking())
-			Refresh(oldrect);
-		return;
+	if(!IsSelectorMode()) {
+		if(!modes[DECTCEM] && !IsSelectorMode()) {
+			caretrect = Null;
+			if(!caret.IsBlinking())
+				Refresh(oldrect);
+			return;
+		}
+		caretrect = GetCaretRect();
 	}
-	caretrect = GetCaretRect();
+	else
+		caretrect = GetSelectorCaretRect();
+	
 	if(!caret.IsBlinking()) {
 		Refresh(oldrect);
 		Refresh(caretrect);
@@ -103,11 +108,11 @@ void TerminalCtrl::PlaceCaret(bool scroll)
 	}
 }
 
-Rect TerminalCtrl::GetCaretRect()
+Rect TerminalCtrl::MakeCaretRect(Point pt, const VTCell& cell) const
 {
 	Size csz = GetCellSize();
-	Point pt = GetCursorPos() * csz;
-	int   cw = page->GetCell().GetWidth();
+	pt *= csz;
+	int cw = cell.GetWidth();
 
 	pt.y -= (csz.cy * GetSbPos());
 
@@ -116,7 +121,7 @@ Rect TerminalCtrl::GetCaretRect()
 		csz.cx = 1;
 		break;
 	case Caret::UNDERLINE:
-		csz.cx *= max(cw, 1); // Adjust the caret widt to cell size.
+		csz.cx *= max(cw, 1); // Adjust the caret width to cell size.
 		pt.y += csz.cy - 1;
 		csz.cy = 1;
 		break;
@@ -125,8 +130,23 @@ Rect TerminalCtrl::GetCaretRect()
 		break;
 	}
 
-	Rect r(pt, csz);
+	return Rect(pt, csz);
+}
+
+Rect TerminalCtrl::GetCaretRect() const
+{
+	Rect r = MakeCaretRect(GetCursorPos(), page->GetCell());
 	return Rect(GetSize()).Contains(r) ? r : Null;
+}
+
+Rect TerminalCtrl::GetSelectorCaretRect() const
+{
+	Rect r = MakeCaretRect(cursor, page->FetchCell(cursor));
+	if(cursor.x == GetPageSize().cx) {
+		r.left = GetSize().cx - 1;
+		r.right += r.left + 1;
+	}
+	return r;
 }
 
 Point TerminalCtrl::GetCursorPoint() const
@@ -391,6 +411,10 @@ void TerminalCtrl::LeftDown(Point pt, dword keyflags)
 	if(IsMouseTracking(keyflags))
 		VTMouseEvent(pt, LEFTDOWN, keyflags);
 	else{
+		if(IsSelectorMode()) {
+			ClearSelection();
+		}
+		else
 		if(IsSelected(ClientToPagePos(pt))) {
 			return;
 		}
@@ -471,6 +495,8 @@ void TerminalCtrl::LeftDouble(Point pt, dword keyflags)
 		Ctrl::LeftDouble(pt, keyflags);
 	else {
 		ClearSelection();
+		if(IsSelectorMode())
+			return;
 		pt = ClientToPagePos(pt);
 		if((keyflags & K_CTRL) == K_CTRL) {
 			if(IsMouseOverImage(pt)) {
@@ -501,6 +527,8 @@ void TerminalCtrl::LeftTriple(Point pt, dword keyflags)
 		Ctrl::LeftTriple(pt, keyflags);
 	else {
 		ClearSelection();
+		if(IsSelectorMode())
+			return;
 		Point pl, ph;
 		GetLineSelection(ClientToPagePos(pt), pl, ph);
 		SetSelection(pl, ph, SEL_LINE);
@@ -514,14 +542,19 @@ void TerminalCtrl::MiddleDown(Point pt, dword keyflags)
 	if(IsMouseTracking(keyflags))
 		VTMouseEvent(pt, MIDDLEDOWN, keyflags);
 	else {
-		WString w;
-		if(IsSelection())
-			w = GetSelectedText();
-		else
-		if(AcceptText(Selection()))
-			w = GetWString(Selection());
-		if(!IsNull(w))
-			Paste(w);
+		if(IsSelectorMode()) {
+			ClearSelection();
+		}
+		else {
+			WString w;
+			if(IsSelection())
+				w = GetSelectedText();
+			else
+			if(AcceptText(Selection()))
+				w = GetWString(Selection());
+			if(!IsNull(w))
+				Paste(w);
+		}
 	}
 }
 
@@ -777,7 +810,8 @@ void TerminalCtrl::ClearSelection()
 	ReleaseCapture();
 	anchor = Null;
 	selpos = Null;
-	seltype = SEL_NONE;
+//	seltype = SEL_NONE;
+	selecting = false;
 	multiclick = false;
 	Refresh();
 }
@@ -881,6 +915,27 @@ void TerminalCtrl::GetWordPosH(const VTLine& line, Point& ph) const
 			GetWordPosH(next, ph);
 		}
 	}
+}
+
+void TerminalCtrl::BeginSelectorMode()
+{
+	selectormode = true;
+	ClearSelection();
+	seltype = SEL_NONE;
+	anchor = selpos = cursor = GetCursorPos();
+	caretbackup = clone(caret);
+	caret.Unlock().Beam().Blink(false).Lock();
+	PlaceCaret();
+}
+
+void TerminalCtrl::EndSelectorMode()
+{
+	ClearSelection();
+	cursor = Null;
+	seltype = SEL_NONE;
+	caret = clone(caretbackup);
+	selectormode = false;
+	PlaceCaret();
 }
 
 Image TerminalCtrl::GetInlineImage(Point pt, bool modifier)
@@ -1022,13 +1077,18 @@ void TerminalCtrl::StdBar(Bar& menu)
 
 void TerminalCtrl::EditBar(Bar& menu)
 {
+	bool b = IsEditable() && !IsSelectorMode();
 	menu.Add(IsSelection(), t_("Copy"), CtrlImg::copy(),  [=] { Copy();  })
 		.Key(K_SHIFT_CTRL_C);
-	menu.Add(IsEditable(), t_("Paste"), CtrlImg::paste(), [=] { Paste(); })
+	menu.Add(b, t_("Paste"), CtrlImg::paste(), [=] { Paste(); })
 		.Key(K_SHIFT_CTRL_V);
 	menu.Separator();
-	menu.Add(t_("Select all"), CtrlImg::select_all(), [=] { SelectAll(); })
+	menu.Add(b, t_("Select all"), CtrlImg::select_all(), [=] { SelectAll(); })
 		.Key(K_SHIFT_CTRL_A);
+	menu.Separator();
+	menu.Add(t_("Selector mode"),[=] { IsSelectorMode() ? EndSelectorMode() : BeginSelectorMode(); })
+		.Check(IsSelectorMode())
+		.Key(K_SHIFT_CTRL_X);
 }
 
 void TerminalCtrl::LinksBar(Bar& menu)
@@ -1070,7 +1130,7 @@ void TerminalCtrl::OptionsBar(Bar& menu)
 	menu.Sub(t_("Cursor style"), [=](Bar& menu)
 		{
 			byte cstyle   = caret.GetStyle();
-			bool unlocked = !caret.IsLocked();
+			bool unlocked = !caret.IsLocked() &&  !IsSelectorMode();
 			menu.Add(unlocked,
 				t_("Block"),
 				[=] { caret.Block(caret.IsBlinking()); })
