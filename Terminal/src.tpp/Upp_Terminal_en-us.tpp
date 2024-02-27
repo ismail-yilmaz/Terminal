@@ -204,6 +204,15 @@ in a format agnostic way, using the registered U`+`+ image decoders
 (e.g. the StreamRaster interface.). &]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenDirectoryChange:%- Event<[@(0.0.255) const] 
+String[@(0.0.255) `&]> [* WhenDirectoryChange]&]
+[s2; This event is dispatched when a working directory change is 
+requested (OSC 7). It passes a reference to  a String as its 
+parameter. The string [/ should ]contain the path to the target 
+directory. It is up to the client`-code to determine whether 
+tha path is valid.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenHighlight:%- Event<VectorMap<[@(0.0.255) int], 
 VTLine>[@(0.0.255) `&]> [* WhenHighlight]&]
 [s2; If defined, this event will be dispatched before a line is painted. 

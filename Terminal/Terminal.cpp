@@ -919,6 +919,8 @@ void TerminalCtrl::GetWordPosH(const VTLine& line, Point& ph) const
 
 void TerminalCtrl::BeginSelectorMode()
 {
+	if(IsSelectorMode())
+		return;
 	selectormode = true;
 	ClearSelection();
 	seltype = SEL_NONE;

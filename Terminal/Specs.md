@@ -557,6 +557,16 @@
 
 ## [Other Supported Extensions](#other-extensions)
 
+### Directory Change Protocol
+
+| Sequence                                           | Description                                                     | Device Level |
+| ---                                                | ---                                                             | ---          |
+|`OSC 7 ; PATH ; ST text OSC 8 ; ; ST`               | Notifies the client code that the working directory is changed. | Level 1      |
+
+#### Notes
+
+- TerminalCtrl does not validate the requested path. It is up to the client-code to check the path's validity.
+
 ### Hyperlinks Protocol
 
 | Sequence                                           | Description                               | Device Level |

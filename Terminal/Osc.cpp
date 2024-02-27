@@ -30,6 +30,9 @@ void TerminalCtrl::ParseOperatingSystemCommands(const VTInStream::Sequence& seq)
 	case 119:	// Reset dynamic color (selection paper)
 		ResetProgrammableColors(seq, opcode);
 		break;
+	case 7:     // Change the current working directory.
+		ParseWorkingDirectoryChangeRequest(seq);
+		break;
 	case 8:		// Explicit hyperlinks protocol.
 		ParseHyperlinks(seq);
 		break;
@@ -197,4 +200,10 @@ void TerminalCtrl::ParseClipboardRequests(const VTInStream::Sequence& seq)
 			ClearClipboard();
 	}
 }
+
+void TerminalCtrl::ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq)
+{
+	WhenDirectoryChange(seq.GetStr(2));
+}
+
 }

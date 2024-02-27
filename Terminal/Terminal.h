@@ -88,6 +88,7 @@ public:
     Gate<PasteClip&>     WhenClip;
     Event<const String&> WhenLink;
     Event<const String&> WhenImage;
+    Event<const String&> WhenDirectoryChange;
   
     Event<VectorMap<int, VTLine>&> WhenHighlight;
     
@@ -679,6 +680,8 @@ private:
     void        ParseHyperlinks(const VTInStream::Sequence& seq);
 
     void        ParseClipboardRequests(const VTInStream::Sequence& seq);
+    
+    void        ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
     
     void        SetCaretStyle(const VTInStream::Sequence& seq);
 
