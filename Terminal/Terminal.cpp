@@ -514,8 +514,7 @@ void TerminalCtrl::LeftDouble(Point pt, dword keyflags)
 		else {
 			Point pl, ph;
 			if(GetWordSelection(pt, pl, ph)) {
-				SetSelection(pl, ph, SEL_WORD);
-				multiclick = true;
+				SetSelection(pl, ph, SEL_WORD, true);
 			}
 		}
 	}
@@ -761,11 +760,12 @@ Point TerminalCtrl::SelectionToPagePos(Point pt) const
 	return ClientToPagePos(pt);
 }
 
-void TerminalCtrl::SetSelection(Point pl, Point ph, dword type)
+void TerminalCtrl::SetSelection(Point pl, Point ph, dword type, bool multi_click)
 {
 	anchor = pl;
 	selpos = ph;
 	seltype = type;
+	multiclick = multi_click;
 	SetSelectionSource(ClipFmtsText());
 	Refresh();
 }
@@ -853,13 +853,17 @@ WString TerminalCtrl::GetSelectedText() const
 	return AsWString((const VTPage&)*page, GetSelectionRect(), seltype == SEL_RECT);
 }
 
-void TerminalCtrl::GetLineSelection(const Point& pt, Point& pl, Point& ph) const
+bool TerminalCtrl::GetLineSelection(const Point& pt, Point& pl, Point& ph) const
 {
+	pl = ph = pt;
+	
 	Tuple<int, int> span = page->GetLineSpan(pt.y);
 	pl.x = 0;
 	pl.y = span.a;
 	ph.x = GetPageSize().cx;
 	ph.y = span.b;
+	
+	return !(pl == ph);
 }
 
 bool TerminalCtrl::GetWordSelection(const Point& pt, Point& pl, Point& ph) const

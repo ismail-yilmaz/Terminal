@@ -435,10 +435,10 @@ protected:
     Rect        GetSelectionRect() const;
     WString     GetSelectedText() const;
       
-    void        SetSelection(Point  pl, Point ph, dword selflag);
-    bool        GetSelection(Point& pl, Point& ph) const;
-    void        GetLineSelection(const Point& pt, Point& pl, Point& ph) const;
-    bool        GetWordSelection(const Point& pt, Point& pl, Point& ph) const;
+    void         SetSelection(Point  pl, Point ph, dword selflag, bool multiclick = false);
+    bool         GetSelection(Point& pl, Point& ph) const;
+    bool         GetLineSelection(const Point& pt, Point& pl, Point& ph) const;
+    virtual bool GetWordSelection(const Point& pt, Point& pl, Point& ph) const;
 
     void        ClearSelection();
     bool        IsSelected(Point pt) const;

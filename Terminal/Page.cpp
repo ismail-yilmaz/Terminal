@@ -1181,7 +1181,7 @@ const VTLine& VTPage::FetchLine(int i) const
 	return VTLine::Void();
 }
 
-void VTPage::FetchLine(int i, VectorMap<int, VTLine>& line)
+void VTPage::FetchLine(int i, VectorMap<int, VTLine>& line) const
 {
 	LLOG("FetchLine(" << i << ", " << &line << ") [fecthes as a line vector]");
 	
@@ -1193,7 +1193,7 @@ void VTPage::FetchLine(int i, VectorMap<int, VTLine>& line)
 	}
 }
 
-int VTPage::FetchLine(int i, VectorMap<int, WString>& line)
+int VTPage::FetchLine(int i, VectorMap<int, WString>& line) const
 {
 	LLOG("FetchLine(" << i << ", " << &line << ") [fetches as a text]");
 	

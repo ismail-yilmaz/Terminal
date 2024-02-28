@@ -215,8 +215,8 @@ public:
     int             GetLineCount() const                     { return lines.GetCount() + saved.GetCount(); }
     Tuple<int, int> GetLineSpan(int i) const;
     const VTLine&   FetchLine(int i) const;
-    void            FetchLine(int i, VectorMap<int, VTLine>& line);
-    int             FetchLine(int i, VectorMap<int, WString>& line);
+    void            FetchLine(int i, VectorMap<int, VTLine>& line) const;
+    int             FetchLine(int i, VectorMap<int, WString>& line) const;
     const VTLine&   operator[](int i) const                  { return FetchLine(i); }
 
     // Point: 0-based.
