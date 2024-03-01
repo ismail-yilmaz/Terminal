@@ -793,9 +793,8 @@ bool TerminalCtrl::GetSelection(Point& pl, Point& ph) const
 
 	if(seltype == SEL_LINE) {
 		// Updates the horizontal highlight on display resize.
-		ph.x = GetPageSize().cx;
+		ph.x = page->FetchLine(ph.y).GetCount();
 	}
-	
 	return true;
 }
 
@@ -862,7 +861,10 @@ bool TerminalCtrl::GetLineSelection(const Point& pt, Point& pl, Point& ph) const
 	pl.y = span.a;
 	ph.x = GetPageSize().cx;
 	ph.y = span.b;
-	
+
+	if(pl.y == ph.y)
+		ph.x = page->FetchLine(ph.y).GetCount();
+
 	return !(pl == ph);
 }
 

@@ -1208,28 +1208,27 @@ int VTPage::FetchLine(int i, VectorMap<int, WString>& line) const
 
 bool VTPage::FetchRange(const Rect& r, Gate<const VTLine&, VTLine::ConstRange&> consumer, bool rect) const
 {
-	Rect rr = Rect(0, 0, size.cx, GetLineCount());
-	if(IsNull(r) || !rr.Contains(r) || !consumer)
+	if(IsNull(r) || !consumer)
 		return false;
 
-	for(int i = r.top; i <= r.bottom; i++) {
+	for(int i = max(0, r.top); i <= min(r.bottom, GetLineCount()); i++) {
 		const VTLine& line = FetchLine(i);
 		if(!line.IsVoid()) {
 			int length = line.GetCount();
 			int b = 0, e = length;
 			if(r.top == r.bottom || rect) {
-				b = r.left;
-				e = min(length, r.right - r.left);
+				b = max(0, r.left);
+				e = min(length, max(0, r.right - r.left));
 			}
 			else
 			if(r.top == i) {
-				b = r.left;
-				e = min(length, length - r.left);
+				b = max(0, r.left);
+				e = length;
 			}
 			else
 			if(r.bottom == i) {
 				b = 0;
-				e = min(length, r.right);
+				e = min(length, max(0, r.right));
 			}
 			auto range  = SubRange(line, b, e);
 			if(consumer(line, range))
