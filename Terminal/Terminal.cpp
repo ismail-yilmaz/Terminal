@@ -222,6 +222,7 @@ void TerminalCtrl::SyncSize(bool notify)
 	
 	auto OnResize = [=]
 	{
+		ClearSelection();
 		resizing = false;
 		WhenResize();
 		ScheduleRefresh();
