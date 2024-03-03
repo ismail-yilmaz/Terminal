@@ -1238,6 +1238,12 @@ cell size [/ may ]include additional spaces (like padding, etc.).&]
 [s2; Returns the current size of the terminal display in cells.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:GetPageRange`(`)const:%- Tuple<[@(0.0.255) int], 
+[@(0.0.255) int]> [* GetPageRange]() [@(0.0.255) const]&]
+[s2; Returns the top and bottom position of the visible view. Calculates 
+the scrolled position if the view is scrolled..&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:PageSizeToClient`(Upp`:`:Size`)const:%- [_^Upp`:`:Size^ Siz
 e]_[* PageSizeToClient]([_^Upp`:`:Size^ Size]_[*@3 sz])_[@(0.0.255) const]&]
 [s5;:Upp`:`:TerminalCtrl`:`:PageSizeToClient`(int`,int`)const:%- [_^Upp`:`:Size^ Size]_

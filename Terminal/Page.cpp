@@ -1206,7 +1206,23 @@ int VTPage::FetchLine(int i, VectorMap<int, WString>& line) const
 	return span.b;
 }
 
-bool VTPage::FetchRange(const Rect& r, Gate<const VTLine&, VTLine::ConstRange&> consumer, bool rect) const
+int VTPage::FetchLine(int i, WString& s, VectorMap<int, int>& lineinfo) const
+{
+	LLOG("FetchLine(" << i << ", " << &lineinfo << ") [fetches as a text]");
+	
+	Tuple<int, int> span = GetLineSpan(i);
+	for(int n = span.a; n <= span.b; n++) {
+		const VTLine& l = FetchLine(n);
+		if(!l.IsVoid()) {
+			int n = s.GetLength();
+			s << l.ToWString();
+			lineinfo.Add(n, s.GetLength() - n);
+		}
+	}
+	return span.b;
+}
+
+bool VTPage::FetchRange(const Rect& r, Gate<int, const VTLine&, VTLine::ConstRange&> consumer, bool rect) const
 {
 	if(IsNull(r) || !consumer)
 		return false;
@@ -1231,12 +1247,32 @@ bool VTPage::FetchRange(const Rect& r, Gate<const VTLine&, VTLine::ConstRange&> 
 				e = min(length, max(0, r.right));
 			}
 			auto range  = SubRange(line, b, e);
-			if(consumer(line, range))
+			if(consumer(i, line, range))
 				return false;
 		}
 	}
 
 	return true;
+}
+
+bool VTPage::FetchRange(int top, int bottom, WString& s, VectorMap<int, int>& lineinfo) const
+{
+	LLOG("FetchRange(" << top << ", " << bottom << ")");
+
+	auto RangeToLineInfo = [&](int i, const VTLine& line, VTLine::ConstRange& range) -> bool
+	{
+		int n = s.GetLength();
+		s << line.ToWString();
+		lineinfo.Add(i, s.GetLength() - n);
+		return false;
+	};
+	
+	return FetchRange(Rect(0, top, size.cx, bottom), RangeToLineInfo, false);
+}
+
+bool VTPage::FetchRange(Tuple<int, int> range, WString& s, VectorMap<int, int>& lineinfo) const
+{
+	return FetchRange(range.a, range.b, s, lineinfo);
 }
 
 void VTPage::LineFill(int pos, int begin, int end, const VTCell& filler, dword flags)
@@ -1458,7 +1494,7 @@ WString AsWString(const VTPage& page, const Rect& r, bool rectsel, bool tspaces)
 	Vector<WString> v;
 	bool wrapped = false;
 
-	auto RangeToWString = [&](const VTLine& line, VTLine::ConstRange& range) -> bool
+	auto RangeToWString = [&](int i, const VTLine& line, VTLine::ConstRange& range) -> bool
 	{
 		WString s = AsWString(range, tspaces);
 		if(!rectsel && (v.GetCount() && wrapped))

@@ -76,6 +76,7 @@ class VTPage : Moveable<VTPage> {
 public:
     using Lines = Vector<VTLine>;
     using Saved = BiVector<VTLine>;
+    using RangeCallback = Gate<int, const VTLine&, VTLine::ConstRange&>;
 
     VTPage();
     VTPage(Size sz) : VTPage()                              { SetSize(sz); }
@@ -217,15 +218,18 @@ public:
     const VTLine&   FetchLine(int i) const;
     void            FetchLine(int i, VectorMap<int, VTLine>& line) const;
     int             FetchLine(int i, VectorMap<int, WString>& line) const;
+    int             FetchLine(int i, WString& s, VectorMap<int, int>& lineinfo) const;
     const VTLine&   operator[](int i) const                  { return FetchLine(i); }
 
     // Point: 0-based.
     const VTCell&   FetchCell(const Point& pt) const;
     const VTCell&   operator()(const Point& pt) const        { return FetchCell(pt);  }
 
-    // Rect: 0-based.
-    bool            FetchRange(const Rect& r, Gate<const VTLine&, VTLine::ConstRange&> consumer, bool rect = false) const;
-
+    // Rect/coords: 0-based.
+    bool            FetchRange(const Rect& r, RangeCallback consumer, bool rect = false) const;
+    bool            FetchRange(int top, int bottom, WString& s, VectorMap<int, int>& lineinfo) const;
+    bool            FetchRange(Tuple<int, int> range, WString& s, VectorMap<int, int>& lineinfo) const;
+    
     const VTLine*    begin() const                           { return lines.begin(); }
     VTLine*          begin()                                 { return lines.begin(); }
     const VTLine*    end() const                             { return lines.end();   }
