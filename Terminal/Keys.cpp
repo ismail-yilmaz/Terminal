@@ -5,6 +5,8 @@
 
 namespace Upp {
 
+using namespace TerminalCtrlKeys;
+
 void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 {
 	if(key & K_KEYUP)
@@ -12,73 +14,97 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 	
 	Size psz = GetPageSize();
 	int cy = GetPage().GetLineCount() - 1;
+	
+	dword k = 0;
 
-	switch(key) {
-	case K_ESCAPE:
+	if(Match(AK_SELECTOR_EXIT, key) || key  == K_ESCAPE) {
 		EndSelectorMode();
 		return;
-	case K_RETURN:
+	}
+	else
+	if(Match(AK_SELECTOR_START, key)) {
 		selecting = true;
-		break;
-	case K_CTRL_C:
+	}
+	else
+	if(Match(AK_SELECTOR_COPY, key)) {
 		if(IsSelection()) Copy();
 		return;
-	case K_BACKSPACE:
-		selecting = false;
-		break;
-	case K_CTRL_T:
-		seltype = SEL_TEXT;
-		break;
-	case K_CTRL_W:
-		seltype = SEL_WORD;
-		break;
-	case K_CTRL_R:
-		seltype = SEL_RECT;
-		break;
-	case K_UP:
-		cursor.y = max(0, cursor.y - 1);
-		break;
-	case K_DOWN:
-		cursor.y = min(cy, cursor.y + 1);
-		break;
-	case K_LEFT:
-		cursor.x = max(0, cursor.x - 1);
-		break;
-	case K_RIGHT:
-		cursor.x = min(psz.cx, cursor.x + 1);
-		break;
-	case K_SHIFT_LEFT:
-		cursor.x = 0;
-		break;
-	case K_SHIFT_RIGHT:
-		cursor.x = psz.cx;
-		break;
-	case K_HOME:
-		cursor = { 0, 0 };
-		break;
-	case K_END:
-		cursor = { psz.cx, cy };
-		break;
-	case K_PAGEUP:
-		cursor.y = max(0, cursor.y - psz.cy);
-		break;
-	case K_PAGEDOWN:
-		cursor.y = min(cy, cursor.y + psz.cy);
-		break;
-	default:
-		return;
 	}
+	else
+	if(Match(AK_SELECTOR_CANCEL, key)) {
+		selecting = false;
+	}
+	else
+	if(Match(AK_SELECTOR_TEXTMODE, key)) {
+		seltype = SEL_TEXT;
+	}
+	else
+	if(Match(AK_SELECTOR_RECTMODE, key)) {
+		seltype = SEL_RECT;
+	}
+	else
+	if(Match(AK_SELECTOR_WORDMODE, key)) {
+		seltype = SEL_WORD;
+	}
+	else
+	if(Match(AK_SELECTOR_TEXTMODE, key)) {
+		seltype = SEL_TEXT;
+	}
+	else
+	if(Match(AK_SELECTOR_UP, key)) {
+		cursor.y = max(0, cursor.y - 1);
+	}
+	else
+	if(Match(AK_SELECTOR_DOWN, key)) {
+		cursor.y = min(cy, cursor.y + 1);
+	}
+	else
+	if(Match(AK_SELECTOR_LEFT, key)) {
+		cursor.x = max(0, cursor.x - 1);
+		k = K_LEFT;
+	}
+	else
+	if(Match(AK_SELECTOR_RIGHT, key)) {
+		cursor.x = min(psz.cx, cursor.x + 1);
+		k = K_RIGHT;
+	}
+	else
+	if(Match(AK_SELECTOR_LEFTMOST, key)) {
+		cursor.x = 0;
+	}
+	else
+	if(Match(AK_SELECTOR_RIGHTMOST, key)) {
+		cursor.x = psz.cx;
+	}
+	else
+	if(Match(AK_SELECTOR_HOME, key)) {
+		cursor = { 0, 0 };
+	}
+	else
+	if(Match(AK_SELECTOR_END, key)) {
+		cursor = { psz.cx, cy };
+	}
+	else
+	if(Match(AK_SELECTOR_PAGEUP, key)) {
+		cursor.y = max(0, cursor.y - psz.cy);
+	}
+	else
+	if(Match(AK_SELECTOR_PAGEDOWN, key)) {
+		cursor.y = min(cy, cursor.y + psz.cy);
+	}
+	else
+		return;
 
 	if(!selecting)
 		anchor = selpos = cursor;
 	else
 	if(seltype == SEL_WORD) {
 		while(!GetWordSelection(cursor, anchor, selpos)) { // Skip text and space.
-			if(key == K_LEFT) {
+			if(k == K_LEFT) {
 				cursor.x = max(cursor.x - 1, 0);
 			}
 			else
-			if(key == K_RIGHT) {
+			if(k == K_RIGHT) {
 				cursor.x = min(cursor.x + 1, psz.cx);
 			}
 			else
@@ -86,10 +112,10 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 			if(cursor.x == 0 || cursor.x == psz.cx)
 				break;
 		}
-		if(key == K_LEFT)
+		if(k == K_LEFT)
 			cursor = anchor;
 		else
-		if(key == K_RIGHT)
+		if(k == K_RIGHT)
 			cursor = selpos;
 	}
 	else
@@ -364,28 +390,32 @@ bool TerminalCtrl::NavKey(dword key, int count)
 	if(!keynavigation)
 		return false;
 
-	switch(key) {
-	case K_SHIFT_CTRL_UP:
+	if(Match(AK_MOVE_UP, key)) {
 		sb.PrevLine();
-		break;
-	case K_SHIFT_CTRL_DOWN:
-		sb.NextLine();
-		break;;
-	case K_SHIFT_CTRL_PAGEUP:
-		sb.PrevPage();
-		break;
-	case K_SHIFT_CTRL_PAGEDOWN:
-		sb.NextPage();
-		break;
-	case K_SHIFT_CTRL_HOME:
-		sb.Begin();
-		break;
-	case K_SHIFT_CTRL_END:
-		sb.End();
-		break;
-	default:
-		return false;
 	}
+	else
+	if(Match(AK_MOVE_DOWN, key)) {
+		sb.NextLine();
+	}
+	else
+	if(Match(AK_MOVE_PAGEUP, key)) {
+		sb.PrevPage();
+	}
+	else
+	if(Match(AK_MOVE_PAGEDOWN, key)) {
+		sb.NextPage();
+	}
+	else
+	if(Match(AK_MOVE_HOME, key)) {
+		sb.Begin();
+	}
+	else
+	if(Match(AK_MOVE_END, key)) {
+		sb.End();
+	}
+	else
+		return false;
+	
 	return true;
 }
 

@@ -10,6 +10,15 @@
 
 namespace Upp {
 
+#ifndef TERMINALCTRL_KEYGROUPNAME
+	#define TERMINALCTRL_KEYGROUPNAME "Terminal"
+#endif
+
+#define KEYGROUPNAME TERMINALCTRL_KEYGROUPNAME
+#define KEYNAMESPACE TerminalCtrlKeys
+#define KEYFILE <Terminal/Terminal.key>
+#include <CtrlLib/key_header.h>
+ 
 class TerminalCtrl : public Ctrl {
 public:
     const int ANSI_COLOR_COUNT = 16;    // Actually, ANSI + aixterm colors.

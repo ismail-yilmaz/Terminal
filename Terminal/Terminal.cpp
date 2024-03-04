@@ -5,6 +5,13 @@
 
 namespace Upp {
 
+#define KEYGROUPNAME TERMINALCTRL_KEYGROUPNAME
+#define KEYNAMESPACE TerminalCtrlKeys
+#define KEYFILE <Terminal/Terminal.key>
+#include <CtrlLib/key_source.h>
+
+using namespace TerminalCtrlKeys;
+
 bool sDefaultCellFilter(const VTCell& cell)
 {
 	return !cell.IsImage() && (IsLeNum(cell) || findarg(cell, '_', '-') >= 0);
@@ -875,8 +882,8 @@ bool TerminalCtrl::GetWordSelection(const Point& pt, Point& pl, Point& ph) const
 	
 	const VTLine& line = page->FetchLine(pt.y);
 	if(!line.IsVoid()) {
-		const VTCell& cell = line[pt.x];
-		if(IsWCh(cell, line.IsWrapped(), cellfilter)) {
+		const VTCell& cell = page->FetchCell(pt);
+		if(!cell.IsVoid() && IsWCh(cell, line.IsWrapped(), cellfilter)) {
 			ph.x++;
 			GetWordPosL(line, pl);
 			GetWordPosH(line, ph);
@@ -886,7 +893,6 @@ bool TerminalCtrl::GetWordSelection(const Point& pt, Point& pl, Point& ph) const
 
 	return false;
 }
-
 
 void TerminalCtrl::GetWordPosL(const VTLine& line, Point& pl) const
 {
@@ -1087,13 +1093,10 @@ void TerminalCtrl::StdBar(Bar& menu)
 void TerminalCtrl::EditBar(Bar& menu)
 {
 	bool b = IsEditable() && !IsSelectorMode();
-	menu.Add(IsSelection(), t_("Copy"), CtrlImg::copy(),  [=] { Copy();  })
-		.Key(K_SHIFT_CTRL_C);
-	menu.Add(b, t_("Paste"), CtrlImg::paste(), [=] { Paste(); })
-		.Key(K_SHIFT_CTRL_V);
+	menu.Add(IsSelection(), AK_COPY,  [=] { Copy();  });
+	menu.Add(b, AK_PASTE, CtrlImg::paste(), [=] { Paste(); });
 	menu.Separator();
-	menu.Add(b, t_("Select all"), CtrlImg::select_all(), [=] { SelectAll(); })
-		.Key(K_SHIFT_CTRL_A);
+	menu.Add(b, AK_SELECTALL, CtrlImg::select_all(), [=] { SelectAll(); });
 	menu.Separator();
 	menu.Add(t_("Selector mode"),[=] { IsSelectorMode() ? EndSelectorMode() : BeginSelectorMode(); })
 		.Check(IsSelectorMode())
@@ -1106,30 +1109,26 @@ void TerminalCtrl::LinksBar(Bar& menu)
 	if(IsNull(uri))
 		return;
 
-	menu.Add(t_("Copy link to clipboard"), CtrlImg::copy(), [=] { Copy(uri.ToWString()); })
-		.Key(K_SHIFT_CTRL_H);
-	menu.Add(t_("Open link..."), CtrlImg::open(), [=] { WhenLink(uri); })
-		.Key(K_SHIFT_CTRL_O);
+	menu.Add(AK_COPYLINK, CtrlImg::copy(), [=] { Copy(uri.ToWString()); });
+	menu.Add(AK_OPENLINK, CtrlImg::open(), [=] { WhenLink(uri); });
 }
 
 void TerminalCtrl::ImagesBar(Bar& menu)
 {
 	Point pt = mousepos;
 
-	menu.Add(t_("Copy image to clipboard"), CtrlImg::copy(), [=]
+	menu.Add(AK_COPYIMAGE, CtrlImg::copy(), [=]
 		{
 			Image img = GetInlineImage(pt, true);
 			if(!IsNull(img))
 				AppendClipboardImage(img);
-		})
-		.Key(K_SHIFT_CTRL_H);
-	menu.Add(t_("Open image..."), CtrlImg::open(), [=]
+		});
+	menu.Add(AK_OPENIMAGE, CtrlImg::open(), [=]
 		{
 			Image img = GetInlineImage(pt, true);
 			if(!IsNull(img))
 				WhenImage(PNGEncoder().SaveString(img));
-		})
-		.Key(K_SHIFT_CTRL_O);
+		});
 }
 
 void TerminalCtrl::OptionsBar(Bar& menu)
@@ -1163,61 +1162,53 @@ void TerminalCtrl::OptionsBar(Bar& menu)
 				.Check(!unlocked);
 		});
 	menu.Separator();
-	menu.Add(t_("Scrollbar"),
+	menu.Add(AK_SCROLLBAR,
 		[=] { ShowScrollBar(!sb.IsChild()); })
-		.Key(K_SHIFT_CTRL_S)
 		.Check(sb.IsChild());
-	menu.Add(t_("Auto-hide mouse cursor"),
-		[=] { AutoHideMouseCursor(!hidemousecursor); })
-		.Key(K_SHIFT_CTRL_M)
-		.Check((hidemousecursor));
-	menu.Add(t_("Alternate scroll"),
+	menu.Add(AK_ALTERNATESCROLL,
 		[=] { AlternateScroll(!alternatescroll); })
-		.Key(K_SHIFT|K_ALT_S)
 		.Check(alternatescroll);
-	menu.Add(t_("Key navigation"),
+	menu.Add(AK_KEYNAVIGATION,
 		[=] { KeyNavigation(!keynavigation); })
-		.Key(K_SHIFT_CTRL_K)
 		.Check(keynavigation);
-	menu.Add(t_("PC-style function keys"),
+	menu.Add(AK_VTFUNCTIONKEYS,
 		[=] { PCStyleFunctionKeys(!pcstylefunctionkeys); })
-		.Key(K_SHIFT_CTRL_P)
 		.Check(pcstylefunctionkeys);
-	menu.Add(t_("Dynamic colors"),
-		[=] { DynamicColors(!dynamiccolors); })
-		.Key(K_SHIFT_CTRL_D)
-		.Check(dynamiccolors);
-	menu.Add(t_("Light colors"),
-		[=] { LightColors(!lightcolors); })
-		.Key(K_SHIFT|K_ALT_L)
-		.Check(lightcolors);
-	menu.Add(t_("Adjust to dark themes"),
-		[=] { AdjustColors(!adjustcolors); })
-		.Key(K_SHIFT|K_ALT_D)
-		.Check(adjustcolors);
-	menu.Add(t_("Blinking text"),
+	menu.Add(AK_AUTOSCROLL,
+		[=] { ScrollToEnd(!scrolltoend); })
+		.Check(scrolltoend);
+	menu.Add(AK_HIDEMOUSE,
+		[=] { AutoHideMouseCursor(!hidemousecursor); })
+		.Check((hidemousecursor));
+	menu.Add(AK_BLINKINGTEXT,
 		[=] { BlinkingText(!blinkingtext); })
-		.Key(K_SHIFT_CTRL_B)
 		.Check(blinkingtext);
-	menu.Add(t_("Hyperlinks"),
+	menu.Add(AK_REVERSEWRAP,
+		[=] { ReverseWrap(!reversewrap); })
+		.Check(reversewrap);
+	menu.Add(AK_HYPERLINKS,
 		[=] { Hyperlinks(!hyperlinks); })
-		.Key(K_SHIFT|K_ALT_H)
 		.Check(hyperlinks);
-	menu.Add(t_("Inline images"),
+	menu.Add(AK_INLINEIMAGES,
 		[=] { InlineImages(!inlineimages); })
-		.Key(K_SHIFT_CTRL_I)
 		.Check(inlineimages);
-	menu.Add(t_("Size hint"),
+	menu.Add(AK_DYNAMICCOLORS,
+		[=] { DynamicColors(!dynamiccolors); })
+		.Check(dynamiccolors);
+	menu.Add(AK_BRIGHTCOLORS,
+		[=] { LightColors(!lightcolors); })
+		.Check(lightcolors);
+	menu.Add(AK_ADJUSTCOLORS,
+		[=] { AdjustColors(!adjustcolors); })
+		.Check(adjustcolors);
+	menu.Add(AK_SIZEHINT,
 		[=] { ShowSizeHint(!sizehint); })
-		.Key(K_SHIFT_CTRL_W)
 		.Check(sizehint);
-	menu.Add(t_("Buffered refresh"),
+	menu.Add(AK_BUFFEREDREFRESH,
 		[=] { DelayedRefresh(!delayedrefresh); })
-		.Key(K_SHIFT_CTRL_Z)
 		.Check(delayedrefresh);
-	menu.Add(t_("Lazy resize"),
+	menu.Add(AK_LAZYRESIZE,
 		[=] { LazyResize(!lazyresize); })
-		.Key(K_SHIFT_CTRL_Y)
 		.Check(lazyresize);
 }
 
