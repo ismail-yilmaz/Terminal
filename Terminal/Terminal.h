@@ -295,7 +295,7 @@ public:
     Size            GetFontSize() const                             { return Size(max(font.GetWidth('M'), font.GetWidth('W')), font.GetCy()); }
     Size            GetCellSize() const                             { return GetFontSize() + padding * 2; }
     Size            GetPageSize() const                             { Size csz = GetCellSize(); return clamp(GetSize() / csz, Size(1, 1), GetScreenSize() / csz); }
-    Tuple<int, int> GetPageRange() const                            { int pos = GetSbPos(); return MakeTuple<int, int>(pos, min(pos + GetPageSize().cx, page->GetLineCount())); }
+    Tuple<int, int> GetPageRange() const                            { int pos = GetSbPos(); return MakeTuple<int, int>(pos, min(pos + GetPageSize().cy, page->GetLineCount())); }
     
     Size            PageSizeToClient(Size sz) const                 { return AddFrameSize(sz * GetCellSize()); }
     Size            PageSizeToClient(int col, int row) const        { return PageSizeToClient(Size(col, row)); }

@@ -1234,19 +1234,19 @@ bool VTPage::FetchRange(const Rect& r, Gate<int, const VTLine&, VTLine::ConstRan
 			int b = 0, e = length;
 			if(r.top == r.bottom || rect) {
 				b = max(0, r.left);
-				e = min(length, max(0, r.right - r.left));
+				e = clamp(r.right, b, length);
 			}
 			else
 			if(r.top == i) {
-				b = max(0, r.left);
+				b = clamp(r.left, 0, length);
 				e = length;
 			}
 			else
 			if(r.bottom == i) {
 				b = 0;
-				e = min(length, max(0, r.right));
+				e = clamp(r.right, 0, length);
 			}
-			auto range  = SubRange(line, b, e);
+			auto range  = SubRange(line, b, e - b);
 			if(consumer(i, line, range))
 				return false;
 		}
