@@ -105,6 +105,19 @@ const VTLine& VTLine::Void()
 	return line;
 }
 
+int VTLine::GetLength() const
+{
+	return Upp::GetLength(*this, 0, GetCount());
+}
+
+int VTLine::GetOffset() const
+{
+	int offset = 0;
+	for(const VTCell& cell : *this)
+		offset += cell == 1;
+	return offset;
+}
+
 String VTLine::ToString() const
 {
 	return ToWString().ToString();
@@ -114,6 +127,7 @@ WString VTLine::ToWString() const
 {
 	return AsWString(SubRange(Begin(), End()));
 }
+
 
 WString AsWString(VTLine::ConstRange& cellrange, bool tspaces)
 {
@@ -132,6 +146,17 @@ WString AsWString(VTLine::ConstRange& cellrange, bool tspaces)
 		}
 	}
 	return pick(txt);
+}
+
+int GetLength(const VTLine& line, int begin, int end)
+{
+	int length = 0;
+	for(int i = begin, end = min(end, line.GetCount()); i < end; i++) {
+		const VTCell& cell = line[i];
+		if(!cell) break;
+		length += cell >= 32;
+	}
+	return length;
 }
 
 VTPage::VTPage()
@@ -984,6 +1009,7 @@ VTPage& VTPage::ErasePage(dword flags)
 	Rect r = GetView();
 	for(int i = r.top; i <= r.bottom; i++) {
 		VTLine& l = lines[i - 1];
+		l.Shrink(size.cx);
 		l.FillLine(cellattrs, flags);
 		l.Unwrap();
 	}
@@ -1181,45 +1207,32 @@ const VTLine& VTPage::FetchLine(int i) const
 	return VTLine::Void();
 }
 
-void VTPage::FetchLine(int i, VectorMap<int, VTLine>& line) const
+int VTPage::FetchLine(int i, Event<int, const VTLine&> consumer) const
 {
-	LLOG("FetchLine(" << i << ", " << &line << ") [fecthes as a line vector]");
+	LLOG("FetchLine(" << i <<")");
 	
 	Tuple<int, int> span = GetLineSpan(i);
 	for(int n = span.a; n <= span.b; n++) {
 		const VTLine& l = FetchLine(n);
 		if(!l.IsVoid())
-			line.Add(n, clone(l));
+			consumer(n, l);
 	}
+
+	return span.b;
+}
+
+int VTPage::FetchLine(int i, VectorMap<int, VTLine>& line) const
+{
+	LLOG("FetchLine(" << i << ", " << &line << ") [fecthes as a line vector]");
+
+	return FetchLine(i, [&](int ii, const VTLine& l) { line.Add(ii, clone(l)); });
 }
 
 int VTPage::FetchLine(int i, VectorMap<int, WString>& line) const
 {
 	LLOG("FetchLine(" << i << ", " << &line << ") [fetches as a text]");
 	
-	Tuple<int, int> span = GetLineSpan(i);
-	for(int n = span.a; n <= span.b; n++) {
-		const VTLine& l = FetchLine(n);
-		if(!l.IsVoid())
-			line.Add(n, l.ToWString());
-	}
-	return span.b;
-}
-
-int VTPage::FetchLine(int i, WString& s, VectorMap<int, int>& lineinfo) const
-{
-	LLOG("FetchLine(" << i << ", " << &lineinfo << ") [fetches as a text]");
-	
-	Tuple<int, int> span = GetLineSpan(i);
-	for(int n = span.a; n <= span.b; n++) {
-		const VTLine& l = FetchLine(n);
-		if(!l.IsVoid()) {
-			int n = s.GetLength();
-			s << l.ToWString();
-			lineinfo.Add(n, s.GetLength() - n);
-		}
-	}
-	return span.b;
+	return FetchLine(i, [&](int ii, const VTLine& l) { line.Add(ii, l.ToWString()); });
 }
 
 bool VTPage::FetchRange(const Rect& r, Gate<int, const VTLine&, VTLine::ConstRange&> consumer, bool rect) const
@@ -1255,24 +1268,26 @@ bool VTPage::FetchRange(const Rect& r, Gate<int, const VTLine&, VTLine::ConstRan
 	return true;
 }
 
-bool VTPage::FetchRange(int top, int bottom, WString& s, VectorMap<int, int>& lineinfo) const
+bool VTPage::FetchRange(int begin, int end, Gate<VectorMap<int, VTLine>&> consumer) const
 {
-	LLOG("FetchRange(" << top << ", " << bottom << ")");
-
-	auto RangeToLineInfo = [&](int i, const VTLine& line, VTLine::ConstRange& range) -> bool
-	{
-		int n = s.GetLength();
-		s << line.ToWString();
-		lineinfo.Add(i, s.GetLength() - n);
-		return false;
-	};
-	
-	return FetchRange(Rect(0, top, size.cx, bottom), RangeToLineInfo, false);
+	VectorMap<int, VTLine> ln;
+	for(int i = begin, end = min(end, GetLineCount() - 1); i <= end; i++) {
+		const VTLine& l = FetchLine(i);
+		if(!l.IsVoid()) {
+			ln.Add(i, clone(l));
+			if(!l.IsWrapped() || i == end) {
+				if(consumer(ln))
+					return true;
+				ln.Clear();
+			}
+		}
+	}
+	return false;
 }
 
-bool VTPage::FetchRange(Tuple<int, int> range, WString& s, VectorMap<int, int>& lineinfo) const
+bool VTPage::FetchRange(Tuple<int, int> range, Gate<VectorMap<int, VTLine>&> consumer) const
 {
-	return FetchRange(range.a, range.b, s, lineinfo);
+	return FetchRange(range.a, range.b, consumer);
 }
 
 void VTPage::LineFill(int pos, int begin, int end, const VTCell& filler, dword flags)

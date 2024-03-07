@@ -32,6 +32,9 @@ public:
     static const VTLine& Void();
     bool IsVoid() const                                     { return this == &Void(); }
 
+    int             GetLength() const;
+    int             GetOffset() const;
+    
     String          ToString() const;
     WString         ToWString() const;
     
@@ -44,6 +47,7 @@ private:
 };
 
 WString AsWString(VTLine::ConstRange& cellrange, bool tspaces = true);
+int     GetLength(const VTLine& line, int begin, int end);
 
 class VTPage : Moveable<VTPage> {
     struct Cursor
@@ -216,9 +220,9 @@ public:
     int             GetLineCount() const                     { return lines.GetCount() + saved.GetCount(); }
     Tuple<int, int> GetLineSpan(int i) const;
     const VTLine&   FetchLine(int i) const;
-    void            FetchLine(int i, VectorMap<int, VTLine>& line) const;
+    int             FetchLine(int i, Event<int, const VTLine&> consumer) const;
+    int             FetchLine(int i, VectorMap<int, VTLine>& line) const;
     int             FetchLine(int i, VectorMap<int, WString>& line) const;
-    int             FetchLine(int i, WString& s, VectorMap<int, int>& lineinfo) const;
     const VTLine&   operator[](int i) const                  { return FetchLine(i); }
 
     // Point: 0-based.
@@ -227,9 +231,9 @@ public:
 
     // Rect/coords: 0-based.
     bool            FetchRange(const Rect& r, RangeCallback consumer, bool rect = false) const;
-    bool            FetchRange(int top, int bottom, WString& s, VectorMap<int, int>& lineinfo) const;
-    bool            FetchRange(Tuple<int, int> range, WString& s, VectorMap<int, int>& lineinfo) const;
-    
+    bool            FetchRange(int begin, int end, Gate<VectorMap<int, VTLine>&> consumer) const;
+    bool            FetchRange(Tuple<int, int> range, Gate<VectorMap<int, VTLine>&> consumer) const;
+   
     const VTLine*    begin() const                           { return lines.begin(); }
     VTLine*          begin()                                 { return lines.begin(); }
     const VTLine*    end() const                             { return lines.end();   }
