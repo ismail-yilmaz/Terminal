@@ -185,6 +185,8 @@ void TerminalCtrl::Paste(const WString& s, bool filter)
 	}
 	else
 		PutEncoded(s, filter);
+
+	SyncSb(true);
 }
 
 void TerminalCtrl::SelectAll(bool history)
