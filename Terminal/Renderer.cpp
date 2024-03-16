@@ -161,77 +161,82 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 	cpd.size = csz;
 	Buffer<CellPaintData> linepaintdata(psz.cx, cpd);
 
+	auto PaintLine = [&](const VTLine& line, int i) {
+		LTIMING("TerminalCtrl::PaintLine");
+		int y = i * csz.cy - (csz.cy * pos);
+		{
+			// Render the background rectangles.
+			sRectRenderer rr(w, bkg, nobackground);
+			for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
+				const VTCell& cell = line.Get(j, GetAttrs());
+				CellPaintData& data = linepaintdata[j];
+				data.highlight = IsSelected(Point(j,i));
+				data.show |= cell.IsHyperlink() && cell.data == activelink;
+				data.show |= cell.IsInverted();
+				data.show |= print;
+				if(data.highlight) {
+					data.ink = colortable[COLOR_INK_SELECTED];
+					data.paper = colortable[COLOR_PAPER_SELECTED];
+				}
+				else {
+					SetInkAndPaperColor(cell, data.ink, data.paper);
+				}
+				data.pos = {x, y};
+				if(j == psz.cx - 1)
+					data.size.cx = wsz.cx - x;
+
+				data.show |= data.highlight;
+				rr.DrawRect(cell, data);
+			}
+		}
+		int icount = 0, lcount = 0;
+		{
+			// Render the text by combining non-contiguous chunks of chars.
+			sTextRenderer tr(w, GetFont(), hyperlinks);
+			for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
+				CellPaintData& data = linepaintdata[j];
+				data.pos = { x + padding.cx, y + padding.cy };
+				data.show = !blinking;
+				tr.DrawChar(line.Get(j, GetAttrs()), data);
+			}
+			icount = tr.GetImageCount();
+			lcount = tr.GetLinkCount();
+		}
+		{
+			if(icount) {
+				// Render inline images, if any.
+				ImageParts ip;
+				for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
+					if(line[j].IsImage())
+						CollectImage(ip, x, y, line.Get(j, GetAttrs()), csz);
+				}
+				PaintImages(w, ip, csz);
+			}
+		}
+	};
+	
 	if(!nobackground)
 		w.DrawRect(wsz, bkg);
-	for(int i = pos; i < min(pos + psz.cy, page->GetLineCount()); ++i) {
-		int y = i * csz.cy - (csz.cy * pos);
-		const VTLine& line = page->FetchLine(i);
-		if(!line.IsVoid() && w.IsPainting(0, y, wsz.cx, csz.cy)) {
-			auto PaintLine = [this, &w, &linepaintdata, &csz, &wsz, &psz, &pos, &bkg, &print](const VTLine& line, int i) {
-				LTIMING("TerminalCtrl::PaintLine");
-				int y = i * csz.cy - (csz.cy * pos);
-				{
-					// Render the background rectangles.
-					sRectRenderer rr(w, bkg, nobackground);
-					for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
-						const VTCell& cell = line.Get(j, GetAttrs());
-						CellPaintData& data = linepaintdata[j];
-						data.highlight = IsSelected(Point(j,i));
-						data.show |= cell.IsHyperlink() && cell.data == activelink;
-						data.show |= cell.IsInverted();
-						data.show |= print;
-						if(data.highlight) {
-							data.ink = colortable[COLOR_INK_SELECTED];
-							data.paper = colortable[COLOR_PAPER_SELECTED];
-						}
-						else {
-							SetInkAndPaperColor(cell, data.ink, data.paper);
-						}
-						data.pos = {x, y};
-						if(j == psz.cx - 1)
-							data.size.cx = wsz.cx - x;
+	
+	auto range = GetPageRange();
 
-						data.show |= data.highlight;
-						rr.DrawRect(cell, data);
-					}
-				}
-				int icount = 0, lcount = 0;
-				{
-					// Render the text by combining non-contiguous chunks of chars.
-					sTextRenderer tr(w, GetFont(), hyperlinks);
-					for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
-						CellPaintData& data = linepaintdata[j];
-						data.pos = { x + padding.cx, y + padding.cy };
-						data.show = !blinking;
-						tr.DrawChar(line.Get(j, GetAttrs()), data);
-					}
-					icount = tr.GetImageCount();
-					lcount = tr.GetLinkCount();
-				}
-				{
-					if(icount) {
-						// Render inline images, if any.
-						ImageParts ip;
-						for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
-							if(line[j].IsImage())
-								CollectImage(ip, x, y, line.Get(j, GetAttrs()), csz);
-						}
-						PaintImages(w, ip, csz);
-					}
-				}
-			};
-			if(highlight) {
-					LTIMING("TerminalCtrl::WhenHighlight");
-					VectorMap<int, VTLine> hl;
-					page->FetchLine(i, hl);
-					WhenHighlight(hl);
-					for(const auto& h : ~hl)
-						PaintLine(h.value, h.key);
-					i = hl.TopKey();
-			}
-			else
+	if(highlight) {
+		LTIMING("TerminalCtrl::WhenHighlight");
+		page->FetchRange(range.a, range.b, [&](VectorMap<int, VTLine>& hl) {
+			WhenHighlight(hl);
+			for(const auto& h : ~hl)
+				PaintLine(h.value, h.key);
+			return false;
+		});
+	}
+	else {
+		for(int i = range.a; i < range.b; i++) {
+			int y = i * csz.cy - (csz.cy * pos);
+			const VTLine& line = page->FetchLine(i);
+			if(!line.IsVoid() && w.IsPainting(0, y, wsz.cx, csz.cy))
 				PaintLine(line, i);
 		}
+
 	}
 
 	// Paint a steady (non-blinking) caret, if enabled.

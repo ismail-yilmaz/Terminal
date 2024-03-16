@@ -220,7 +220,7 @@ public:
     int             GetLineCount() const                     { return lines.GetCount() + saved.GetCount(); }
     Tuple<int, int> GetLineSpan(int i) const;
     const VTLine&   FetchLine(int i) const;
-    int             FetchLine(int i, Event<int, const VTLine&> consumer) const;
+    int             FetchLine(int i, Gate<int, const VTLine&> consumer) const;
     int             FetchLine(int i, VectorMap<int, VTLine>& line) const;
     int             FetchLine(int i, VectorMap<int, WString>& line) const;
     const VTLine&   operator[](int i) const                  { return FetchLine(i); }
@@ -291,7 +291,7 @@ private:
 };
 
 WString AsWString(const VTPage& page, const Rect& r, bool rectsel = false, bool tspaces = true);
-
+int     GetLength(const VTPage& page, int begin, int end);
 }
 #endif
 

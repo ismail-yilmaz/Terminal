@@ -1207,7 +1207,7 @@ const VTLine& VTPage::FetchLine(int i) const
 	return VTLine::Void();
 }
 
-int VTPage::FetchLine(int i, Event<int, const VTLine&> consumer) const
+int VTPage::FetchLine(int i, Gate<int, const VTLine&> consumer) const
 {
 	LLOG("FetchLine(" << i <<")");
 	
@@ -1225,14 +1225,14 @@ int VTPage::FetchLine(int i, VectorMap<int, VTLine>& line) const
 {
 	LLOG("FetchLine(" << i << ", " << &line << ") [fecthes as a line vector]");
 
-	return FetchLine(i, [&](int ii, const VTLine& l) { line.Add(ii, clone(l)); });
+	return FetchLine(i, [&](int ii, const VTLine& l) { line.Add(ii, clone(l)); return false; });
 }
 
 int VTPage::FetchLine(int i, VectorMap<int, WString>& line) const
 {
 	LLOG("FetchLine(" << i << ", " << &line << ") [fetches as a text]");
 	
-	return FetchLine(i, [&](int ii, const VTLine& l) { line.Add(ii, l.ToWString()); });
+	return FetchLine(i, [&](int ii, const VTLine& l) { line.Add(ii, l.ToWString()); return false; });
 }
 
 bool VTPage::FetchRange(const Rect& r, Gate<int, const VTLine&, VTLine::ConstRange&> consumer, bool rect) const
@@ -1268,14 +1268,14 @@ bool VTPage::FetchRange(const Rect& r, Gate<int, const VTLine&, VTLine::ConstRan
 	return true;
 }
 
-bool VTPage::FetchRange(int begin, int end, Gate<VectorMap<int, VTLine>&> consumer) const
+bool VTPage::FetchRange(int b, int e, Gate<VectorMap<int, VTLine>&> consumer) const
 {
 	VectorMap<int, VTLine> ln;
-	for(int i = begin, end = min(end, GetLineCount() - 1); i <= end; i++) {
+	for(int i = b; i <= e; i++) {
 		const VTLine& l = FetchLine(i);
 		if(!l.IsVoid()) {
 			ln.Add(i, clone(l));
-			if(!l.IsWrapped() || i == end) {
+			if(!l.IsWrapped() || i == e) {
 				if(consumer(ln))
 					return true;
 				ln.Clear();
@@ -1529,4 +1529,13 @@ WString AsWString(const VTPage& page, const Rect& r, bool rectsel, bool tspaces)
 	page.FetchRange(r, RangeToWString, rectsel);
 	return pick(Join(v, VT_EOL));
 }
+
+int GetLength(const VTPage& page, int begin, int end)
+{
+	int length = 0;
+	for(int i = max(0, begin); i < min(end, page.GetLineCount()); i++)
+		length += page.FetchLine(i).GetLength();
+	return length;
+}
+
 }
