@@ -1212,11 +1212,11 @@ const VTLine& VTPage::FetchLine(int i) const
 	return VTLine::Void();
 }
 
-int VTPage::FetchLine(int i, Gate<int, const VTLine&> consumer) const
+int VTPage::FetchLine(int i, Gate<int, const VTLine&> consumer, int spanlimit) const
 {
 	LLOG("FetchLine(" << i <<")");
 	
-	Tuple<int, int> span = GetLineSpan(i);
+	Tuple<int, int> span = GetLineSpan(i, spanlimit);
 	for(int n = span.a; n <= span.b; n++) {
 		const VTLine& l = FetchLine(n);
 		if(!l.IsVoid())
