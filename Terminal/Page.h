@@ -48,6 +48,7 @@ private:
 
 WString AsWString(VTLine::ConstRange& cellrange, bool tspaces = true);
 int     GetLength(const VTLine& line, int begin, int end);
+int     GetOffset(const VTLine& line, int begin, int end);
 
 class VTPage : Moveable<VTPage> {
     struct Cursor
@@ -218,7 +219,7 @@ public:
 
     // Index: 0-based.
     int             GetLineCount() const                     { return lines.GetCount() + saved.GetCount(); }
-    Tuple<int, int> GetLineSpan(int i) const;
+    Tuple<int, int> GetLineSpan(int i, int limit = 0) const;
     const VTLine&   FetchLine(int i) const;
     int             FetchLine(int i, Gate<int, const VTLine&> consumer) const;
     int             FetchLine(int i, VectorMap<int, VTLine>& line) const;
@@ -292,6 +293,7 @@ private:
 
 WString AsWString(const VTPage& page, const Rect& r, bool rectsel = false, bool tspaces = true);
 int     GetLength(const VTPage& page, int begin, int end);
+int     GetOffset(const VTPage& page, int begin, int end);
 }
 #endif
 

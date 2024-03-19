@@ -356,8 +356,6 @@ TerminalCtrl& TerminalCtrl::Echo(const String& s)
 
 void TerminalCtrl::Serialize(Stream& s)
 {
-	GuiLock __;
-
 	ColorTableSerializer cts(colortable);
 	String chrset = CharsetName(charset);
     
@@ -415,8 +413,6 @@ void TerminalCtrl::Serialize(Stream& s)
 
 void TerminalCtrl::Jsonize(JsonIO& jio)
 {
-	GuiLock __;
-
     ColorTableSerializer cts(colortable);
     String chrset  = CharsetName(charset);
 

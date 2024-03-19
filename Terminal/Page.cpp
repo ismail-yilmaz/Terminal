@@ -112,10 +112,7 @@ int VTLine::GetLength() const
 
 int VTLine::GetOffset() const
 {
-	int offset = 0;
-	for(const VTCell& cell : *this)
-		offset += cell == 1;
-	return offset;
+	return Upp::GetOffset(*this, 0, GetCount());
 }
 
 String VTLine::ToString() const
@@ -157,6 +154,14 @@ int GetLength(const VTLine& line, int begin, int end)
 		length += cell >= 32;
 	}
 	return length;
+}
+
+int GetOffset(const VTLine& line, int begin, int end)
+{
+	int offset = 0;
+	for(int i = max(0, begin); i < min(end, line.GetCount()); i++)
+		offset += line[i] == 1; // Double width, second half.
+	return offset;
 }
 
 VTPage::VTPage()
@@ -1271,11 +1276,11 @@ bool VTPage::FetchRange(const Rect& r, Gate<int, const VTLine&, VTLine::ConstRan
 bool VTPage::FetchRange(int b, int e, Gate<VectorMap<int, VTLine>&> consumer) const
 {
 	VectorMap<int, VTLine> ln;
-	for(int i = b; i <= e; i++) {
+	for(int i = b; i < e; i++) {
 		const VTLine& l = FetchLine(i);
 		if(!l.IsVoid()) {
 			ln.Add(i, clone(l));
-			if(!l.IsWrapped() || i == e) {
+			if(!l.IsWrapped() || i == e - 1) {
 				if(consumer(ln))
 					return true;
 				ln.Clear();
@@ -1490,15 +1495,20 @@ String VTPage::Cursor::ToString() const
 			x, y, displaced, eol);
 }
 
-Tuple<int, int> VTPage::GetLineSpan(int i) const
+Tuple<int, int> VTPage::GetLineSpan(int i, int limit) const
 {
 	LLOG("GetLineSpan(" << i << ")");
 	
-	int lo = i, hi = i;
+	int lo = i, hi = i, minlo = 0, maxhi = GetLineCount();
 
-	while(lo > 0 && FetchLine(lo - 1).IsWrapped())
+	if(limit > 0) {
+		minlo =  clamp(lo - limit, 0, maxhi);
+		maxhi =  clamp(hi + limit, 0, maxhi);
+	}
+
+	while(lo > minlo && FetchLine(lo - 1).IsWrapped())
 		lo--;
-	while(hi < GetLineCount() && FetchLine(hi).IsWrapped())
+	while(hi < maxhi && FetchLine(hi).IsWrapped())
 		hi++;
 	
 	return MakeTuple(lo, hi);
@@ -1536,6 +1546,14 @@ int GetLength(const VTPage& page, int begin, int end)
 	for(int i = max(0, begin); i < min(end, page.GetLineCount()); i++)
 		length += page.FetchLine(i).GetLength();
 	return length;
+}
+
+int GetOffset(const VTPage& page, int begin, int end)
+{
+	int offset = 0;
+	for(int i = max(0, begin); i < min(end, page.GetLineCount()); i++)
+		offset += page.FetchLine(i).GetOffset();
+	return offset;
 }
 
 }
