@@ -11,7 +11,7 @@
 namespace Upp {
 
 #ifndef TERMINALCTRL_KEYGROUPNAME
-	#define TERMINALCTRL_KEYGROUPNAME "Terminal"
+    #define TERMINALCTRL_KEYGROUPNAME "Terminal"
 #endif
 
 #define KEYGROUPNAME TERMINALCTRL_KEYGROUPNAME
@@ -45,6 +45,7 @@ public:
         COLOR_INK_SELECTED,
         COLOR_PAPER,
         COLOR_PAPER_SELECTED,
+        COLOR_ANNOTATION_UNDERLINE,
         MAX_COLOR_COUNT
     };
 
@@ -98,6 +99,7 @@ public:
     Event<const String&> WhenLink;
     Event<const String&> WhenImage;
     Event<const String&> WhenDirectoryChange;
+    Gate<Point, String&> WhenAnnotation;
   
     Event<VectorMap<int, VTLine>&> WhenHighlight;
     
@@ -247,6 +249,10 @@ public:
     TerminalCtrl&   NoHyperlinks()                                  { return Hyperlinks(false);     }
     bool            HasHyperlinks() const                           { return hyperlinks; }
 
+    TerminalCtrl&   Annotations(bool b = true)                       { annotations = b; return *this; }
+    TerminalCtrl&   NoAnnotations()                                  { return Annotations(false);     }
+    bool            HasAnnotations() const                           { return annotations; }
+
     TerminalCtrl&   ReverseWrap(bool b = true)                      { XTrewrapm((reversewrap = b)); return *this; }
     TerminalCtrl&   NoReverseWrap()                                 { return ReverseWrap(false); }
     bool            HasReverseWrap() const                          { return reversewrap; }
@@ -331,6 +337,7 @@ public:
     void            StdBar(Bar& menu);
     void            EditBar(Bar& menu);
     void            LinksBar(Bar& menu);
+    void            AnnotationsBar(Bar& menu);
     void            ImagesBar(Bar& menu);
     void            OptionsBar(Bar& menu);
 
@@ -379,6 +386,8 @@ public:
 
     bool            IsMouseOverImage() const                        { return IsMouseOverImage(GetMousePagePos()); }
     bool            IsMouseOverHyperlink() const                    { return IsMouseOverHyperlink(GetMousePagePos()); }
+    bool            IsMouseOverAnnotation() const                   { return IsMouseOverAnnotation(GetMousePagePos()); }
+    bool            IsMouseOverHypertext() const                    { return IsMouseOverHyperlink() || IsMouseOverAnnotation(); }
 
     bool            IsTracking() const                              { return IsMouseTracking(GetMouseFlags()); }
     TerminalCtrl&   OverrideTracking(dword modifiers)               { overridetracking = modifiers; return *this; }
@@ -390,8 +399,14 @@ public:
     const VTCell&   GetCellAtCursorPos() const                      { return page->GetCell(); };
 
     String          GetHyperlinkUri()                               { return GetHyperlinkURI(mousepos, true); }
+    String          GetAnnotationText()                             { return GetAnnotation(mousepos, true);   }
     Image           GetInlineImage()                                { return GetInlineImage(mousepos, true);  }
 
+    void            AddAnnotation(const String& s);
+    void            AddAnnotation();
+    void            EditAnnotation();
+    void            DeleteAnnotation();
+    
     void            DragAndDrop(Point pt, PasteClip& d) override;
 
     void            GotFocus() override                             { if(modes[XTFOCUSM]) PutCSI('I'); Refresh(); }
@@ -487,12 +502,20 @@ private:
 
     bool        IsMouseTracking(dword keyflags) const;
     bool        IsMouseOverImage(Point pt) const                { return !IsSelected(pt) && page->FetchCell(pt).IsImage(); }
-    bool        IsMouseOverHyperlink(Point pt) const            { return hyperlinks && !IsSelected(pt) && page->FetchCell(pt).IsHyperlink(); }
+    bool        IsMouseOverHyperlink(Point pt) const            { return !IsSelected(pt) && page->FetchCell(pt).IsHyperlink(); }
+    bool        IsMouseOverAnnotation(Point pt) const           { return !IsSelected(pt) && page->FetchCell(pt).IsAnnotation(); }
+    bool        IsMouseOverHypertext(Point pt) const            { return IsMouseOverHyperlink() || IsMouseOverAnnotation(); }
 
-    void        HighlightHyperlink(Point pt);
+    void        HighlightHypertext(Point pt);
 
-    String      GetHyperlinkURI(Point pt, bool modifier);
     Image       GetInlineImage(Point pt, bool modifier);
+    String      GetHypertextContent(Point pt, bool modifier);
+    String      GetHyperlinkURI(Point pt, bool modifier)        { return IsMouseOverHyperlink() ? GetHypertextContent(pt, modifier) : Null; }
+    String      GetAnnotation(Point pt, bool modifier)          { return IsMouseOverAnnotation() ? GetHypertextContent(pt, modifier) : Null; }
+    bool        SelectAnnotatedCells(Point pt, const Event<VTCell&>& fn);
+
+    void        ShowAnnotation(Point pt, const String& s);
+    void        HideAnnotation();
     
     void        Search(const WString& s, int begin, int end, bool visibleonly, bool co,
                                   Gate<const VectorMap<int, WString>&, const WString&> fn);
@@ -530,18 +553,18 @@ private:
         }
     };
 
-    struct HyperlinkMaker : LRUCache<String>::Maker {
-        dword   id;
-        const   String& url;
-        String  Key() const override;
-        int     Make(String& link) const override;
-        HyperlinkMaker(int i, const String& s)
+    struct HypertextMaker : ValueMaker {
+        dword id;
+        const String& txt;
+        String Key() const override;
+        int    Make(Value& obj) const override;
+        HypertextMaker(int i, const String& s)
         : id(i)
-        , url(s)
+        , txt(s)
         {
         }
     };
-
+    
     void        Paint0(Draw& w, bool print = false);
     void        PaintSizeHint(Draw& w);
 
@@ -551,8 +574,8 @@ private:
     void        RenderImage(const ImageString& simg, bool scroll);
     const InlineImage& GetCachedImageData(dword id, const ImageString& simg, const Size& csz);
 
-    void        RenderHyperlink(const String& uri);
-    String      GetCachedHyperlink(dword id, const String& data = Null);
+    dword       RenderHypertext(const String& uri);
+    String      GetCachedHypertext(dword id, const String& data = Null);
 
 private:
     enum ModifierKeyFlags : dword {
@@ -592,8 +615,8 @@ private:
     int         wheelstep        = GUI_WheelScrollLines();
     int         metakeyflags     = MKEY_ESCAPE;
     int         clipaccess       = CLIP_NONE;
-    dword       activelink       = 0;
-    dword       prevlink         = 0;
+    dword       activehtext       = 0;
+    dword       prevhtext         = 0;
     int         overridetracking = K_SHIFT_CTRL;
     Size        padding          = { 0, 0 };
 
@@ -612,6 +635,7 @@ private:
     bool        jexerimages;
     bool        iterm2images;
     bool        hyperlinks;
+    bool        annotations;
     bool        delayedrefresh;
     bool        lazyresize;
     bool        sizehint;
@@ -624,7 +648,7 @@ private:
     bool        hidemousecursor;
     bool        highlight;
 
-// Down beloe is the emulator stuff, formerley knonw as "Console"...
+// Down below is the emulator stuff, formerley known as "Console"...
 
 private:
     VTPage*     page;
@@ -683,12 +707,19 @@ private:
     void        InvertGraphicsRendition(VTCell& attrs, const Vector<String>& opcodes);
     String      GetGraphicsRenditionOpcodes(const VTCell& attrs);
 
+    void        ParseiTerm2Protocols(const VTInStream::Sequence& seq);
+
+    void        ParseTerminalCtrlProtocols(const VTInStream::Sequence& seq);
+    
     void        ParseSixelGraphics(const VTInStream::Sequence& seq);
     void        ParseJexerGraphics(const VTInStream::Sequence& seq);
-    void        ParseiTerm2Graphics(const VTInStream::Sequence& seq);
+    bool        ParseiTerm2Graphics(const VTInStream::Sequence& seq);
 
     void        ParseHyperlinks(const VTInStream::Sequence& seq);
 
+    bool        ParseiTerm2Annotations(const VTInStream::Sequence& seq);
+    void        ParseTerminalCtrlAnnotations(const VTInStream::Sequence& seq);
+    
     void        ParseClipboardRequests(const VTInStream::Sequence& seq);
     
     void        ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);

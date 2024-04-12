@@ -402,6 +402,7 @@ void TerminalCtrl::Serialize(Stream& s)
 		s % overridetracking;
 		s % scrolltoend;
 		s % highlight;
+		s % annotations;
 	}
 
 	if(s.IsLoading()) {
@@ -442,6 +443,7 @@ void TerminalCtrl::Jsonize(JsonIO& jio)
         ("JexerGraphics",       jexerimages)
         ("iTerm2Graphics",      iterm2images)
         ("Hyperlinks",          hyperlinks)
+        ("Annotations",         annotations)
         ("ClipboardAccess",     clipaccess)
         ("DelayedRefresh",      delayedrefresh)
         ("LazyResize",          lazyresize)

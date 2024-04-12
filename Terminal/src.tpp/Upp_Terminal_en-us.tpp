@@ -23,8 +23,8 @@ ublic][3 _][*@3;3 Ctrl]&]
 [s0; &]
 [s2; This class implements a 24`-bit color virtual terminal emulator 
 ctrl compatible with DEC VT series and xterm. It supports xterm`-style 
-mouse tracking, inline images, hyperlinks, window reports and 
-window events.&]
+mouse tracking, inline images, hyperlinks, annotations, window 
+reports and window events.&]
 [s3;%- &]
 [ {{10000F(128)G(128)@1 [s0; [* Public Method List]]}}&]
 [s3; &]
@@ -86,6 +86,8 @@ orHighlightText.&]
 [s7;i1120;a17;:TerminalCtrl`:`:COLOR`_PAPER:%- [*C@3 COLOR`_PAPER]-|SColorPaper.&]
 [s7;i1120;a17;:TerminalCtrl`:`:COLOR`_PAPER`_SELECTED:%- [*C@3 COLOR`_PAPER`_SELECTED]-|
 SColorHighlight.&]
+[s7;i1120;a17;:TerminalCtrl`:`:COLOR`_ANNOTATION`_UNDERLINE:%- [*C@3 COLOR`_ANNOTATION`_
+UNDERLINE]-|SYellow.&]
 [s7;i1120;a17;:TerminalCtrl`:`:MAX`_COLOR`_COUNT:%- [*C@3 MAX`_COLOR`_COUNT]-|Maximum 
 number of colors in the color stack.&]
 [s2;%- See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:SetColor`(int`,Upp`:`:Color`)^ S
@@ -212,6 +214,16 @@ parameter. The string [/ should ]contain the path to the target
 directory. It is up to the client`-code to determine whether 
 tha path is valid.&]
 [s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenAnnotation:%- Gate<Point, String[@(0.0.255) `&]> 
+[* WhenAnnotation]&]
+[s2; This event is dispatched when the user wants to add or edit 
+an annotation. It passes the mouse position info in screen (workarea) 
+coordinates as its first parameter. The second parameter depends 
+on the operation. It will be empty (on new annotation) or filled 
+with the current annotation (edit). TerminalCtrl will only accept 
+the new value of the String if the gate returns true.&]
+[s3; &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenHighlight:%- Event<VectorMap<[@(0.0.255) int], 
 VTLine>[@(0.0.255) `&]> [* WhenHighlight]&]
@@ -951,6 +963,24 @@ for method chaining.&]
 xplicit hyperlinks] protocol is enabled.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:Annotations`(bool`):%- TerminalCtrl[@(0.0.255) `&] 
+[* Annotations]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2; Enables or disables [^https`:`/`/iterm2`.com`/documentation`-escape`-codes`.html^ i
+Term2`'s annotations protocol]. Returns `*this for method chaining.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:NoAnnotations`(`):%- TerminalCtrl[@(0.0.255) `&] 
+[* NoAnnotations]()&]
+[s2; Disables [^https`:`/`/iterm2`.com`/documentation`-escape`-codes`.html^ iTerm2`'s 
+annotations protocol]. Returns `*this for method chaining. .&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:HasAnnotations`(`)const:%- [@(0.0.255) bool] 
+[* HasAnnotations]() [@(0.0.255) const]&]
+[s2; Return true if [^https`:`/`/iterm2`.com`/documentation`-escape`-codes`.html^ iTerm
+2`'s annotations protocol] is enabled.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:ReverseWrap`(bool`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T
 erminalCtrl][@(0.0.255) `&]_[* ReverseWrap]([@(0.0.255) bool]_[*@3 b]_`=_[@(0.0.255) true])
 &]
@@ -1432,6 +1462,18 @@ OverHyperlink]()_[@(0.0.255) const]&]
 cell.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:IsMouseOverAnnotation`(`)const:%- [@(0.0.255) bool] 
+[* IsMouseOverAnnotation]() [@(0.0.255) const]&]
+[s2; Return true if the mouse pointer is hovering over an annotated 
+cell.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:IsMouseOverHypertext`(`)const:%- [@(0.0.255) bool] 
+[* IsMouseOverHypertext]() [@(0.0.255) const]&]
+[s2; Returns true if  the mouse pointer is hovering over of any type 
+of hypertext (hyperlink or annotation).&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:IsTracking`(`)const:%- [@(0.0.255) bool]_[* IsTracking]()_[@(0.0.255) c
 onst]&]
 [s2; Returns true if mouse tracking mode is enabled.&]
@@ -1465,15 +1507,22 @@ and is a part of standard menu. It can also be used separately.&]
 [s5;:Upp`:`:TerminalCtrl`:`:LinksBar`(Upp`:`:Bar`&`):%- [@(0.0.255) void]_[* LinksBar]([_^Upp`:`:Bar^ B
 ar][@(0.0.255) `&]_[*@3 menu])&]
 [s2; Links menu consists of standard clipboard actions for hyperlinks 
-(copy/open), and is a part of standard menu. It can also be used 
-separately.&]
+(copy/open), and is a part of TerminalCtrl`'s standard menu. 
+It can also be used separately.&]
 [s3; &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:AnnotationsBar`(Bar`&`):%- [@(0.0.255) void] 
+[* AnnotationsBar](Bar[@(0.0.255) `&] [*@3 menu])&]
+[s2; Annotations menu consists of standard editing and clipboard 
+action (copy) for annotations, and is a part of TerminalCtrl`'s 
+standard menu. It can also be used separately.&]
+[s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:ImagesBar`(Upp`:`:Bar`&`):%- [@(0.0.255) void]_[* ImagesBar](
 [_^Upp`:`:Bar^ Bar][@(0.0.255) `&]_[*@3 menu])&]
 [s2; Images menu consists of standard clipboard actions for inline 
-images (copy/open), and is a part of standard menu. It can also 
-be used separately.&]
+images (copy/open), and is a part of TerminalCtrl`'s standard 
+menu. It can also be used separately.&]
 [s3; &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:OptionsBar`(Upp`:`:Bar`&`):%- [@(0.0.255) void]_[* OptionsBar
@@ -1521,7 +1570,7 @@ stuff.&]
 the terminal`'s buffer with keys and select text without using 
 a mouse. Plaint text, word and rectangle selections are available. 
 TerminalCtrl will be in selector mode unless EndSelectorMode 
-method is explicitly called.By default the [C Escape ]key ends 
+method is explicitly called.By default the [*C Escape ]key ends 
 the session. See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:EndSelectorMode`(`)^ E
 ndSelectorMode], [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:IsSelectorMode`(`)const^ I
 sSelectorMode].&]
@@ -1572,20 +1621,6 @@ number of items to [%-*@3 maxcount]. The maximum cache size has
 to be provided in pixels. The default [%-*@3 maxsize ]is [C `[1024 
 x 1024 x 4`] x 128] pixels (512 MB), and the default [%-*@3 maxcount] 
 is 256.000 entries.&]
-[s3; &]
-[s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:ClearHyperlinkCache`(`):%- [@(0.0.255) static] 
-[@(0.0.255) void]_[* ClearHyperlinkCache]()&]
-[s2; Clears the shared hyperlink cache.&]
-[s3;%- &]
-[s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:SetHyperlinkCacheMaxSize`(int`):%- [@(0.0.255) void]_[* SetHy
-perlinkCacheMaxSize]([@(0.0.255) int]_[*@3 maxcount])&]
-[s2; TerminalCtrl uses a [/ shared ]hyperlink cache to store its URIs. 
-This method sets the maximum number of URIs to be stored in the 
-hyperlink cache to [%-*@3 maxcount]. The default [%-*@3 maxcount 
-]is 100.000 entries. The maximum length of a single entry can 
-be at most 2084 bytes.&]
 [s3; &]
 [ {{10000F(128)G(128)@1 [s0; [* Protected Method List]]}}&]
 [s3;%- &]

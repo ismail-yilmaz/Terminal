@@ -40,6 +40,7 @@ TerminalCtrl& TerminalCtrl::ResetColors()
 	colortable[COLOR_INK_SELECTED] = SColorHighlightText;
 	colortable[COLOR_PAPER] = SColorPaper;
 	colortable[COLOR_PAPER_SELECTED] = SColorHighlight;
+	colortable[COLOR_ANNOTATION_UNDERLINE] = SYellow;
 
 	return *this;
 }
@@ -53,7 +54,7 @@ void TerminalCtrl::SetInkAndPaperColor(const VTCell& cell, Color& ink, Color& pa
 		Swap(ink, paper);
 	if(modes[DECSCNM])
 		Swap(ink, paper);
-	if(hyperlinks && cell.IsHyperlink() && activelink == cell.data)
+	if((hyperlinks || annotations) && cell.IsHypertext() && activehtext == cell.data)
 		Swap(ink, paper);
 }
 
@@ -396,6 +397,9 @@ void TerminalCtrl::ColorTableSerializer::Jsonize(JsonIO& jio)
 			break;
 		case TerminalCtrl::COLOR_PAPER_SELECTED:
 			jio("SelectionPaper", table[i]);
+			break;
+		case TerminalCtrl::COLOR_ANNOTATION_UNDERLINE:
+			jio("AnnotationUnderline", table[i]);
 			break;
 		default:
 			jio(Format("Color_%d", i), table[i]);

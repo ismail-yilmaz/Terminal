@@ -42,8 +42,11 @@ void TerminalCtrl::ParseOperatingSystemCommands(const VTInStream::Sequence& seq)
 	case 444:	// Jexer inline images protocol.
 		ParseJexerGraphics(seq);
 		break;
-	case 1337:	// iTerm2 inline images protocol.
-		ParseiTerm2Graphics(seq);
+	case 1337:	// iTerm2 protocols.
+		ParseiTerm2Protocols(seq);
+		break;
+	case 8100: // TerminalCtrl protocols
+		ParseTerminalCtrlProtocols(seq);
 		break;
 	default:
 		LLOG(Format("Unhandled OSC opcode: %d", opcode));
@@ -82,22 +85,27 @@ void TerminalCtrl::ParseJexerGraphics(const VTInStream::Sequence& seq)
 	RenderImage(simg, scroll);
 }
 
-void TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseiTerm2Protocols(const VTInStream::Sequence& seq)
+{
+	if(iterm2images)
+		ParseiTerm2Graphics(seq);
+	// if(annotations && ParseiTerm2Annotations(seq)) return;
+	// TODO: ...
+}
+
+bool TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
 {
 	// iTerm2's file and image download and display protocol,
 	// Currently, we only support its inline images  portion.
 	// See: https://iterm2.com/documentation-images.html
-	
-	if(!iterm2images)
-		return;
-	
+
 	int pos = 0;
 	String options, enc;
 	if(!SplitTo(seq.payload, ':', false, options, enc)
 	|| (pos = ToLower(options).FindAfter("file=")) < 0 || IsNull(enc))
-		return;
+		return false;
 
-	auto GetVal = [=](const String& s, int p, int f) -> int
+	auto GetVal = [this](const String& s, int p, int f) -> int
 	{
 		int n = ReadInt(s, 0);
 		if(!n)
@@ -134,12 +142,19 @@ void TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
 	}
 	
 	if(!show)
-		return;
+		return false;
 
 	if(simg.size.cx == 0 && simg.size.cy == 0)
 		simg.size.SetNull();
 
 	RenderImage(simg, !modes[DECSDM]);	// Rely on sixel scrolling mode.
+	return true;
+}
+
+bool TerminalCtrl::ParseiTerm2Annotations(const VTInStream::Sequence& seq)
+{
+	// TODO
+	return false;
 }
 
 void TerminalCtrl::ParseHyperlinks(const VTInStream::Sequence& seq)
@@ -162,8 +177,8 @@ void TerminalCtrl::ParseHyperlinks(const VTInStream::Sequence& seq)
 		uri = UrlDecode(uri);
 		cellattrs.Image(false);
 		cellattrs.Hyperlink(true);
-		cellattrs.data = FoldHash(GetHashValue(uri));
-		RenderHyperlink(uri);
+		cellattrs.Annotation(false);
+		cellattrs.data = RenderHypertext(uri);
 	}
 }
 
@@ -204,6 +219,36 @@ void TerminalCtrl::ParseClipboardRequests(const VTInStream::Sequence& seq)
 void TerminalCtrl::ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq)
 {
 	WhenDirectoryChange(seq.GetStr(2));
+}
+
+void TerminalCtrl::ParseTerminalCtrlProtocols(const VTInStream::Sequence& seq)
+{
+	if(seq.GetInt(2) == 1)
+		ParseTerminalCtrlAnnotations(seq);
+}
+
+void TerminalCtrl::ParseTerminalCtrlAnnotations(const VTInStream::Sequence& seq)
+{
+	if(!annotations || seq.parameters.GetCount() != 4)
+		return;
+	
+	constexpr const int MAX_ANNOTATION_LENGTH = 65536;
+
+	String type = seq.GetStr(3);
+	String anno = seq.GetStr(4);
+
+	anno = Base64Decode(anno);
+	
+	if(IsNull(anno) || anno.GetLength() > MAX_ANNOTATION_LENGTH) {
+		cellattrs.Annotation(false);
+		cellattrs.data = 0;
+	}
+	else {
+		cellattrs.Image(false);
+		cellattrs.Hyperlink(false);
+		cellattrs.Annotation(true);
+		cellattrs.data = RenderHypertext(anno);
+	}
 }
 
 }

@@ -1192,6 +1192,39 @@ const VTCell& VTPage::FetchCell(const Point& pt) const
 			: VTCell::Void();
 }
 
+void VTPage::FetchCellsMutable(Point pl, Point ph, Event<VTCell&> consumer)
+{
+	Point ptl = min(pl, ph);
+	Point pth = max(pl, ph);
+	
+	if(ptl.y == pth.y) {
+		const VTLine& line = FetchLine(ptl.y);
+		if(!line.IsVoid())
+			for(int i = ptl.x; i < min(pth.x, line.GetCount() - 1); i++) {
+				consumer(const_cast<VTCell&>(line[i]));
+			}
+	}
+	else {
+		for(int i = ptl.y; i <= pth.y; i++) {
+			const VTLine& line = FetchLine(i);
+			if(line.IsVoid())
+				continue;
+			if(i == ptl.y) {
+				for(int j = ptl.x; j < line.GetCount(); j++)
+					consumer(const_cast<VTCell&>(line[j]));
+			}
+			else
+			if(i == pth.y) {
+				for(int j = 0; j < min(pth.x, line.GetCount() - 1); j++)
+					consumer(const_cast<VTCell&>(line[j]));
+			}
+			else {
+				for(int j = 0; j < line.GetCount(); j++)
+					consumer(const_cast<VTCell&>(line[j]));
+			}
+		}
+	}
+}
 
 const VTLine& VTPage::FetchLine(int i) const
 {

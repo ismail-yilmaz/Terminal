@@ -32,6 +32,7 @@ TerminalCtrl::TerminalCtrl()
 , jexerimages(false)
 , iterm2images(false)
 , hyperlinks(false)
+, annotations(false)
 , reversewrap(false)
 , hidemousecursor(false)
 , sizehint(true)
@@ -343,14 +344,16 @@ void TerminalCtrl::RefreshDisplay()
 	
 	LTIMING("TerminalCtrl::RefreshDisplay");
 
+	bool hypertext = hyperlinks || annotations;
+	
 	for(int i = pos; i < cnt; i++) {
 		const VTLine& line = page->FetchLine(i);
 		int y = i * csz.cy - (csz.cy * pos);
 		for(int j = 0; j < line.GetCount(); j++) {
 			int x = j * csz.cx;
 			const VTCell& cell = line[j];
-			if(hyperlinks && cell.IsHyperlink()
-				&& (cell.data == activelink || cell.data == prevlink)) {
+			if(hypertext && cell.IsHypertext()
+				&& (cell.data == activehtext || cell.data == prevhtext)) {
 					if(!line.IsInvalid())
 						Refresh(RectC(x, y, csz.cx, csz.cy).Inflated(4));
 			}
@@ -471,8 +474,8 @@ void TerminalCtrl::LeftDrag(Point pt, dword keyflags)
 			DoDragAndDrop(data, iw, DND_COPY);
 		}
 		else
-		if(modifier && IsMouseOverHyperlink(pt)) {
-			WString lsample = GetHyperlinkURI(pt, modifier).ToWString();
+		if(modifier && (IsMouseOverHyperlink(pt) || IsMouseOverAnnotation(pt))) {
+			WString lsample = GetHypertextContent(pt, modifier).ToWString();
 			Append(data, lsample);
 			Size lsz = StdSampleSize();
 			ImageDraw iw(lsz);
@@ -516,9 +519,13 @@ void TerminalCtrl::LeftDouble(Point pt, dword keyflags)
 			}
 			else
 			if(IsMouseOverHyperlink(pt)) {
-				String uri = GetHyperlinkURI(pt, true);
+				String uri = GetHypertextContent(pt, true);
 				if(!IsNull(uri))
 					WhenLink(uri);
+			}
+			else
+			if(IsMouseOverAnnotation(pt)) {
+				EditAnnotation();
 			}
 		}
 		else {
@@ -617,8 +624,8 @@ void TerminalCtrl::MouseMove(Point pt, dword keyflags)
 		Refresh();
 	}
 	else
-	if(hyperlinks) {
-		HighlightHyperlink(ClientToPagePos(pt));
+	if(hyperlinks || annotations) {
+		HighlightHypertext(ClientToPagePos(pt));
 	}
 }
 
@@ -963,41 +970,133 @@ Image TerminalCtrl::GetInlineImage(Point pt, bool modifier)
 			Image img = GetCachedImageData(cell.chr, Null, GetCellSize()).image;
 			if(!IsNull(img))
 				return pick(img);
-			LLOG("Unable to retrieve image from cache. Link id: " << cell.chr);
+			LLOG("Unable to retrieve image from cache. Image id: " << cell.chr);
 		}
 	}
 	return Null;
 }
 
-String TerminalCtrl::GetHyperlinkURI(Point pt, bool modifier)
+String TerminalCtrl::GetHypertextContent(Point pt, bool modifier)
 {
 	if(modifier) {
 		const VTCell& cell = page->FetchCell(pt);
-		if(cell.IsHyperlink()) {
-			String uri = GetCachedHyperlink(cell.data);
-			if(!IsNull(uri))
-				return uri;
-			LLOG("Unable to retrieve URI from link cache. Link id: " << cell.data);
+		if(cell.IsHypertext()) {
+			String htxt = GetCachedHypertext(cell.data);
+			if(!IsNull(htxt))
+				return htxt;
+			LLOG("Unable to retrieve hypertext from the hypertext cache. Htext id: " << cell.data);
 		}
 	}
 	return Null;
 }
 
-void TerminalCtrl::HighlightHyperlink(Point pt)
+void TerminalCtrl::HighlightHypertext(Point pt)
 {
 	if(mousepos != pt) {
 		mousepos = pt;
 		const VTCell& cell = page->FetchCell(pt);
-		if(cell.IsHyperlink() || activelink > 0) {
-			if(cell.data != activelink) {
-				prevlink = activelink;
-				activelink = cell.data;
+		if((!HasAnnotations() && cell.IsAnnotation())
+		|| (!HasHyperlinks() && cell.IsHyperlink())) {
+			activehtext = 0;
+			return;
+		}
+		if(cell.IsHypertext() || activehtext > 0) {
+			if(cell.data != activehtext) {
+				prevhtext = activehtext;
+				activehtext = cell.data;
 				RefreshDisplay();
 			}
-			String lnk = GetCachedHyperlink(activelink);
-			Tip(UrlDecode(lnk));
+			String htxt = GetCachedHypertext(activehtext);
+			Tip(htxt);
+		}
+		else {
+			Tip("");
 		}
 	}
+}
+
+bool TerminalCtrl::SelectAnnotatedCells(Point pt, const Event<VTCell&>& fn)
+{
+	const VTCell& cell = page->FetchCell(pt);
+	if(cell.IsVoid() || !cell.IsAnnotation())
+		return false;
+	auto f = GetWordSelectionFilter();
+	SetWordSelectionFilter([](const VTCell& cell) { return cell.IsAnnotation(); });
+	Point pl, ph;
+	bool ok = GetWordSelection(pt, pl, ph);
+	SetWordSelectionFilter(f);
+	if(ok)
+		page->FetchCellsMutable(pl, ph, fn);
+	return ok;
+}
+
+void TerminalCtrl::AddAnnotation(const String& txt)
+{
+	Point pl, ph;
+	if(!IsNull(txt) && GetSelection(pl, ph)) {
+		dword id = RenderHypertext(txt);
+		page->FetchCellsMutable(pl, ph, [id](VTCell& cell) {
+			cell.Image(false).Hyperlink(false).Annotation().data = id;
+		});
+		RefreshDisplay();
+	}
+}
+
+void TerminalCtrl::AddAnnotation()
+{
+	String txt;
+	if(WhenAnnotation(GetMouseViewPos(), txt) && !IsNull(txt))
+		AddAnnotation(txt);
+}
+
+void TerminalCtrl::EditAnnotation()
+{
+	if(!IsMouseOverAnnotation(mousepos))
+		return;
+	dword id = page->FetchCell(mousepos).data;
+	String txt = GetCachedHypertext(id);
+	if(!IsNull(txt) && WhenAnnotation(GetMouseViewPos(), txt)) {
+		id = RenderHypertext(txt);
+		SelectAnnotatedCells(mousepos, [id](VTCell& cell) {
+			cell.Image(false).Hyperlink(false).Annotation().data = id;
+		});
+		RefreshDisplay();
+	}
+}
+
+void TerminalCtrl::DeleteAnnotation()
+{
+	SelectAnnotatedCells(mousepos, [](VTCell& cell) {
+		if(cell.IsAnnotation())
+			cell.Annotation(false).data = 0;
+	});
+	RefreshDisplay();
+}
+
+void TerminalCtrl::ShowAnnotation(Point pt, const String& s)
+{
+	auto& p = Single<ToolTip>();
+	if(s.IsEmpty()) {
+		HideAnnotation();
+		return;
+	}
+
+	p.Set(s);
+	Size sz = p.GetMinSize();
+	Rect r = GetMouseWorkArea();
+	pt = GetMousePos();
+	pt.x = max(pt.x + sz.cx > r.right ? pt.x - sz.cx : pt.x + Zx(4), r.left);
+	pt.y = max(pt.y + sz.cy > r.bottom ? pt.y - sz.cy: pt.y + Zy(4), r.top);
+	if(!p.IsOpen())
+		p.PopUp(this, pt, false);
+	p.Refresh();
+}
+
+void TerminalCtrl::HideAnnotation()
+{
+	auto& p = Single<ToolTip>();
+	if(p.IsOpen())
+		p.Close();
 }
 
 void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly, bool co,
@@ -1086,6 +1185,11 @@ void TerminalCtrl::StdBar(Bar& menu)
 		menu.Separator();
 		LinksBar(menu);
 	}
+	else
+	if(IsMouseOverAnnotation()) {
+		menu.Separator();
+		AnnotationsBar(menu);
+	}
 	else {
 		menu.Separator();
 		EditBar(menu);
@@ -1095,9 +1199,14 @@ void TerminalCtrl::StdBar(Bar& menu)
 void TerminalCtrl::EditBar(Bar& menu)
 {
 	bool b = IsEditable() && !IsSelectorMode();
+	bool q = b && annotations && IsSelection() && !IsSelectorMode();
 	menu.Add(IsSelection(), AK_COPY,  [=] { Copy();  });
 	menu.Add(b, AK_PASTE, CtrlImg::paste(), [=] { Paste(); });
 	menu.Separator();
+	if(HasAnnotations()) {
+		menu.Add(q, AK_ANNOTATE, [=] { AddAnnotation(); });
+		menu.Separator();
+	}
 	menu.Add(b, AK_SELECTALL, CtrlImg::select_all(), [=] { SelectAll(); });
 	menu.Separator();
 	menu.Add(t_("Selector mode"),[=] { IsSelectorMode() ? EndSelectorMode() : BeginSelectorMode(); })
@@ -1107,6 +1216,9 @@ void TerminalCtrl::EditBar(Bar& menu)
 
 void TerminalCtrl::LinksBar(Bar& menu)
 {
+	if(!HasHyperlinks())
+		return;
+	
 	String uri = GetHyperlinkUri();
 	if(IsNull(uri))
 		return;
@@ -1115,8 +1227,26 @@ void TerminalCtrl::LinksBar(Bar& menu)
 	menu.Add(AK_OPENLINK, CtrlImg::open(), [=] { WhenLink(uri); });
 }
 
+void TerminalCtrl::AnnotationsBar(Bar& menu)
+{
+	if(!HasAnnotations())
+		return;
+	
+	String txt = GetAnnotationText();
+	if(IsNull(txt))
+		return;
+
+	bool b = IsEditable() && !IsSelectorMode();
+	menu.Add(AK_COPYANNOTATION, CtrlImg::copy(),       [=] { Copy(txt.ToWString()); });
+	menu.Add(b, AK_EDITANNOTATION, CtrlImg::open(),    [=] { EditAnnotation();   });
+	menu.Add(b, AK_DELETEANNOTATION, CtrlImg::remove(),[=] { DeleteAnnotation(); });
+}
+
 void TerminalCtrl::ImagesBar(Bar& menu)
 {
+	if(!HasInlineImages())
+		return;
+	
 	Point pt = mousepos;
 
 	menu.Add(AK_COPYIMAGE, CtrlImg::copy(), [=]
@@ -1191,6 +1321,9 @@ void TerminalCtrl::OptionsBar(Bar& menu)
 	menu.Add(AK_HYPERLINKS,
 		[=] { Hyperlinks(!hyperlinks); })
 		.Check(hyperlinks);
+	menu.Add(AK_ANNOTATIONS,
+		[=] { Annotations(!annotations); })
+		.Check(annotations);
 	menu.Add(AK_INLINEIMAGES,
 		[=] { InlineImages(!inlineimages); })
 		.Check(inlineimages);
@@ -1236,7 +1369,8 @@ Image TerminalCtrl::CursorImage(Point p, dword keyflags)
 	if(IsMouseTracking(keyflags))
 		return Image::Arrow();
 	else
-	if(IsMouseOverHyperlink())
+	if((HasAnnotations() && IsMouseOverAnnotation())
+	|| (HasHyperlinks()  && IsMouseOverHyperlink()))
 		return Image::Hand();
 	else
 		return Image::IBeam();

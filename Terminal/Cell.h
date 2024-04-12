@@ -37,7 +37,8 @@ struct VTCell : Moveable<VTCell> {
         SGR_HIDDEN      = 0x0080,
         SGR_FAINT       = 0x0100,
         SGR_IMAGE       = 0x0200,
-        SGR_HYPERLINK   = 0x0400
+        SGR_HYPERLINK   = 0x0400,
+        SGR_ANNOTATION  = 0x0800
     };
 
     enum FillerFlags : dword {
@@ -65,6 +66,7 @@ struct VTCell : Moveable<VTCell> {
     VTCell& Conceal(bool b = true)           { sgr = (sgr & ~SGR_HIDDEN)    | (-word(b) & SGR_HIDDEN); return *this;    }
     VTCell& Image(bool b = true)             { sgr = (sgr & ~SGR_IMAGE)     | (-word(b) & SGR_IMAGE); return *this;     }
     VTCell& Hyperlink(bool b = true)         { sgr = (sgr & ~SGR_HYPERLINK) | (-word(b) & SGR_HYPERLINK); return *this; }
+    VTCell& Annotation(bool b = true)        { sgr = (sgr & ~SGR_ANNOTATION)| (-word(b) & SGR_ANNOTATION); return *this;}
 
     VTCell& ProtectDEC(bool b = true)        { attrs = (attrs & ~ATTR_PROTECTION_DEC) | (-word(b) & ATTR_PROTECTION_DEC); return *this; }
     VTCell& ProtectISO(bool b = true)        { attrs = (attrs & ~ATTR_PROTECTION_ISO) | (-word(b) & ATTR_PROTECTION_ISO); return *this; }
@@ -90,6 +92,8 @@ struct VTCell : Moveable<VTCell> {
     bool IsConcealed() const                 { return sgr & SGR_HIDDEN;      }
     bool IsImage() const                     { return sgr & SGR_IMAGE;       }
     bool IsHyperlink() const                 { return sgr & SGR_HYPERLINK;   }
+    bool IsAnnotation() const                { return sgr & SGR_ANNOTATION;  }
+    bool IsHypertext() const                 { return IsHyperlink() || IsAnnotation(); }
     bool IsProtected() const                 { return attrs & ATTR_PROTECTION_ALL; }
     bool HasDECProtection() const            { return attrs & ATTR_PROTECTION_DEC; }
     bool HasISOProtection() const            { return attrs & ATTR_PROTECTION_ISO; }

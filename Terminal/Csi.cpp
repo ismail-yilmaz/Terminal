@@ -180,6 +180,7 @@ void TerminalCtrl::ReportDeviceAttributes(const VTInStream::Sequence& seq)
 		if(sixelimages)  s << ";4";
 		if(jexerimages)  s << ";444";
 		if(iterm2images) s << ";1337";
+		if(annotations)  s << ";8100";
 		
 		PutCSI(s + "c");
 	}

@@ -230,11 +230,15 @@ public:
     const VTCell&   FetchCell(const Point& pt) const;
     const VTCell&   operator()(const Point& pt) const        { return FetchCell(pt);  }
 
+    void            FetchCellsMutable(Point pl, Point ph, Event<VTCell&> consumer);
+    
     // Rect/coords: 0-based.
     bool            FetchRange(const Rect& r, RangeCallback consumer, bool rect = false) const;
     bool            FetchRange(int begin, int end, Gate<VectorMap<int, VTLine>&> consumer) const;
     bool            FetchRange(Tuple<int, int> range, Gate<VectorMap<int, VTLine>&> consumer) const;
-   
+
+    // TODO: Add a complete set of mutating fetchers.
+       
     const VTLine*    begin() const                           { return lines.begin(); }
     VTLine*          begin()                                 { return lines.begin(); }
     const VTLine*    end() const                             { return lines.end();   }

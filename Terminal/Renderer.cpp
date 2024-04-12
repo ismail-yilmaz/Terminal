@@ -54,7 +54,6 @@ void sRectRenderer::DrawRect(const VTCell& cell, const CellPaintData& data)
 class sTextRenderer {
 	Draw&       w;
 	Font        font;
-	bool        canlink;
 	int         y, icount = 0, lcount = 0;
 	struct Chrs : Moveable<Chrs> {
 		Vector<int> x;
@@ -69,7 +68,11 @@ public:
 	void DrawChar(const VTCell& cell, const CellPaintData& data);
 	void Flush();
 
-	sTextRenderer(Draw& w, Font f, bool l) : w(w), font(f), canlink(l) { y = Null; }
+	Color annotationcolor;
+	bool canhyperlink:1;
+	bool canannotate:1;
+	
+	sTextRenderer(Draw& w, Font f) : w(w), font(f) { y = Null; }
 	~sTextRenderer()                               { Flush();  }
 };
 
@@ -96,9 +99,14 @@ void sTextRenderer::Flush()
 				int h = font.GetDescent() - 2;
 				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_SOLID, fc.b);
 			}
-			if(canlink && fc.a & VTCell::SGR_HYPERLINK) {
+			if(canhyperlink && fc.a & VTCell::SGR_HYPERLINK) {
 				int h = font.GetAscent() + 2;
 				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_DOT, fc.b);
+				font.NoUnderline();
+			}
+			if(canannotate && fc.a & VTCell::SGR_ANNOTATION) {
+				int h = font.GetAscent() + 2;
+				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_SOLID, annotationcolor);
 				font.NoUnderline();
 			}
 			w.DrawText(x, y, c.text, font, fc.b, c.x);
@@ -117,7 +125,7 @@ void sTextRenderer::DrawChar(const VTCell& cell, const CellPaintData& data)
 
 	Chrs *c = &cache.GetAdd(MakeTuple(cell.sgr, data.ink));
 	
-	if(c->x.GetCount() && c->x.Top() > p.x || (cell.IsUnderlined() || cell.IsHyperlink()) && cache.GetCount() > 1) {
+	if(c->x.GetCount() && c->x.Top() > p.x || (cell.IsUnderlined() || cell.IsHypertext()) && cache.GetCount() > 1) {
 		Flush();
 		c = &cache.GetAdd(MakeTuple(cell.sgr, data.ink));
 	}
@@ -171,7 +179,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 				const VTCell& cell = line.Get(j, GetAttrs());
 				CellPaintData& data = linepaintdata[j];
 				data.highlight = IsSelected(Point(j,i));
-				data.show |= cell.IsHyperlink() && cell.data == activelink;
+				data.show |= (cell.IsHypertext() && cell.data == activehtext);
 				data.show |= cell.IsInverted();
 				data.show |= print;
 				if(data.highlight) {
@@ -192,7 +200,10 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 		int icount = 0, lcount = 0;
 		{
 			// Render the text by combining non-contiguous chunks of chars.
-			sTextRenderer tr(w, GetFont(), hyperlinks);
+			sTextRenderer tr(w, GetFont());
+			tr.canhyperlink = hyperlinks;
+			tr.canannotate  = annotations;
+			tr.annotationcolor = colortable[COLOR_ANNOTATION_UNDERLINE];
 			for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
 				CellPaintData& data = linepaintdata[j];
 				data.pos = { x + padding.cx, y + padding.cy };
@@ -339,13 +350,13 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 {
 	LTIMING("TerminalCtrl::ImageDataMaker::Make");
 
-	auto ToCellSize = [=](Sizef sz) -> Size
+	auto ToCellSize = [this](Sizef sz) -> Size
 	{
 		sz = sz / Sizef(fontsize);
 		return Size(fround(sz.cx), fround(sz.cy));
 	};
 
-	auto AdjustSize = [=](Size sr, Size sz) -> Size
+	auto AdjustSize = [this](Size sr, Size sz) -> Size
 	{
 		if(imgs.keepratio) {
 			if(sr.cx == 0 && sr.cy > 0)
@@ -408,56 +419,46 @@ void TerminalCtrl::SetImageCacheMaxSize(int maxsize, int maxcount)
 	sCachedImageMaxCount = max(1, maxcount);
 }
 
-void TerminalCtrl::RenderHyperlink(const String& uri)
+dword TerminalCtrl::RenderHypertext(const String& uri)
 {
-	
-	GetCachedHyperlink(FoldHash(GetHashValue(uri)), uri);
+	dword h = FoldHash(GetHashValue(uri));
+	GetCachedHypertext(h, uri);
+	return h;
 }
 
-// Shared hyperlink cache support.
+// Shared hypertext cache support.
 
-static StaticMutex sLinkCacheLock;
-static LRUCache<String> sLinkCache;
-static int sCachedLinkMaxSize = 2084 * 100000;
-static int sCachedLinkMaxCount = 100000;
-
-String TerminalCtrl::HyperlinkMaker::Key() const
+String TerminalCtrl::HypertextMaker::Key() const
 {
 	StringBuffer h;
 	RawCat(h, id);
 	return String(h); // Make MSVC happy...
 }
 
-int TerminalCtrl::HyperlinkMaker::Make(String& link) const
+int TerminalCtrl::HypertextMaker::Make(Value& obj) const
 {
-	LTIMING("TerminalCtrl::HyperlinkMaker::Make");
+	LTIMING("TerminalCtrl::HypertextMaker::Make");
 
-	link = url;
-	return link.GetLength();
+	obj = txt;
+	return txt.GetLength();
 }
 
-String TerminalCtrl::GetCachedHyperlink(dword id, const String& data)
+String TerminalCtrl::GetCachedHypertext(dword id, const String& data)
 {
-	Mutex::Lock __(sLinkCacheLock);
+	LTIMING("TerminalCtrl::GetCachedHypertext");
 
-	LTIMING("TerminalCtrl::GetCachedHyperlink");
-
-	HyperlinkMaker hm(id, data);
-	sLinkCache.Shrink(sCachedLinkMaxSize, sCachedLinkMaxCount);
-	return sLinkCache.Get(hm);
+	HypertextMaker m(id, data);
+	return MakeValue(m);
 }
 
 void TerminalCtrl::ClearHyperlinkCache()
 {
-	Mutex::Lock __(sLinkCacheLock);
-	sLinkCache.Clear();
+	// TODO: Obsolete. Remove
 }
 
 void TerminalCtrl::SetHyperlinkCacheMaxSize(int maxcount)
 {
-	Mutex::Lock __(sLinkCacheLock);
-	sCachedLinkMaxSize  = max(2084, maxcount * 2084);
-	sCachedLinkMaxCount = max(1, maxcount);
+	// TODO: Obsolete. Remove
 }
 
 // Image display support.
