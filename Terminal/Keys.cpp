@@ -39,6 +39,10 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 		seltype = SEL_TEXT;
 	}
 	else
+	if(Match(AK_SELECTOR_LINEMODE, key)) {
+		seltype = SEL_LINE;
+	}
+	else
 	if(Match(AK_SELECTOR_RECTMODE, key)) {
 		seltype = SEL_RECT;
 	}
@@ -117,6 +121,28 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 		else
 		if(k == K_RIGHT)
 			cursor = selpos;
+	}
+	else
+	if(seltype == SEL_LINE) {
+		while(!GetLineSelection(cursor, anchor, selpos)) {
+			if(k == K_UP) {
+				cursor.y = max(cursor.y - 1, 0);
+			}
+			else
+			if(k == K_DOWN) {
+				cursor.y = min(cursor.y + 1, psz.cy);
+			}
+			else
+				break;
+			if(cursor.y == 0 || cursor.y == psz.cy)
+				break;
+		}
+		if(k == K_UP)
+			cursor = anchor;
+		else
+		if(k == K_DOWN)
+			cursor = selpos;
+
 	}
 	else
 		selpos = cursor;
