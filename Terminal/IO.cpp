@@ -456,6 +456,7 @@ void TerminalCtrl::Jsonize(JsonIO& jio)
         ("AdjustColorstoTheme", adjustcolors)
         ("TransparentBackground", nobackground)
         ("Highlight",           highlight)
+        ("NotifyProgress",      notifyprogress)
         ("ColorTable",          cts);
         
     if(jio.IsLoading()) {

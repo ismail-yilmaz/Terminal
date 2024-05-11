@@ -36,6 +36,9 @@ void TerminalCtrl::ParseOperatingSystemCommands(const VTInStream::Sequence& seq)
 	case 8:		// Explicit hyperlinks protocol.
 		ParseHyperlinks(seq);
 		break;
+	case 9:     // Parse ConEMU specific protocols
+		ParseConEmuProtocols(seq);
+		break;
 	case 52:	// Clipboard manipulation protocol.
 		ParseClipboardRequests(seq);
 		break;
@@ -248,6 +251,30 @@ void TerminalCtrl::ParseTerminalCtrlAnnotations(const VTInStream::Sequence& seq)
 		cellattrs.Hyperlink(false);
 		cellattrs.Annotation(true);
 		cellattrs.data = RenderHypertext(anno);
+	}
+}
+
+void TerminalCtrl::ParseConEmuProtocols(const VTInStream::Sequence& seq)
+{
+	// For more information on ConEMU specific commands, see:
+	// https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC
+	
+	if(seq.GetInt(2) == 4 && notifyprogress)
+		ParseConEmuProgressEvent(seq);
+}
+
+void TerminalCtrl::ParseConEmuProgressEvent(const VTInStream::Sequence& seq)
+{
+	// https://learn.microsoft.com/en-us/windows/terminal/tutorials/progress-bar-sequences
+	
+	int n = seq.GetInt(4);
+           
+	switch(seq.GetInt(3)) {
+	case 1: WhenProgress(PROGRESS_NORMAL, clamp(n, 0, 100));  break;
+	case 2: WhenProgress(PROGRESS_ERROR, n);   break;
+	case 3: WhenProgress(PROGRESS_BUSY, 0);    break;
+	case 4: WhenProgress(PROGRESS_WARNING, n); break;
+	default: WhenProgress(PROGRESS_OFF, 0);    break;
 	}
 }
 

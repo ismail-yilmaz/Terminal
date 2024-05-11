@@ -52,6 +52,7 @@ TerminalCtrl::TerminalCtrl()
 , streamfill(false)
 , scrolltoend(true)
 , highlight(false)
+, notifyprogress(false)
 {
 	Unicode();
 	SetLevel(LEVEL_4);

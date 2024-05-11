@@ -55,6 +55,20 @@ are toggled.&]
 henLED] event.&]
 [s3; &]
 [s4; &]
+[s0;%- enum_[* ProgressState]&]
+[s2;b17;a17; Constants used for ConEmu`'s progress notification protocol.&]
+[s7;i1120;a17;:TerminalCtrl`:`:PROGRESS`_OFF: [*C@3 PROGRESS`_OFF]-|Stops 
+the progress.&]
+[s7;i1120;a17;:TerminalCtrl`:`:PROGRESS`_NORMAL: [*C@3 PROGRESS`_NORMAL]-|Sets 
+the progress to a given value (percent).&]
+[s7;i1120;a17;:TerminalCtrl`:`:PROGRESS`_ERROR: [*@3 PROGRESS`_ERROR]-|Sets 
+the progress state to error (with an optional value).&]
+[s7;i1120;a17;:TerminalCtrl`:`:PROGRESS`_WARNING: [*@3 PROGRESS`_WARNING]-|Sets 
+the progress state to warning (with an optional value).&]
+[s7;i1120;a17;:TerminalCtrl`:`:PROGRESS`_BUSY: [*@3 PROGRESS`_BUSY]-|Sets 
+the progress to busy (indeterminate) or scan mode.&]
+[s0; &]
+[s4; &]
 [s0;%- enum_[* Colors]&]
 [s0;l288;b17;a17; Constanst used as indices for ANSI colors, their 
 lighter counterparts, and Terminal ctrl`'s basic colors. The 
@@ -223,6 +237,25 @@ coordinates as its first parameter. The second parameter depends
 on the operation. It will be empty (on new annotation) or filled 
 with the current annotation (edit). TerminalCtrl will only accept 
 the new value of the String if the gate returns true.&]
+[s3; &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenProgress:%- Event<[@(0.0.255) int], 
+[@(0.0.255) int]> [* WhenProgress]&]
+[s2; This event is dispatched when an application wants to notify 
+the user about a progress state of an ongoing operation. It passes 
+the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#TerminalCtrl`:`:PROGRESS`_OFF^ P
+rogressState constants] as its first parameter. The value of 
+the second parameter depends on the value of the first parameter. 
+&]
+[s2; &]
+[s2;i150;O0; If the progress state is [/ normal], then the value will 
+be the percentage of the progress , between 0`-100 (inclusive). 
+&]
+[s2;i150;O0; If the progress state is [/ error ]or [/ warning], then 
+the value is optional and may mean an error or warning value 
+(depending on the app). &]
+[s2;i150;O0; If the progress state is [/ busy], then the value should 
+be ignored.&]
 [s3; &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenHighlight:%- Event<VectorMap<[@(0.0.255) int], 
@@ -1103,6 +1136,30 @@ ClipboardWritePermitted]()_[@(0.0.255) const]&]
 [s2;# Returns true if the clipboard write access is granted to the 
 applications that support the clipboard access and manipulation 
 protocol.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:NotifyProgress`(bool`):%- TerminalCtrl[@(0.0.255) `&] 
+[* NotifyProgress]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2; Enables or disables [^https`:`/`/learn`.microsoft`.com`/en`-us`/windows`/terminal`/tutorials`/progress`-bar`-sequences^ C
+onEmu/Windows terminal`'s progress notification protocol ](OSC 
+9 ;4). Returns `*this for method chaining.&]
+[s2; See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenProgress^ W
+henProgress]&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:NoNotifyProgress`(`):%- TerminalCtrl[@(0.0.255) `&] 
+[* NoNotifyProgress]()&]
+[s2; Disables [^https`:`/`/learn`.microsoft`.com`/en`-us`/windows`/terminal`/tutorials`/progress`-bar`-sequences^ C
+onEmu/Windows terminal`'s progress notification protocol] (OSC 
+9 ;4). Returns `*this for method chaining.&]
+[s2; See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenProgress^ W
+henProgress]&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:IsNotifyingProgress`(`)const:%- [@(0.0.255) bool] 
+[* IsNotifyingProgress]() [@(0.0.255) const]&]
+[s2; Returns true if the progress notification protocol is enabled. 
+.&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:PermitClipboardAccess`(bool`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T

@@ -67,6 +67,15 @@ public:
         LED_ALL
     };
 
+    enum ProgressState
+    {
+        PROGRESS_OFF = 0,
+        PROGRESS_NORMAL,
+        PROGRESS_ERROR,
+        PROGRESS_WARNING,
+        PROGRESS_BUSY
+    };
+    
    enum TimerIds
    {
         TIMEID_REFRESH = Ctrl::TIMEID_COUNT,
@@ -95,6 +104,7 @@ public:
     Event<String>        WhenOutput;
     Event<>              WhenScroll;
     Event<int, bool>     WhenLED;
+    Event<int, int>      WhenProgress;
     Gate<PasteClip&>     WhenClip;
     Event<const String&> WhenLink;
     Event<const String&> WhenImage;
@@ -288,7 +298,11 @@ public:
     TerminalCtrl&   PermitClipboardWrite(bool b = true)             { if(b) clipaccess |= CLIP_WRITE; else clipaccess &= ~CLIP_WRITE; return *this; }
     TerminalCtrl&   ForbidClipboardWrite()                          { return PermitClipboardWrite(false); }
     bool            IsClipboardWritePermitted() const               { return clipaccess & CLIP_WRITE; }
- 
+
+    TerminalCtrl&   NotifyProgress(bool b = true)                   { return *this; }
+    TerminalCtrl&   NoNotifyProgress()                              { return NotifyProgress(false); }
+    bool            IsNotifyingProgress() const                     { return true; }
+    
     TerminalCtrl&   PCStyleFunctionKeys(bool b = true)              { pcstylefunctionkeys = b; return *this; }
     TerminalCtrl&   NoPCStyleFunctionKeys()                         { return PCStyleFunctionKeys(false); }
     bool            HasPCStyleFunctionKeys() const                  { return pcstylefunctionkeys; }
@@ -647,6 +661,7 @@ private:
     bool        lightcolors;
     bool        hidemousecursor;
     bool        highlight;
+    bool        notifyprogress;
 
 // Down below is the emulator stuff, formerley known as "Console"...
 
@@ -711,6 +726,8 @@ private:
 
     void        ParseTerminalCtrlProtocols(const VTInStream::Sequence& seq);
     
+    void        ParseConEmuProtocols(const VTInStream::Sequence& seq);
+    
     void        ParseSixelGraphics(const VTInStream::Sequence& seq);
     void        ParseJexerGraphics(const VTInStream::Sequence& seq);
     bool        ParseiTerm2Graphics(const VTInStream::Sequence& seq);
@@ -719,6 +736,8 @@ private:
 
     bool        ParseiTerm2Annotations(const VTInStream::Sequence& seq);
     void        ParseTerminalCtrlAnnotations(const VTInStream::Sequence& seq);
+    
+    void        ParseConEmuProgressEvent(const VTInStream::Sequence& seq);
     
     void        ParseClipboardRequests(const VTInStream::Sequence& seq);
     

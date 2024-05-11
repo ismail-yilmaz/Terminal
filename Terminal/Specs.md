@@ -593,3 +593,21 @@
 - The `clipboard` parameter can be empty or `s0`. Currently, TerminalCtrl omits this parameter.
 - When the `data` is a `?`, TerminalCtrl will reply to the host with the selection/clipboard data encoded using the same protocol.
 - When the `data` is *neither a base64 string nor a `?`*, TerminalCtrl will clear the selection/clipboard.
+- 
+### Progress Notification Protocol
+
+| Sequence                               | Description                                                         | Device Level |
+| ---                                    | ---                                                                 | ---          |
+|`OSC 9 ; 4 ; [state] ; [value] ST`      | Notifies the client code about the progress status of an operation. | Level 1      |
+
+#### Notes
+
+- Implements ConEmu/Windows Terminal's progress tracking protocol.
+- `[state]` can be one of `0`, `1`, `2`, `3`, or `4`.
+    - `0`: Off state. This indicates that the any progress bar should be hidden. Use this state when the command is complete, to clear out any progress state.
+    - `1`: Normal state. The `[value]` represents the completion percentage of the operation. It can be in between `0-100` (inclusive). 
+    - `2`: Error state.  The `[value]` is optional and *can* represents an error code.
+    - `3`: Busy state. The `[value]` should be ignored.
+    - `4`: Warning state.  The `[value]` is optional and *can* represents an warning number.
+
+
