@@ -124,6 +124,7 @@ Thanks to U++ team, it is possible to run U++ GUI applications from within a web
 - Has a selector mode, where users can navigate, select & copy text, words & rectangle areas, using keyboard. 
 - Supports bracketed paste mode.
 - Supports [explicit hyperlinks.](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) (OSC 8)
+- Supports [progress notification protocol](https://learn.microsoft.com/en-us/windows/terminal/tutorials/progress-bar-sequences) (OSC 9 ; 4)
 - Supports annotations (with rich text).
 - Has a predefined yet completely re-programmable context menu (right mouse button menu).
 - Supports window titles.
