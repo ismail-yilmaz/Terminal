@@ -299,9 +299,9 @@ public:
     TerminalCtrl&   ForbidClipboardWrite()                          { return PermitClipboardWrite(false); }
     bool            IsClipboardWritePermitted() const               { return clipaccess & CLIP_WRITE; }
 
-    TerminalCtrl&   NotifyProgress(bool b = true)                   { return *this; }
+    TerminalCtrl&   NotifyProgress(bool b = true)                   { notifyprogress = b; return *this; }
     TerminalCtrl&   NoNotifyProgress()                              { return NotifyProgress(false); }
-    bool            IsNotifyingProgress() const                     { return true; }
+    bool            IsNotifyingProgress() const                     { return notifyprogress; }
     
     TerminalCtrl&   PCStyleFunctionKeys(bool b = true)              { pcstylefunctionkeys = b; return *this; }
     TerminalCtrl&   NoPCStyleFunctionKeys()                         { return PCStyleFunctionKeys(false); }
