@@ -459,8 +459,10 @@ bool TerminalCtrl::Key(dword key, int count)
 	bool altkey   = key & K_ALT;
 	bool shiftkey = key & K_SHIFT;
 	
-	if(UDKey(key, count))
+	if(UDKey(key, count)) {
+		SyncSb(true);
 		goto End;
+	}
 	else
 	if(NavKey(key, count))
 		goto End;
@@ -480,8 +482,6 @@ bool TerminalCtrl::Key(dword key, int count)
 		return false;
 #endif
 
-	SyncSb(true);
-	
 	if(key == K_RETURN) {
 		PutEol();
 	}
@@ -542,8 +542,10 @@ bool TerminalCtrl::Key(dword key, int count)
 				key = '\'';
 				break;
 			default:
-				if(VTKey(key, count))
+				if(VTKey(key, count)) {
+					SyncSb(true);
 					goto End;
+				}
 				if(ctrlkey || altkey) {
 					key &= ~(K_CTRL|K_ALT|K_SHIFT);
 					if(key >= K_A && key <= K_Z) {
@@ -563,6 +565,8 @@ bool TerminalCtrl::Key(dword key, int count)
 				return false;
 		}
 	}
+	
+	SyncSb(true);
 
 End:
 	if(hidemousecursor)
