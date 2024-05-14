@@ -19,7 +19,7 @@ class sRectRenderer {
 	Rect  cr;
 	Color color;
 	Color background;
-	bool  transparent:1;
+	bool  transparent = false;
 
 public:
 	void DrawRect(const VTCell& cell, const CellPaintData& data);
@@ -41,6 +41,9 @@ void sRectRenderer::Flush()
 
 void sRectRenderer::DrawRect(const VTCell& cell, const CellPaintData& data)
 {
+	if(!data.show)
+		return;
+	
 	Rect r(data.pos, data.size);
 	if(cr.top == r.top && cr.bottom == r.bottom && cr.right == r.left && data.paper == color) {
 		cr.right = r.right;
@@ -179,6 +182,8 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 				const VTCell& cell = line.Get(j, GetAttrs());
 				CellPaintData& data = linepaintdata[j];
 				data.highlight = IsSelected(Point(j,i));
+				data.show = false;
+				data.show |= !IsNull(cell.paper);
 				data.show |= (cell.IsHypertext() && cell.data == activehtext);
 				data.show |= cell.IsInverted();
 				data.show |= print;
