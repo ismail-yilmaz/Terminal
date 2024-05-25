@@ -1,7 +1,5 @@
 
-# Technical Capabilities of Ultimate++ TerminalCtrl
-
-#### Note: *This document is only a draft.*
+# Technical Capabilities of TerminalCtrl
 
 ## Table of Contents
 
@@ -24,7 +22,7 @@
 
 ## [Requirements](#requirements)
 
-- Ultimate++, cross-platform C/C++ rapid application development framework.
+- [U++](www.ultimatepp.org), cross-platform C/C++ rapid application development framework.
 - A C/C++ compiler, that supports at least C++14.
  
 ## [Supported Platforms](#platforms)
@@ -102,6 +100,7 @@
 
 #### Notes
 
+- TerminalCtrl's responses to commands and report requests are not included in this table.
 
 ## [Supported Terminal Modes](#modes)
 
@@ -315,7 +314,9 @@
 |0          | Change icon name and window title.         | Level 1      |
 |2          | Change window title.                       | Level 1      |
 |4          | Change ANSI colors.                        | Level 1      |
+|7          | Directory change. (Shell integration)      | Level 1      |
 |8          | Set up hyperlinks.                         | Level 1      |
+|9 ; 4      | Progress notification.                     | Level 1      |
 |10         | Change ink color.                          | Level 1      |
 |11         | Change paper color.                        | Level 1      |
 |17         | Change selection ink color.                | Level 1      |
@@ -603,11 +604,11 @@
 #### Notes
 
 - Implements ConEmu/Windows Terminal's progress tracking protocol.
-- `[state]` can be one of `0`, `1`, `2`, `3`, or `4`.
+- `state` can be one of `0`, `1`, `2`, `3`, or `4`.
     - `0`: Off state. This indicates that the any progress bar should be hidden. Use this state when the command is complete, to clear out any progress state.
-    - `1`: Normal state. The `[value]` represents the completion percentage of the operation. It can be in between `0-100` (inclusive). 
-    - `2`: Error state.  The `[value]` is optional and *can* represents an error code.
-    - `3`: Busy state. The `[value]` should be ignored.
-    - `4`: Warning state.  The `[value]` is optional and *can* represents an warning number.
+    - `1`: Normal state. The `value` represents the completion percentage of the operation. It can be in between `0-100` (inclusive). 
+    - `2`: Error state.  The `value` is optional and *can* represents an error code.
+    - `3`: Busy state. The `value` should be ignored.
+    - `4`: Warning state.  The `value` is optional and *can* represents an warning number.
 
 
