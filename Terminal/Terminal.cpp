@@ -64,7 +64,7 @@ TerminalCtrl::TerminalCtrl()
 	ResetColors();
 	HideScrollBar();
 	WhenBar = [=](Bar& menu) { StdBar(menu); };
-	sb.WhenScroll = [=]() { Scroll(); };
+	sb.WhenScroll = [=]()    { Scroll(); };
 	caret.WhenAction = [=]() { ScheduleRefresh(); };
 	dpage.WhenUpdate = [=]() { ScheduleRefresh(); };
 	apage.WhenUpdate = [=]() { ScheduleRefresh(); };
