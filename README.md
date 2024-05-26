@@ -116,15 +116,16 @@ Thanks to U++ team, it is possible to run U++ GUI applications from within a web
 - Supports user configurable cursor styles (block, beam, underscore, blinking/steady).
 - Supports cursor locking.
 - Supports basic clipboard operations on texts, hyperlinks, and images.
-- Supports application clipboard/selection manipulation protocol (OSC 52)
+- Supports application clipboard/selection manipulation protocol (`OSC 52`)
 - Supports basic drag and drop operations on texts, hyperlinks and images.
 - Shows drag and drop animations (i.e thumbnails/samples of images, hyperlinks and plain texts)
 - Supports X11-style copy-on-select.
 - Supports rectangle selection.
 - Has a selector mode, where users can navigate, select & copy text, words & rectangle areas, using keyboard. 
 - Supports bracketed paste mode.
-- Supports [explicit hyperlinks.](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) (OSC 8)
-- Supports [progress notification protocol](https://learn.microsoft.com/en-us/windows/terminal/tutorials/progress-bar-sequences) (OSC 9 ; 4)
+- Supports [explicit hyperlinks.](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) (`OSC 8`)
+- Supports [progress notification protocol](https://learn.microsoft.com/en-us/windows/terminal/tutorials/progress-bar-sequences) (`OSC 9 ; 4`)
+- Supports [Working directory change protocol (shell integration)](https://learn.microsoft.com/en-us/windows/terminal/tutorials/new-tab-same-directory) (Both `OSC 7` and `OSC 9 ; 9`)
 - Supports annotations (with rich text).
 - Has a predefined yet completely re-programmable context menu (right mouse button menu).
 - Supports window titles.

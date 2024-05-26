@@ -1466,7 +1466,7 @@ ops.]&]
 ::@2 [s0; [C@5$(245) OSC 7 ; PATH ; ST]]
 :: [s0; [G Notifies the client code that the working directory is changed.]]
 :: [s0; [G Level 1]]
-:: [s0; [C@5$(245) OSC 9; 9 ; PATH ; ST]]
+:: [s0; [C@5$(245) OSC 9; 9 ; PATH ST]]
 :: [s0; [G Notifies the client code that the working directory is changed. 
 (ConEMU/Windows Terminal  version)]]
 :: [s0; [G Level 1]]}}&]

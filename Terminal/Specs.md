@@ -563,8 +563,8 @@
 
 | Sequence                | Description                                                                                         | Device Level |
 | ---                     | ---                                                                                                 | ---          |
-|`OSC 7 ; PATH ; ST`      | Notifies the client code that the working directory is changed.                                     | Level 1      |
-|`OSC 9 ; 9; PATH ; ST`   | Notifies the client code that the working directory is changed. (ConEmu / Windows Terminal version) | Level 1      |
+|`OSC 7 ; PATH ST`        | Notifies the client code that the working directory is changed.                                     | Level 1      |
+|`OSC 9 ; 9 ; PATH ST`    | Notifies the client code that the working directory is changed. (ConEmu / Windows Terminal version) | Level 1      |
 
 #### Notes
 
