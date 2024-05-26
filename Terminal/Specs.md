@@ -314,9 +314,10 @@
 |0          | Change icon name and window title.         | Level 1      |
 |2          | Change window title.                       | Level 1      |
 |4          | Change ANSI colors.                        | Level 1      |
-|7          | Directory change. (Shell integration)      | Level 1      |
+|7          | Change working directory                   | Level 1      |
 |8          | Set up hyperlinks.                         | Level 1      |
 |9 ; 4      | Progress notification.                     | Level 1      |
+|9 ; 9      | Change working directory. (ConEmu version) | Level 1      |
 |10         | Change ink color.                          | Level 1      |
 |11         | Change paper color.                        | Level 1      |
 |17         | Change selection ink color.                | Level 1      |
@@ -560,13 +561,14 @@
 
 ### Directory Change Protocol
 
-| Sequence                | Description                                                     | Device Level |
-| ---                     | ---                                                             | ---          |
-|`OSC 7 ; PATH ; ST`      | Notifies the client code that the working directory is changed. | Level 1      |
+| Sequence                | Description                                                                                         | Device Level |
+| ---                     | ---                                                                                                 | ---          |
+|`OSC 7 ; PATH ; ST`      | Notifies the client code that the working directory is changed.                                     | Level 1      |
+|`OSC 9 ; 9; PATH ; ST`   | Notifies the client code that the working directory is changed. (ConEmu / Windows Terminal version) | Level 1      |
 
 #### Notes
 
-- TerminalCtrl does not validate the requested path. It is up to the client-code to check the path's validity.
+- TerminalCtrl *does not* validate the requested path. It is up to the client-code to check the path's validity.
 
 ### Hyperlinks Protocol
 

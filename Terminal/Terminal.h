@@ -742,6 +742,7 @@ private:
     void        ParseClipboardRequests(const VTInStream::Sequence& seq);
     
     void        ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
+    void        ParseConEmuWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
     
     void        SetCaretStyle(const VTInStream::Sequence& seq);
 

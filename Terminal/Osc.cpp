@@ -259,13 +259,21 @@ void TerminalCtrl::ParseConEmuProtocols(const VTInStream::Sequence& seq)
 	// For more information on ConEMU specific commands, see:
 	// https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC
 	
-	if(seq.GetInt(2) == 4 && notifyprogress)
-		ParseConEmuProgressEvent(seq);
+	int opcode = seq.GetInt(2);
+	
+	switch(opcode) {
+	case 4: ParseConEmuProgressEvent(seq);                 break;
+	case 9: ParseConEmuWorkingDirectoryChangeRequest(seq); break;
+	default: LLOG("Unhandled ConEmu opcode: " << opcode);  break;
+	}
 }
 
 void TerminalCtrl::ParseConEmuProgressEvent(const VTInStream::Sequence& seq)
 {
 	// https://learn.microsoft.com/en-us/windows/terminal/tutorials/progress-bar-sequences
+
+	if(!notifyprogress)
+		return;
 	
 	int n = seq.GetInt(4);
            
@@ -276,6 +284,13 @@ void TerminalCtrl::ParseConEmuProgressEvent(const VTInStream::Sequence& seq)
 	case 4: WhenProgress(PROGRESS_WARNING, n); break;
 	default: WhenProgress(PROGRESS_OFF, 0);    break;
 	}
+}
+
+void TerminalCtrl::ParseConEmuWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq)
+{
+	// https://learn.microsoft.com/en-us/windows/terminal/tutorials/new-tab-same-directory
+	
+	WhenDirectoryChange(seq.GetStr(3));
 }
 
 }
