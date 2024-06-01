@@ -262,6 +262,7 @@ void TerminalCtrl::ParseConEmuProtocols(const VTInStream::Sequence& seq)
 	int opcode = seq.GetInt(2);
 	
 	switch(opcode) {
+	case 2: ParseConEmuMessageBoxMessage(seq);             break;
 	case 4: ParseConEmuProgressEvent(seq);                 break;
 	case 9: ParseConEmuWorkingDirectoryChangeRequest(seq); break;
 	default: LLOG("Unhandled ConEmu opcode: " << opcode);  break;
@@ -291,6 +292,13 @@ void TerminalCtrl::ParseConEmuWorkingDirectoryChangeRequest(const VTInStream::Se
 	// https://learn.microsoft.com/en-us/windows/terminal/tutorials/new-tab-same-directory
 	
 	WhenDirectoryChange(seq.GetStr(3));
+}
+
+void TerminalCtrl::ParseConEmuMessageBoxMessage(const VTInStream::Sequence& seq)
+{
+	// https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC
+	
+	WhenMessage(seq.GetStr(3));
 }
 
 }

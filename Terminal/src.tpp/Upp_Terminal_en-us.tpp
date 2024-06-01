@@ -221,6 +221,15 @@ in a format agnostic way, using the registered U`+`+ image decoders
 (e.g. the StreamRaster interface.). &]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenMessage:%- Event<[@(0.0.255) const] 
+String[@(0.0.255) `&]> [* WhenMessage]&]
+[s6;%- This event is a part of ConEmu`'s protocol extensions.&]
+[s2; This event is dispatched when the application wants to display 
+a message (usually in a [^topic`:`/`/CtrlLib`/src`/MessageBoxes`_en`-us`#Upp`:`:PromptOKCancel`(const char`*`)^ m
+essage box] or by other means), depending on the client`-code. 
+It passes a reference to the message string.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenDirectoryChange:%- Event<[@(0.0.255) const] 
 String[@(0.0.255) `&]> [* WhenDirectoryChange]&]
 [s2; This event is dispatched when a working directory change is 
@@ -242,6 +251,8 @@ the new value of the String if the gate returns true.&]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenProgress:%- Event<[@(0.0.255) int], 
 [@(0.0.255) int]> [* WhenProgress]&]
+[s6;%- This event is a part of ConEmu `& Windows Terminal`'s protocol 
+extensions.&]
 [s2; This event is dispatched when an application wants to notify 
 the user about a progress state of an ongoing operation. It passes 
 the [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#TerminalCtrl`:`:PROGRESS`_OFF^ P

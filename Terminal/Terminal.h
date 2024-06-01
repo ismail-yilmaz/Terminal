@@ -108,6 +108,7 @@ public:
     Gate<PasteClip&>     WhenClip;
     Event<const String&> WhenLink;
     Event<const String&> WhenImage;
+    Event<const String&> WhenMessage;
     Event<const String&> WhenDirectoryChange;
     Gate<Point, String&> WhenAnnotation;
   
@@ -743,6 +744,7 @@ private:
     
     void        ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
     void        ParseConEmuWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
+    void        ParseConEmuMessageBoxMessage(const VTInStream::Sequence& seq);
     
     void        SetCaretStyle(const VTInStream::Sequence& seq);
 

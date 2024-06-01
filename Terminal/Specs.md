@@ -316,6 +316,7 @@
 |4          | Change ANSI colors.                        | Level 1      |
 |7          | Change working directory                   | Level 1      |
 |8          | Set up hyperlinks.                         | Level 1      |
+|9 ; 2      | Show a text message.                       | Level 1      |
 |9 ; 4      | Progress notification.                     | Level 1      |
 |9 ; 9      | Change working directory. (ConEmu version) | Level 1      |
 |10         | Change ink color.                          | Level 1      |
@@ -613,4 +614,13 @@
     - `3`: Busy state. The `value` should be ignored.
     - `4`: Warning state.  The `value` is optional and *can* represents an warning number.
 
+### Message Notification Protocol
+
+| Sequence                               | Description                                                         | Device Level |
+| ---                                    | ---                                                                 | ---          |
+|`OSC 9 ; 2 ; [text] ST`                 | Prompts a text message.                                             | Level 1      |
+
+#### Notes
+
+- Implements ConEmu's message notification protocol.
 
