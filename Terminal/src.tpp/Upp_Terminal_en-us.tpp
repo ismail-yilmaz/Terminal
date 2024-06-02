@@ -25,7 +25,9 @@ ublic][3 _][*@3;3 Ctrl]&]
 ctrl (emmbeddable vt widget) compatible with DEC VT series and 
 xterm. It supports xterm`-style mouse tracking, inline images, 
 hyperlinks, shell integration, progress notification, annotations, 
-window reports and window events.&]
+window reports and window events. See [^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#0^ t
+erminal specs `& capabilities document] for supported modes and 
+VT sequences.&]
 [s3;%- &]
 [ {{10000F(128)G(128)@1 [s0; [* Public Method List]]}}&]
 [s3; &]
