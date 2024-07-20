@@ -446,7 +446,7 @@ Value ConvertHashColorSpec::Scan(const Value& text) const
 Value ConvertHashColorSpec::Format(const Value& q) const
 {
 	if(q.Is<Color>()) {
-		const Color& c = (Color&) q;
+		const Color& c = (const Color&) q;
 		return Upp::Format("#%02x%02x%02x", c.GetR(), c.GetG(), c.GetB());
 	}
 	return Upp::ErrorValue(t_("Bad color value"));
@@ -497,7 +497,7 @@ Value ConvertRgbColorSpec::Scan(const Value& text) const
 Value ConvertRgbColorSpec::Format(const Value& q) const
 {
 	if(q.Is<Color>()) {
-		const Color& c = (Color&) q;
+		const Color& c = (const Color&) q;
 		return Upp::Format("rgb:%04x/%04x/%04x", c.GetR() * 257, c.GetG() * 257, c.GetB() * 257);
 	}
 	return Upp::ErrorValue(t_("Bad color value"));
@@ -536,7 +536,7 @@ Value ConvertCmykColorSpec::Scan(const Value& text) const
 Value ConvertCmykColorSpec::Format(const Value& q) const
 {
 	if(q.Is<Color>()) {
-		const Color& r = (Color&) q;
+		const Color& r = (const Color&) q;
 		double c, m, y, k;
 		RGBtoCMYK(r.GetR() / 255.0, r.GetG() / 255.0, r.GetB() / 255.0, c, m, y, k);
 		return Upp::Format("cmyk:%f/%f/%f/%f", c, m, y, k);
