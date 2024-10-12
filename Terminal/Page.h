@@ -6,11 +6,11 @@
 
 namespace Upp {
 
-class VTLine : public MoveableAndDeepCopyOption<VTLine, Vector<VTCell>> {
+class VTLine : public MoveableAndDeepCopyOption<VTLine>, public Vector<VTCell> {
 public:
     VTLine();
     VTLine(const VTLine& src, int);
-    
+
     void            Adjust(int cx, const VTCell& filler);
     void            Grow(int cx, const VTCell& filler);
     void            Shrink(int cx);

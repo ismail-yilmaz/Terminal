@@ -13,7 +13,7 @@ VTLine::VTLine()
 
 VTLine::VTLine(const VTLine& src, int)
 {
-	reinterpret_cast<Vector<VTCell>&>(*this) = clone(reinterpret_cast<const Vector<VTCell>&>(src));
+	static_cast<Vector<VTCell>&>(*this) = clone(static_cast<const Vector<VTCell>&>(src));
 	invalid = src.invalid;
 	wrapped = src.wrapped;
 }
