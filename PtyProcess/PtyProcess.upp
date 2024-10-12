@@ -3,9 +3,9 @@ description "A cross-platform pseudo-terminal process implementation for U++\377
 uses
 	Core;
 
-library(WIN32 & !WIN10) "advapi32 user32";
+library(WIN32) "advapi32 user32";
 
-options(WIN32 & !WIN10) -DAGENT_EXE=L\"PtyAgent.exe\";
+options(WIN32) -DAGENT_EXE=L\"PtyAgent.exe\";
 
 file
 	PtyProcess.h,

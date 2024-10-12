@@ -13,7 +13,7 @@ topic "PtyProcess";
 [ {{10000@(113.42.0) [s0;%% [*@7;4 PtyProcess]]}}&]
 [s0; &]
 [s1;:Upp`:`:PtyProcess`:`:class: [@(0.0.255)3 class][3 _][*3 PtyProcess][3 _:_][@(0.0.255)3 publ
-ic][3 _][*@3;3 AProcess]&]
+ic][3 _][*@3;3 APtyProcess]&]
 [s2;%% This class represents a pseudo`-terminal process on a local 
 machine.&]
 [s3; &]

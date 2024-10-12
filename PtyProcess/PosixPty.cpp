@@ -85,7 +85,7 @@ bool sParseArgs(Vector<char*>& out, const char *cmd, const Vector<String> *pargs
 	return true;
 }
 
-void PtyProcess::Init()
+void PosixPtyProcess::Init()
 {
 	pid    =  0;
 	master = -1;
@@ -94,7 +94,7 @@ void PtyProcess::Init()
 	exit_code = Null;
 }
 
-void PtyProcess::Free()
+void PosixPtyProcess::Free()
 {
 	if(master >= 0) {
 		close(master);
@@ -112,7 +112,7 @@ void PtyProcess::Free()
 	}
 }
 
-bool PtyProcess::Start(const char *cmdline, const VectorMap<String, String>& env, const char *cd)
+bool APtyProcess::Start(const char *cmdline, const VectorMap<String, String>& env, const char *cd)
 {
 	String senv;
 	for(int i = 0; i < env.GetCount(); i++)
@@ -120,7 +120,7 @@ bool PtyProcess::Start(const char *cmdline, const VectorMap<String, String>& env
 	return DoStart(cmdline, nullptr, ~senv, cd);
 }
 
-bool PtyProcess::DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd)
+bool PosixPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd)
 {
 	Kill();
 	exit_code = Null;
@@ -264,7 +264,45 @@ bool PtyProcess::DoStart(const char *cmd, const Vector<String> *args, const char
 	return true;
 }
 
-bool PtyProcess::Read(String& s)
+void PosixPtyProcess::Kill()
+{
+	if(IsRunning()) {
+		LLOG("\nPtyProcess::Hang up, pid = " << (int) pid);
+		exit_code = 255;
+		kill(pid, SIGHUP); // TTYs behaves better with hang up signal.
+		GetExitCode();
+		int status;
+		if(pid && waitpid(pid, &status, 0) == pid)
+			DecodeExitCode(status);
+	}
+	Free();
+}
+
+bool PosixPtyProcess::IsRunning()
+{
+	if(!pid || !IsNull(exit_code)) {
+		LLOG("IsRunning() -> no");
+		return false;
+	}
+	int status = 0, wp;
+	if(!((wp = waitpid(pid, &status, WNOHANG | WUNTRACED)) == pid && DecodeExitCode(status)))
+		return true;
+	LLOG("IsRunning() -> no, just exited, exit code = " << exit_code);
+	return false;
+}
+
+int PosixPtyProcess::GetExitCode()
+{
+	if(!IsRunning())
+		return Nvl(exit_code, -1);
+	int status;
+	if(!(waitpid(pid, &status, WNOHANG | WUNTRACED) == pid && DecodeExitCode(status)))
+		return -1;
+	LLOG("GetExitCode() -> " << exit_code << " (just exited)");
+	return exit_code;
+}
+
+bool PosixPtyProcess::Read(String& s)
 {
 	String rread;
 	constexpr int BUFSIZE = 4096;
@@ -291,7 +329,7 @@ bool PtyProcess::Read(String& s)
 	return !IsNull(rread) && running;
 }
 
-void PtyProcess::Write(String s)
+void PosixPtyProcess::Write(String s)
 {
 	if(IsNull(s) && IsNull(wbuffer))
 		return;
@@ -310,45 +348,33 @@ void PtyProcess::Write(String s)
 	LLOG("Write() -> " << done << "/" << wbuffer.GetLength() << " bytes.");
 }
 
-void PtyProcess::Kill()
+bool PosixPtyProcess::ResetSignals()
 {
-	if(IsRunning()) {
-		LLOG("\nPtyProcess::Hang up, pid = " << (int) pid);
-		exit_code = 255;
-		kill(pid, SIGHUP); // TTYs behaves better with hang up signal.
-		GetExitCode();
-		int status;
-		if(pid && waitpid(pid, &status, 0) == pid)
-			DecodeExitCode(status);
-	}
-	Free();
-}
-
-int PtyProcess::GetExitCode()
-{
-	if(!IsRunning())
-		return Nvl(exit_code, -1);
-	int status;
-	if(!(waitpid(pid, &status, WNOHANG | WUNTRACED) == pid && DecodeExitCode(status)))
-		return -1;
-	LLOG("GetExitCode() -> " << exit_code << " (just exited)");
-	return exit_code;
-}
-
-bool PtyProcess::IsRunning()
-{
-	if(!pid || !IsNull(exit_code)) {
-		LLOG("IsRunning() -> no");
+	sigset_t set;
+	sigemptyset(&set);
+	if(pthread_sigmask(SIG_SETMASK, &set, nullptr) < 0) {
+		LLOG("Couldn't unblock signals for child process.");
 		return false;
 	}
-	int status = 0, wp;
-	if(!((wp = waitpid(pid, &status, WNOHANG | WUNTRACED)) == pid && DecodeExitCode(status)))
-		return true;
-	LLOG("IsRunning() -> no, just exited, exit code = " << exit_code);
-	return false;
+	
+	// We also need to reset the signal handlers.
+	// See signal.h for NSIG constant.
+	
+	for(int i = 1; i < NSIG; i++) {
+		if(i != SIGSTOP && i != SIGKILL)
+			signal(i, SIG_DFL);
+	}
+	return true;
 }
 
-bool PtyProcess::DecodeExitCode(int status)
+bool PosixPtyProcess::Wait(dword event, int ms)
+{
+	SocketWaitEvent we;
+	we.Add((SOCKET) master, event);
+	return we.Wait(ms) && we[0] & event;
+}
+
+bool PosixPtyProcess::DecodeExitCode(int status)
 {
 	if(WIFEXITED(status)) {
 		exit_code = (byte)WEXITSTATUS(status);
@@ -388,49 +414,27 @@ bool PtyProcess::DecodeExitCode(int status)
 	return false;
 }
 
-bool PtyProcess::ResetSignals()
+bool PosixPtyProcess::SetAttrs(const termios& t)
 {
-	sigset_t set;
-	sigemptyset(&set);
-	if(pthread_sigmask(SIG_SETMASK, &set, nullptr) < 0) {
-		LLOG("Couldn't unblock signals for child process.");
-		return false;
+	if(master >= 0 && tcsetattr(master, TCSANOW, &t) >= 0) {
+		LLOG("Pty attributes are set.");
+		return true;
 	}
-	
-	// We also need to reset the signal handlers.
-	// See signal.h for NSIG constant.
-	
-	for(int i = 1; i < NSIG; i++) {
-		if(i != SIGSTOP && i != SIGKILL)
-			signal(i, SIG_DFL);
-	}
-	return true;
-}
-
-bool PtyProcess::Wait(dword event, int ms)
-{
-	SocketWaitEvent we;
-	we.Add((SOCKET) master, event);
-	return we.Wait(ms) && we[0] & event;
-}
-
-bool PtyProcess::SetSize(Size sz)
-{
-	if(master >= 0) {
-		winsize wsz;
-		Zero(wsz);
-		wsz.ws_col = max(2, sz.cx);
-		wsz.ws_row = max(2, sz.cy);
-		if(ioctl(master, TIOCSWINSZ, &wsz) >= 0) {
-			LLOG("Pty size is set to: " << sz);
-			return true;
-		}
-	}
-	LLOG("Couldn't set pty size!");
+	LLOG("Couldn't set pty attributes!");
 	return false;
 }
 
-Size PtyProcess::GetSize()
+bool PosixPtyProcess::GetAttrs(termios& t)
+{
+	if(master >= 0 && tcgetattr(master, &t) >= 0) {
+		LLOG("Pty attributes are fetched.");
+		return true;
+	}
+	LLOG("Couldn't fetch pty attributes!");
+	return false;
+}
+
+Size PosixPtyProcess::GetSize()
 {
 	if(master >= 0) {
 		winsize wsz;
@@ -445,23 +449,19 @@ Size PtyProcess::GetSize()
 	return Null;
 }
 
-bool PtyProcess::SetAttrs(const termios& t)
+bool PosixPtyProcess::SetSize(Size sz)
 {
-	if(master >= 0 && tcsetattr(master, TCSANOW, &t) >= 0) {
-		LLOG("Pty attributes are set.");
-		return true;
+	if(master >= 0) {
+		winsize wsz;
+		Zero(wsz);
+		wsz.ws_col = max(2, sz.cx);
+		wsz.ws_row = max(2, sz.cy);
+		if(ioctl(master, TIOCSWINSZ, &wsz) >= 0) {
+			LLOG("Pty size is set to: " << sz);
+			return true;
+		}
 	}
-	LLOG("Couldn't set pty attributes!");
-	return false;
-}
-
-bool PtyProcess::GetAttrs(termios& t)
-{
-	if(master >= 0 && tcgetattr(master, &t) >= 0) {
-		LLOG("Pty attributes are fetched.");
-		return true;
-	}
-	LLOG("Couldn't fetch pty attributes!");
+	LLOG("Couldn't set pty size!");
 	return false;
 }
 
