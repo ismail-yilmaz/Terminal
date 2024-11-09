@@ -241,6 +241,23 @@ to the target directory. It is up to the client`-code to determine
 whether tha path is valid.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenBackgroundChange:%- Event<[@(0.0.255) const] 
+String[@(0.0.255) `&]> [* WhenBackgroundChange]&]
+[s6;%- This event is a part of iTerm2`'s protocol extensions.&]
+[s2;%- This event is triggered when the application intends to change 
+the background image. It provides a constant reference to the 
+file path of the new background image. If the provided path is 
+an empty string, the background image should be removed. See 
+[^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:NoBackground`(bool`)^ N
+oBackground() ]and [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:HasBackground`(`)const^ H
+asBackground()] methods.&]
+[s2;%- &]
+[s2;%- [* Security Note]: Allowing arbitrary file paths may pose a security 
+risk. It is strongly recommended that client code prompts for 
+user confirmation before applying any changes to ensure safety 
+and prevent unauthorized modifications.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenAnnotation:%- Gate<Point, String[@(0.0.255) `&]> 
 [* WhenAnnotation]&]
 [s2; This event is dispatched when the user wants to add or edit 
@@ -756,12 +773,15 @@ erminalCtrl][@(0.0.255) `&]_[* NoBackground]([@(0.0.255) bool]_[*@3 b]_`=_[@(0.0
 [s2; Enables or disables transparent mode. When enabled, the background 
 is not painted and transparency flag is set, allowing client 
 code to provide any background it needs. Returns `*this for method 
-chaining.&]
+chaining. See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenBackgroundChange^ W
+henBackgroundChange] event.&]
 [s3; &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:HasBackground`(`)const:%- [@(0.0.255) bool]_[* HasBackground](
 )_[@(0.0.255) const]&]
-[s2; Returns true if the background transparency is disabled.&]
+[s2; Returns true if the background transparency is disabled. See 
+[^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenBackgroundChange^ W
+henBackgroundChange] event.&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:ShowSizeHint`(bool`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T

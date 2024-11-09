@@ -110,6 +110,7 @@ public:
     Event<const String&> WhenImage;
     Event<const String&> WhenMessage;
     Event<const String&> WhenDirectoryChange;
+    Event<const String&> WhenBackgroundChange;
     Gate<Point, String&> WhenAnnotation;
   
     Event<VectorMap<int, VTLine>&> WhenHighlight;
@@ -733,6 +734,8 @@ private:
     void        ParseJexerGraphics(const VTInStream::Sequence& seq);
     bool        ParseiTerm2Graphics(const VTInStream::Sequence& seq);
 
+    bool        ParseiTerm2BackgroundChange(const VTInStream::Sequence& seq);
+    
     void        ParseHyperlinks(const VTInStream::Sequence& seq);
 
     bool        ParseiTerm2Annotations(const VTInStream::Sequence& seq);

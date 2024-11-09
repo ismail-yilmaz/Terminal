@@ -90,10 +90,18 @@ void TerminalCtrl::ParseJexerGraphics(const VTInStream::Sequence& seq)
 
 void TerminalCtrl::ParseiTerm2Protocols(const VTInStream::Sequence& seq)
 {
-	if(iterm2images)
-		ParseiTerm2Graphics(seq);
-	// if(annotations && ParseiTerm2Annotations(seq)) return;
-	// TODO: ...
+	bool b = false;
+
+	if(iterm2images
+		&& ParseiTerm2Graphics(seq))
+			return;
+	if(!nobackground
+		&& ParseiTerm2BackgroundChange(seq))
+			return;
+// if(annotations
+//		&& ParseiTerm2Annotations(seq))
+//			return;
+	
 }
 
 bool TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
@@ -144,14 +152,22 @@ bool TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
 		}
 	}
 	
-	if(!show)
-		return false;
-
-	if(simg.size.cx == 0 && simg.size.cy == 0)
-		simg.size.SetNull();
-
-	RenderImage(simg, !modes[DECSDM]);	// Rely on sixel scrolling mode.
+	if(show) {
+		if(simg.size.cx == 0 && simg.size.cy == 0)
+			simg.size.SetNull();
+		RenderImage(simg, !modes[DECSDM]);	// Rely on sixel scrolling mode.
+	}
+	
 	return true;
+}
+
+bool TerminalCtrl::ParseiTerm2BackgroundChange(const VTInStream::Sequence& seq)
+{
+	String path = seq.GetStr(2);
+	int pos = path.FindAfter("SetBackgroundImageFile=");
+	if(pos >= 0)
+		WhenBackgroundChange(Base64Decode(path.Mid(pos)));
+	return pos >= 0;
 }
 
 bool TerminalCtrl::ParseiTerm2Annotations(const VTInStream::Sequence& seq)

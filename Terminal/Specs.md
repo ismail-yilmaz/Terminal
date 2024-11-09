@@ -624,3 +624,14 @@
 
 - Implements ConEmu's message notification protocol.
 
+### Background Image Change Protocol
+
+| Sequence                               | Description                                                         | Device Level |
+| ---                                    | ---                                                                 | ---          |
+|`OSC 1337 ; SetBackgroundImageFile=[path] ST`                 | Requests a background image change.                                             | Level 1      |
+
+
+- `SetBackgroundImageFile`  argument specifies the background image change command.
+- `path` should contain the path to an image file and must be base64 encoded.
+- *Allowing arbitrary file paths may pose a security risk.* It is strongly recommended that client code prompts for user confirmation before applying any changes to ensure safety and prevent unauthorized modifications.
+

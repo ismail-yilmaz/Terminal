@@ -1551,4 +1551,22 @@ is optional and ][/G can][G  represents an warning number.]&]
 :: [s0; [G Prompts a text message.]]
 :: [s0; [G Level 1]]}}&]
 [s0;b20;a20;pht300; [*G Notes]&]
-[s6;i150;O1; [G Implements ConEmu`'s message notification protocol.]]]
+[s0;b20;a20;pht300; [G Implements ConEmu`'s message notification protocol.][*G iTerm2`'s 
+Inline Images Protocol]&]
+[s0;b20;a20;pht300;*G &]
+[s0;b20;a20;pht300; [*G Background Image Change Protocol]&]
+[ {{5035:1631:3334B20;A20;G(220)@(220.225.230) [s0; [G Sequnece]]
+:: [s0; [G Description]]
+:: [s0; [G Device Level]]
+::@2 [s0; [C@5$(245) OSC 1337 ; SetBackgroundImageFile`=`[path`] ST]]
+:: [s0; [G Requests a background image change.]]
+:: [s0; [G Level 1]]}}&]
+[s0;b20;a20;pht300; [*G Notes]&]
+[s0;l200;i200;b20;O1; [C@5$(245) SetBackgroundImageFile][G   argument 
+specifies the background image change command.]&]
+[s0;l200;i200;b20;O1; [C@5$(245) path][G  should contain the path to 
+an image file and must be base64 encoded.]&]
+[s0;l200;i200;b20;O1; [/G Allowing arbitrary file paths may pose a 
+security risk][G . It is strongly recommended that client code 
+prompts for user confirmation before applying any changes to 
+ensure safety and prevent unauthorized modifications.]]]
