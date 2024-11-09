@@ -90,12 +90,10 @@ void TerminalCtrl::ParseJexerGraphics(const VTInStream::Sequence& seq)
 
 void TerminalCtrl::ParseiTerm2Protocols(const VTInStream::Sequence& seq)
 {
-	bool b = false;
-
 	if(iterm2images
 		&& ParseiTerm2Graphics(seq))
 			return;
-	if(!nobackground
+	if(nobackground
 		&& ParseiTerm2BackgroundChange(seq))
 			return;
 // if(annotations
