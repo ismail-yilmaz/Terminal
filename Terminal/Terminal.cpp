@@ -591,7 +591,7 @@ void TerminalCtrl::RightDown(Point pt, dword keyflags)
 		if(!IsSelected(pt))
 			ClearSelection();
 		MenuBar::Execute(WhenBar);
-		SetFocus();
+//		SetFocus();
 	}
 }
 
