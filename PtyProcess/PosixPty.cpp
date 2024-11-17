@@ -168,6 +168,12 @@ bool PosixPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const
 		return false;
 	}
 
+	if((slave = open(~sname, O_RDWR)) < 0) {
+		LLOG("Couldn't open pty slave.");
+		Free();
+		return false;
+	}
+
 	struct termios tio; Zero(tio);
 	if(WhenAttrs && GetAttrs(tio) && WhenAttrs(tio)) {
 		LLOG("Setting user-defined termios flags for initial pty setup.");
@@ -198,13 +204,9 @@ bool PosixPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const
 		Exit(1);
 	}
 	
-	setpgid(pid, 0);
+	//setpgid(pid, 0);
 	
-	if((slave = open(~sname, O_RDWR)) < 0) {
-		LLOG("Couldn't open pty slave.");
-		Free();
-		return false;
-	}
+
 
 #if defined(TIOCSCTTY)
 	if(ioctl(slave, TIOCSCTTY, nullptr) < 0) {
@@ -269,7 +271,7 @@ void PosixPtyProcess::Kill()
 	if(IsRunning()) {
 		LLOG("\nPtyProcess::Hang up, pid = " << (int) pid);
 		exit_code = 255;
-		kill(pid, SIGHUP); // TTYs behaves better with hang up signal.
+		kill(pid, SIGTERM);
 		GetExitCode();
 		int status;
 		if(pid && waitpid(pid, &status, 0) == pid)
