@@ -205,8 +205,6 @@ bool PosixPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const
 	}
 	
 	//setpgid(pid, 0);
-	
-
 
 #if defined(TIOCSCTTY)
 	if(ioctl(slave, TIOCSCTTY, nullptr) < 0) {
@@ -271,7 +269,7 @@ void PosixPtyProcess::Kill()
 	if(IsRunning()) {
 		LLOG("\nPtyProcess::Hang up, pid = " << (int) pid);
 		exit_code = 255;
-		kill(pid, SIGTERM);
+		kill(pid, SIGHUP);
 		GetExitCode();
 		int status;
 		if(pid && waitpid(pid, &status, 0) == pid)
