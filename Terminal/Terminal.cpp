@@ -1008,7 +1008,7 @@ void TerminalCtrl::HighlightHypertext(Point pt)
 				RefreshDisplay();
 			}
 			String htxt = GetCachedHypertext(activehtext);
-			Tip(htxt);
+			Tip(cell.IsAnnotation() ? "\1[g " + htxt + " ]" : htxt); // Use qtf for annotations.
 		}
 		else {
 			Tip("");

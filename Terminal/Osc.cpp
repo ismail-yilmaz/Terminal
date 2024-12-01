@@ -48,7 +48,7 @@ void TerminalCtrl::ParseOperatingSystemCommands(const VTInStream::Sequence& seq)
 	case 1337:	// iTerm2 protocols.
 		ParseiTerm2Protocols(seq);
 		break;
-	case 8100: // TerminalCtrl protocols
+	case 8100:  // TerminalCtrl protocols
 		ParseTerminalCtrlProtocols(seq);
 		break;
 	default:
