@@ -113,7 +113,7 @@ HANDLE WinPtyCreateProcess(const char *cmdptr, const char *envptr, const char *c
 	return hProcess;
 }
 
-void Win32PtyProcess::Init()
+void WindowsPtyProcess::Init()
 {
 	hProcess       = nullptr;
 	hOutputRead    = nullptr;
@@ -124,7 +124,7 @@ void Win32PtyProcess::Init()
 	exit_code      = Null;
 }
 
-void Win32PtyProcess::Free()
+void WindowsPtyProcess::Free()
 {
 	if(hProcess) {
 		CloseHandle(hProcess);
@@ -147,7 +147,7 @@ void Win32PtyProcess::Free()
 	}
 }
 
-bool Win32PtyProcess::DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd)
+bool WindowsPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd)
 {
 	Kill();
 	exit_code = Null;
@@ -162,7 +162,7 @@ bool Win32PtyProcess::DoStart(const char *cmd, const Vector<String> *args, const
 }
 
 
-void Win32PtyProcess::Kill()
+void WindowsPtyProcess::Kill()
 {
 	if(hProcess && IsRunning()) {
 		TerminateProcess(hProcess, (DWORD)-1);
@@ -171,7 +171,7 @@ void Win32PtyProcess::Kill()
 	Free();
 }
 
-bool Win32PtyProcess::IsRunning()
+bool WindowsPtyProcess::IsRunning()
 {
 	dword exitcode;
 	if(!hProcess)
@@ -186,12 +186,12 @@ bool Win32PtyProcess::IsRunning()
 	return false;
 }
 
-int Win32PtyProcess::GetExitCode()
+int WindowsPtyProcess::GetExitCode()
 {
 	return IsRunning() ? (int) Null : exit_code;
 }
 
-bool Win32PtyProcess::Read(String& s)
+bool WindowsPtyProcess::Read(String& s)
 {
 	String rread;
 	constexpr const int BUFSIZE = 4096;
@@ -223,7 +223,7 @@ bool Win32PtyProcess::Read(String& s)
 	return !IsNull(rread) && running;
 }
 
-void Win32PtyProcess::Write(String s)
+void WindowsPtyProcess::Write(String s)
 {
 	if(IsNull(s) && IsNull(wbuffer))
 		return;
@@ -244,21 +244,21 @@ void Win32PtyProcess::Write(String s)
 	LLOG("Write() -> " << done << "/" << wbuffer.GetLength() << " bytes.");
 }
 
-HANDLE Win32PtyProcess::GetProcessHandle() const
+HANDLE WindowsPtyProcess::GetProcessHandle() const
 {
 	return hProcess;
 }
 
 void WinPtyProcess::Init()
 {
-	Win32PtyProcess::Init();
+	WindowsPtyProcess::Init();
 
 	hConsole = nullptr;
 }
 
 void WinPtyProcess::Free()
 {
-	Win32PtyProcess::Free();
+	WindowsPtyProcess::Free();
 	
 	if(hConsole) {
 		winpty_free(hConsole);
@@ -269,7 +269,7 @@ void WinPtyProcess::Free()
 
 bool WinPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd)
 {
-	if(!Win32PtyProcess::DoStart(cmd, args, env, cd))
+	if(!WindowsPtyProcess::DoStart(cmd, args, env, cd))
 		return false;
 
 	auto hAgentConfig = winpty_config_new(0, nullptr);
@@ -378,7 +378,7 @@ bool Win32CreateProcess(const char *cmdptr, const char *envptr, STARTUPINFOEX& s
 
 void ConPtyProcess::Init()
 {
-	Win32PtyProcess::Init();
+	WindowsPtyProcess::Init();
 
 	hConsole       = nullptr;
 	hProcAttrList  = nullptr;
@@ -386,7 +386,7 @@ void ConPtyProcess::Init()
 
 void ConPtyProcess::Free()
 {
-	Win32PtyProcess::Free();
+	WindowsPtyProcess::Free();
 
 	if(hConsole) {
 		ClosePseudoConsole(hConsole);
@@ -400,7 +400,7 @@ void ConPtyProcess::Free()
 
 bool ConPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd)
 {
-	if(!Win32PtyProcess::DoStart(cmd, args, env, cd))
+	if(!WindowsPtyProcess::DoStart(cmd, args, env, cd))
 		return false;
 
 	HANDLE hOutputReadTmp, hOutputWrite;

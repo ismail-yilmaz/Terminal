@@ -61,6 +61,7 @@ public:
     Gate<termios&> WhenAttrs;
 
     int          GetPid() const                      { return pid; }
+    int          GetSocket() const					 { return master; }
 
     void         Kill() final;
     bool         IsRunning() final;
@@ -89,17 +90,17 @@ using PtyProcess = PosixPtyProcess;
 
 #elif defined(PLATFORM_WIN32)
 
-class Win32PtyProcess : public APtyProcess {
+class WindowsPtyProcess : public APtyProcess {
     public:
-    Win32PtyProcess()                                                                                                    { Init(); }
-    virtual ~Win32PtyProcess()                                                                                           { Kill(); }
+    WindowsPtyProcess()                                                                                                    { Init(); }
+    virtual ~WindowsPtyProcess()                                                                                           { Kill(); }
 
-    void         Kill() override;
-    bool         IsRunning() override;
-    int          GetExitCode() override;
+    void        Kill() override;
+    bool        IsRunning() override;
+    int         GetExitCode() override;
     
-    bool         Read(String& s) override;
-    void         Write(String s) override;
+    bool        Read(String& s) override;
+    void        Write(String s) override;
 
     HANDLE      GetProcessHandle() const;
     
@@ -116,7 +117,7 @@ protected:
     Size        cSize;
 };
 
-class WinPtyProcess : public Win32PtyProcess {
+class WinPtyProcess : public WindowsPtyProcess {
 public:
     WinPtyProcess()                                                                                                    { Init(); }
     WinPtyProcess(const char *cmdline, const VectorMap<String, String>& env, const char *cd = nullptr)                 { Init(); APtyProcess::Start(cmdline, env, cd); }
@@ -137,7 +138,7 @@ private:
 
 #if defined(flagWIN10)
 
-class ConPtyProcess : public Win32PtyProcess {
+class ConPtyProcess : public WindowsPtyProcess {
 public:
     ConPtyProcess()                                                                                                    { Init(); }
     ConPtyProcess(const char *cmdline, const VectorMap<String, String>& env, const char *cd = nullptr)                 { Init(); APtyProcess::Start(cmdline, env, cd); }
@@ -166,6 +167,22 @@ using PtyProcess = WinPtyProcess;
 
 #endif
 
+struct ProcessWaitEvent {
+	SocketWaitEvent we;
+	void Clear()		{ we.Clear(); }
+	void Add(APtyProcess& pty, dword events)
+	{
+#if defined(PLATFORM_POSIX)
+		auto& p = static_cast<PosixPtyProcess&>(pty);
+		we.Add(p.GetSocket(), events);
+#endif
+	}
+
+	int Wait(int ms = 10)
+	{
+		return we.Wait(ms);
+	}
+};
 }
 
 #endif
