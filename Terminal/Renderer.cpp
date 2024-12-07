@@ -5,7 +5,7 @@
 
 namespace Upp {
 
-struct CellPaintData {
+struct CellPaintData : Moveable<CellPaintData> {
 	Point pos   = {0, 0};
 	Size  size  = {0, 0};
 	Color ink   = Null;
@@ -170,7 +170,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 
 	CellPaintData cpd;
 	cpd.size = csz;
-	Buffer<CellPaintData> linepaintdata(psz.cx, cpd);
+	Vector<CellPaintData> linepaintdata(psz.cx, cpd);
 
 	auto PaintLine = [&](const VTLine& line, int i) {
 		LTIMING("TerminalCtrl::PaintLine");

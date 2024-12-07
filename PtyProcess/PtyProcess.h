@@ -167,22 +167,6 @@ using PtyProcess = WinPtyProcess;
 
 #endif
 
-struct ProcessWaitEvent {
-	SocketWaitEvent we;
-	void Clear()		{ we.Clear(); }
-	void Add(APtyProcess& pty, dword events)
-	{
-#if defined(PLATFORM_POSIX)
-		auto& p = static_cast<PosixPtyProcess&>(pty);
-		we.Add(p.GetSocket(), events);
-#endif
-	}
-
-	int Wait(int ms = 10)
-	{
-		return we.Wait(ms);
-	}
-};
 }
 
 #endif
