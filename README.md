@@ -21,9 +21,9 @@ Terminal package is designed from the ground up with modularity and maintainabil
 
 ## [Requirements](#requirements)
 
-- U++ (ver. >= 2022.2)
+- U++ (ver. >= 2024.1)
 - POSIX (GNU/Linux, FreeBSD, etc.), Windows, or MacOS
-- A decent C/C++ compiler that supports at least C++14. (GCC/CLANG/MinGW/MSC)
+- A decent C/C++ compiler that supports at least C++17. (GCC/CLANG/MinGW/MSC)
 - Snacks & beer.
 
 ## [Installation](#installation)
@@ -36,7 +36,7 @@ There are three ways to install the source code of Ultimate++ terminal widget:
 
 ##  [Version](#version)  
   
-`Terminal` package loosely follows the release cycles of U++. Releases are tagged twice a year. Currently it is tagged as `2023.2` (v 0.8).
+`Terminal` package loosely follows the release cycles of U++. Releases are tagged twice a year. Currently it is tagged as `2025.1` (v 0.9).
 
 ## [Highlights](#highlights)
 
