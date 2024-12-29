@@ -24,6 +24,8 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 	else
 	if(Match(AK_SELECTOR_START, key)) {
 		selecting = true;
+		if(seltype == SEL_NONE) // Initialize
+			seltype = SEL_TEXT;
 	}
 	else
 	if(Match(AK_SELECTOR_COPY, key)) {
@@ -49,10 +51,6 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 	else
 	if(Match(AK_SELECTOR_WORDMODE, key)) {
 		seltype = SEL_WORD;
-	}
-	else
-	if(Match(AK_SELECTOR_TEXTMODE, key)) {
-		seltype = SEL_TEXT;
 	}
 	else
 	if(Match(AK_SELECTOR_UP, key)) {
@@ -151,7 +149,7 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 
 	if(IsSelection())
 		SetSelection(anchor, selpos, seltype);
-
+	
 	PlaceCaret();
 	Refresh();
 }
