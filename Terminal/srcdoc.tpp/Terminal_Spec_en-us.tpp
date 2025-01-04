@@ -24,7 +24,7 @@ topic "Specifications";
 [2 $$0,0#00000000000000000000000000000000:Default]
 [{_} 
 [s2;=:0:%% Terminal Package for U`+`+&]
-[s0;=%% [*1 Copyright © 2019`-2024, ][*^https`:`/`/github`.com`/ismail`-yilmaz^1 İsmail
+[s0;=%% [*1 Copyright © 2019`-2025, ][*^https`:`/`/github`.com`/ismail`-yilmaz^1 İsmail
  Yılmaz]&]
 [s2; [G4 Table of Contents]&]
 [s0;l200;i200;b20;N1;t300; [G^`#requirements^ Requirements]&]
