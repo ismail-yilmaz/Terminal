@@ -807,12 +807,16 @@ private:
 private:
     void        SetPageSize(Size sz)                            { page->SetSize(sz); }
     VTPage&     GetDefaultPage()                                { return dpage; }
-    bool        IsDefaultPage() const                           { return page == &dpage; }
     VTPage&     GetAlternatePage()                              { return apage; }
-    bool        IsAlternatePage() const                         { return page == &apage; }
 
     TerminalCtrl&   Put0(const String& s, int cnt = 1);
     TerminalCtrl&   Put0(int c, int cnt = 1);
+    
+protected:
+    bool        IsDefaultPage() const                           { return page == &dpage; }
+    bool        IsAlternatePage() const                         { return page == &apage; }
+
+
     TerminalCtrl&   Put(const WString& s, int cnt = 1);
     TerminalCtrl&   Put(int c, int cnt = 1);
     TerminalCtrl&   PutRaw(const String& s, int cnt = 1);
@@ -834,6 +838,7 @@ private:
     void        Flush();
     void        CancelOut()                                     { out.Clear(); }
 
+private:
     void        DisplayAlignmentTest();
     int         ReadInt(const String& s, int def);
 
