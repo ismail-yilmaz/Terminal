@@ -10,6 +10,10 @@
 
 namespace Upp {
 
+#ifndef TERMINALCTRL_DEVICE_ID
+    #define TERMINALCTRL_DEVICE_ID "TerminalCtrl"
+#endif
+
 #ifndef TERMINALCTRL_KEYGROUPNAME
     #define TERMINALCTRL_KEYGROUPNAME "Terminal"
 #endif
@@ -713,6 +717,7 @@ private:
     void        ReportDeviceStatus(const VTInStream::Sequence& seq);
     void        ReportDeviceParameters(const VTInStream::Sequence& seq);
     void        ReportDeviceAttributes(const VTInStream::Sequence& seq);
+    void        ReportExtendedDeviceAttributes(const VTInStream::Sequence& seq);
     void        ReportControlFunctionSettings(const VTInStream::Sequence& seq);
     void        ReportRectAreaChecksum(const VTInStream::Sequence &seq);
     void        ReportPresentationState(const VTInStream::Sequence& seq);

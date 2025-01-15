@@ -188,6 +188,7 @@ const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const VTInStream::
         VT_CSI('q', 0x00, 0x00, 0x00, LEVEL_1, LEVEL_4,  { t.SetProgrammableLEDs(q);                                    }),   // DECLL,       Set programmable LEDs
         VT_CSI('q', 0x00, '\"', 0x00, LEVEL_2, LEVEL_4,  { t.SetDECStyleCellProtection(q.GetInt(1, 0) == 1);            }),   // DECSCA,      Set character protection attribute
         VT_CSI('q', 0x00, ' ',  0x00, LEVEL_4, LEVEL_4,  { t.SetCaretStyle(q);                                          }),   // DECSCUSR,    Set cursor style
+        VT_CSI('q', '>',  0x00, 0x00, LEVEL_1, LEVEL_4,  { t.ReportExtendedDeviceAttributes(q);                         }),   //              Reports the extended device attributes
         VT_CSI('r', 0x00, 0x00, 0x00, LEVEL_1, LEVEL_4,  { t.SetVerticalMargins(q);                                     }),   // DECSTBM,     Set vertical margins
         VT_CSI('r', 0x00, '$',  0x00, LEVEL_4, LEVEL_4,  { t.ChangeRectAreaAttrs(q, false);                             }),   // DECCARA,     Change attributes in rectangular area
         VT_CSI('s', 0x00, 0x00, 0x00, LEVEL_3, LEVEL_4,  { t.SetHorizontalMargins(q);                                   }),   // DECSLRM,     Set horizontal margins / SCO save cursor

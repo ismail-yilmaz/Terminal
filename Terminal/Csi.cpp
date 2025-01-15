@@ -192,6 +192,12 @@ void TerminalCtrl::ReportDeviceAttributes(const VTInStream::Sequence& seq)
 		PutDCS(VTID_UNIT);	// DECREPTUI
 }
 
+void TerminalCtrl::ReportExtendedDeviceAttributes(const VTInStream::Sequence& seq)
+{
+	// Extended device attributes.
+	PutDCS(TERMINALCTRL_DEVICE_ID);
+}
+
 void TerminalCtrl::ReportPresentationState(const VTInStream::Sequence& seq)
 {
 	int report = seq.GetInt(1, 0);
