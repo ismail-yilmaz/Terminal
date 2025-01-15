@@ -10,10 +10,6 @@
 
 namespace Upp {
 
-#ifndef TERMINALCTRL_DEVICE_ID
-    #define TERMINALCTRL_DEVICE_ID "TerminalCtrl"
-#endif
-
 #ifndef TERMINALCTRL_KEYGROUPNAME
     #define TERMINALCTRL_KEYGROUPNAME "Terminal"
 #endif
@@ -444,6 +440,7 @@ public:
 
     Image           CursorImage(Point p, dword keyflags) override;
 
+    void            SetDeviceId(const String& s)                    { deviceid = s;   }
     void            AnswerBackMessage(const String& s)              { answerback = s; }
 
     void            State(int reason) override;
@@ -806,6 +803,7 @@ private:
     VTCell      cellattrs_backup;
     String      out;
     String      answerback;
+    String      deviceid;
     byte        clevel;
     bool        streamfill:1;
 
