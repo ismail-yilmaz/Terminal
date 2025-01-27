@@ -92,7 +92,7 @@ public:
     VTPage&         Displaced(bool b = true);
     bool            IsDisplaced() const                     { return cursor.displaced; }
 
-    VTPage&         SetAmbiguousCellWidth(int w)            { ambiguouscellwidth = w; return *this; }
+    VTPage&         SetAmbiguousCellWidth(int w)            { ambiguouscellwidth = clamp(w, 1, 2); return *this; }
     int             GetAmbiguousCellWidth() const           { return ambiguouscellwidth; }
     
     VTPage&         AutoWrap(bool b = true);
