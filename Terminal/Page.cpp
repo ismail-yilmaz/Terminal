@@ -172,6 +172,7 @@ VTPage::VTPage()
 , historysize(1024)
 , size(2, 2)
 , margins(Null)
+, ambiguouscellwidth(1)
 {
 	Reset();
 }
@@ -440,7 +441,7 @@ VTPage& VTPage::InsertCell(const VTCell& cell)
 {
 	LLOG("InsertCell()");
 
-	int width = cell.GetWidth();
+	int width = cell.GetWidth(ambiguouscellwidth);
 	if(width > 0) InsertCells(cursor.x, width);
 	CellAdd(cell, width);
 	return *this;
@@ -452,7 +453,7 @@ VTPage& VTPage::RepeatCell(int n)
 
 	TryShrinkCurrentLine();
 	const VTCell& cell = GetCell(cursor.x - 1, cursor.y);
-	for(int i = 0, w = cell.GetWidth(); i < n; i++)
+	for(int i = 0, w = cell.GetWidth(ambiguouscellwidth); i < n; i++)
 		CellAdd(cell, w);
 	return *this;
 }

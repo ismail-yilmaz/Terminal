@@ -121,7 +121,7 @@ Rect TerminalCtrl::MakeCaretRect(Point pt, const VTCell& cell) const
 {
 	Size csz = GetCellSize();
 	pt *= csz;
-	int cw = cell.GetWidth();
+	int cw = cell.GetWidth(GetPage().GetAmbiguousCellWidth());
 
 	pt.y -= (csz.cy * GetSbPos());
 

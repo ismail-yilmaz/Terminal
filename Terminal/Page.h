@@ -88,10 +88,13 @@ public:
     virtual ~VTPage()                                       {}
 
     Event<>         WhenUpdate;
-
+    
     VTPage&         Displaced(bool b = true);
     bool            IsDisplaced() const                     { return cursor.displaced; }
 
+    VTPage&         SetAmbiguousCellWidth(int w)            { ambiguouscellwidth = w; return *this; }
+    int             GetAmbiguousCellWidth() const           { return ambiguouscellwidth; }
+    
     VTPage&         AutoWrap(bool b = true);
     bool            IsAutoWrapping() const                  { return autowrap; }
 
@@ -140,7 +143,7 @@ public:
     const VTCell&   GetCell(int x, int y) const;
     const VTCell&   GetCell(Point pt) const                 { return GetCell(pt.x, pt.y);   }
     const VTCell&   GetCell() const                         { return GetCell(cursor);       }
-    int             AddCell(const VTCell& cell)             { TryShrinkCurrentLine(); return CellAdd(cell, cell.GetWidth()); }
+    int             AddCell(const VTCell& cell)             { TryShrinkCurrentLine(); return CellAdd(cell, cell.GetWidth(ambiguouscellwidth)); }
     VTPage&         InsertCell(const VTCell& cell);
     VTPage&         RepeatCell(int n);
 
@@ -288,6 +291,7 @@ private:
     Bits            tabs;
     int             tabsize;
     int             historysize;
+    int             ambiguouscellwidth;
     bool            history;
     bool            autowrap;
     bool            reversewrap;

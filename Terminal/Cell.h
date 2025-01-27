@@ -77,7 +77,7 @@ struct VTCell : Moveable<VTCell> {
     VTCell& Ink(Color c)                     { ink = c; return *this;   }
     VTCell& Paper(Color c)                   { paper = c; return *this; }
 
-    int  GetWidth() const;
+    int  GetWidth(int ambiguouswidth = 1) const;
     
     bool IsVoid() const                      { return this == &Void();       }
     bool IsNormal() const                    { return sgr == SGR_NORMAL;     }

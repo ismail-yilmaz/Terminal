@@ -1340,6 +1340,21 @@ isplay] used to display embedded images (e.g. sixels). See Terminal
 Displays section for more information.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:TreatAmbiguousCharsAsWideChars`(bool`):%- Upp[@(0.0.255) `:
+:]TerminalCtrl[@(0.0.255) `&] [* TreatAmbiguousCharsAsWideChars]([@(0.0.255) bool] 
+[*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2; If enabled, the spacing characters in the East Asian Ambiguous 
+(A) category will have a column width of 2. Otherwise the column 
+width of ambiguous characters will be 1 (default). Returns `*this 
+for method chaining.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:IsAmbiguousCharsWide`(`)const:%- [@(0.0.255) bool] 
+[* IsAmbiguousCharsWide]() [@(0.0.255) const]&]
+[s2; Returns true if the spacing characters in the East Asian Ambiguous 
+(A) category have a column width of 2.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:GetFontSize`(`)const:%- [_^Upp`:`:Size^ Size]_[* GetFontSize](
 )_[@(0.0.255) const]&]
 [s2; Returns the current font size of the terminal in pixels.&]

@@ -316,6 +316,9 @@ public:
     TerminalCtrl&   SetImageDisplay(const Display& d)               { imgdisplay = &d; return *this; }
     const Display&  GetImageDisplay() const                         { return *imgdisplay; }
 
+    TerminalCtrl&   TreatAmbiguousCharsAsWideChars(bool b = true)   { dpage.SetAmbiguousCellWidth(b ? 2 : 1); apage.SetAmbiguousCellWidth(b ? 2 : 1); return *this; }
+    bool            IsAmbiguousCharsWide() const                    { return GetPage().GetAmbiguousCellWidth() == 2; }
+  
     TerminalCtrl&   UDK(bool b = true)                              { userdefinedkeys = b; return *this;  }
     TerminalCtrl&   NoUDK()                                         { return UDK(false);     }
     bool            HasUDK() const                                  { return userdefinedkeys; }
