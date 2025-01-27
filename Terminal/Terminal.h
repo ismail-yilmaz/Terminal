@@ -639,7 +639,7 @@ private:
     dword       prevhtext         = 0;
     int         overridetracking = K_SHIFT_CTRL;
     Size        padding          = { 0, 0 };
-
+    
     bool        eightbit;
     bool        reversewrap;
     bool        keynavigation;
@@ -668,6 +668,7 @@ private:
     bool        hidemousecursor;
     bool        highlight;
     bool        notifyprogress;
+    bool        ambiguouschartowide;
 
 // Down below is the emulator stuff, formerley known as "Console"...
 

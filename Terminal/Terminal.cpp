@@ -53,6 +53,7 @@ TerminalCtrl::TerminalCtrl()
 , scrolltoend(true)
 , highlight(false)
 , notifyprogress(false)
+, ambiguouschartowide(false)
 {
 	Unicode();
 	SetLevel(LEVEL_4);
@@ -63,6 +64,7 @@ TerminalCtrl::TerminalCtrl()
 	History();
 	ResetColors();
 	HideScrollBar();
+	TreatAmbiguousCharsAsWideChars(ambiguouschartowide);
 	WhenBar = [=](Bar& menu) { StdBar(menu); };
 	sb.WhenScroll = [=]()    { Scroll(); };
 	caret.WhenAction = [=]() { ScheduleRefresh(); };

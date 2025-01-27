@@ -403,11 +403,13 @@ void TerminalCtrl::Serialize(Stream& s)
 		s % scrolltoend;
 		s % highlight;
 		s % annotations;
+		s % ambiguouschartowide;
 	}
 
 	if(s.IsLoading()) {
 		SetCharset(CharsetByName(chrset));
 		SetEmulation(clevel, false);
+		TreatAmbiguousCharsAsWideChars(ambiguouschartowide);
 		Layout();
 	}
 }
@@ -430,6 +432,7 @@ void TerminalCtrl::Jsonize(JsonIO& jio)
         ("KeyNavigation",       keynavigation)
         ("MetaKeyFlags",        metakeyflags)
         ("PCStyleFunctionKeys", pcstylefunctionkeys)
+        ("TreatAmbiguousCharsAsWideChars",  ambiguouschartowide)
         ("UDK",                 userdefinedkeys)
         ("LockUDK",             userdefinedkeyslocked)
         ("ScrollToEnd",         scrolltoend)
