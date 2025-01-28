@@ -290,8 +290,8 @@ int VTCell::GetWidth(int ambiguouswidth) const
 		return 0;
 	if(FindChar(sDoubleWidthChars, chr))
 		return 2;
-	if(FindChar(sAmbiguousWidthChars, chr))
-		return ambiguouswidth;
+	if(ambiguouswidth == 2 && FindChar(sAmbiguousWidthChars, chr))
+		return 2;
 //	if(FindChar(sUnknownWidthChars, chr))
 //		return -1;
 	return 1;
