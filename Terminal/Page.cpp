@@ -150,8 +150,7 @@ int GetLength(const VTLine& line, int begin, int end)
 	int length = 0;
 	for(int i = max(0, begin); i < min(end, line.GetCount()); i++) {
 		const VTCell& cell = line[i];
-		if(!cell) break;
-		length += cell >= 32;
+		length += cell >= 32 || cell == 0;
 	}
 	return length;
 }
