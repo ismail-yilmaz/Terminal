@@ -148,7 +148,7 @@ WString AsWString(VTLine::ConstRange& cellrange, bool tspaces)
 int GetLength(const VTLine& line, int begin, int end)
 {
 	int length = 0;
-	for(int i = begin, end = min(end, line.GetCount()); i < end; i++) {
+	for(int i = max(0, begin); i < min(end, line.GetCount()); i++) {
 		const VTCell& cell = line[i];
 		if(!cell) break;
 		length += cell >= 32;
@@ -160,7 +160,7 @@ int GetOffset(const VTLine& line, int begin, int end)
 {
 	int offset = 0;
 	for(int i = max(0, begin); i < min(end, line.GetCount()); i++)
-		offset += line[i] == 1; // Double width, second half.
+		offset += line[i] < 32; // Include all the special values in calculation (such as 1 = double width char, second half)
 	return offset;
 }
 
