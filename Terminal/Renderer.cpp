@@ -182,7 +182,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 				const VTCell& cell = line.Get(j, GetAttrs());
 				CellPaintData& data = linepaintdata[j];
 				data.highlight = IsSelected(Point(j,i));
-				data.show = false;
+				data.show = !nobackground;
 				data.show |= !IsNull(cell.paper);
 				data.show |= (cell.IsHypertext() && cell.data == activehtext);
 				data.show |= cell.IsInverted();
