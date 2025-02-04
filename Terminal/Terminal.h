@@ -137,7 +137,7 @@ public:
     bool            IsLevel3() const                                { return modes[DECANM] && clevel >= LEVEL_3; }
     bool            IsLevel4() const                                { return modes[DECANM] && clevel >= LEVEL_4; }
 
-    TerminalCtrl&   Set8BitMode(bool b = true)                      { eightbit = b; return *this; }
+    TerminalCtrl&   Set8BitMode(bool b = true);
     TerminalCtrl&   No8BitMode()                                    { return Set8BitMode(false); }
     bool            Is8BitMode() const                              { return IsLevel2() && eightbit; }
     bool            Is7BitMode() const                              { return !Is8BitMode(); }

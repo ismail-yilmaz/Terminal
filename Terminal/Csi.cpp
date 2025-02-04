@@ -487,29 +487,8 @@ void TerminalCtrl::SetDeviceConformanceLevel(const VTInStream::Sequence& seq)
 	int level = seq.GetInt(1, 0);
 	int mode  = seq.GetInt(2, -1);
 
-	switch(level) {
-	case 61:
-		clevel = LEVEL_1;
-		break;
-	case 62:
-		clevel = LEVEL_2;
-		break;
-	case 63:
-		clevel = LEVEL_3;
-		break;
-	case 64:
-		clevel = LEVEL_4;
-		break;
-	default:
-		LLOG("Unknown device conformance level: " << level - 60);
-		return;
-	}
-
-	SoftReset();
+	SetEmulation(level - 60, true);
 	Set8BitMode(mode == 0 || mode == 2);
-
-	LLOG(Format("Device conformance level is set to: %d (%d-bits mode)",
-				(int) clevel, Is8BitMode() ? 8 : 7 ));
 }
 
 void TerminalCtrl::SetProgrammableLEDs(const VTInStream::Sequence& seq)

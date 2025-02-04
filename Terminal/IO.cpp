@@ -17,24 +17,23 @@ void TerminalCtrl::InitParser(VTInStream& vts)
 	vts.WhenApc = [=](const VTInStream::Sequence& seq) { ParseApplicationProgrammingCommands(seq); };
 }
 
+Upp::TerminalCtrl& TerminalCtrl::Set8BitMode(bool b)
+{
+	eightbit = b;
+
+	LLOG(Format("Device IO is set to: %d-bits mode.", Is8BitMode() ? 8 : 7 ));
+	return *this;
+}
+
 void TerminalCtrl::SetEmulation(int level, bool reset)
 {
 	if(reset)
 		SoftReset();
 
-	clevel = clamp(level, int(LEVEL_0), int(LEVEL_4));
-
-	switch(level) {
-	case LEVEL_0:
+	if((clevel = clamp(level, int(LEVEL_0), int(LEVEL_4))) == (int) LEVEL_0)
 		DECanm(false);
-		break;
-	case LEVEL_1:
-	case LEVEL_2:
-	case LEVEL_3:
-	case LEVEL_4:
-	default:
-		break;
-	}
+
+	LLOG(Format("Device conformance level is set to: %d", (int) clevel));
 }
 
 void TerminalCtrl::Reset(bool full)
