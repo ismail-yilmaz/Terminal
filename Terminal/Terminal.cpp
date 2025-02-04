@@ -338,43 +338,66 @@ void TerminalCtrl::SwapPage()
 
 void TerminalCtrl::RefreshDisplay()
 {
-	Size wsz = GetSize();
-	Size psz = GetPageSize();
-	Size csz = GetCellSize();
-	int  pos = GetSbPos();
-	int  cnt = min(pos + psz.cy, page->GetLineCount());
-	int blinking_cells = 0;
+	const Size wsz = GetSize();
+	const Size psz = GetPageSize();
+	const Size csz = GetCellSize();
+	const int  pos = GetSbPos();
 	
 	LTIMING("TerminalCtrl::RefreshDisplay");
+	
+	const int cnt = min(pos + psz.cy, page->GetLineCount());
+	int blinking_cells = 0;
+	int hypertext_cells = 0;
 
-	bool hypertext = hyperlinks || annotations;
+	const bool hypertext = hyperlinks || annotations;
+	const bool plaintext = !hypertext && !blinkingtext;
+	
+	Rect rdirty = Null;
+	Rect rblink = Null;
+	Rect rhtext = Null;
 	
 	for(int i = pos; i < cnt; i++) {
 		const VTLine& line = page->FetchLine(i);
 		int y = i * csz.cy - (csz.cy * pos);
-		for(int j = 0; j < line.GetCount(); j++) {
-			int x = j * csz.cx;
-			const VTCell& cell = line[j];
-			if(hypertext && cell.IsHypertext()
+		bool invalid = line.IsInvalid();
+		
+		if(!plaintext) {
+			for(int j = 0; j < line.GetCount(); j++) {
+				const VTCell& cell = line[j];
+				int x = j * csz.cx;
+				if(hypertext && cell.IsHypertext()
 				&& (cell.data == activehtext || cell.data == prevhtext)) {
-					if(!line.IsInvalid())
-						Refresh(RectC(x, y, csz.cx, csz.cy).Inflated(4));
-			}
-			else
-			if(blinkingtext && cell.IsBlinking()) {
-				if(!line.IsInvalid())
-					Refresh(RectC(x, y, csz.cx, csz.cy).Inflated(4));
-				blinking_cells++;
+					hypertext_cells++;
+						if(!invalid)
+							rhtext.Union(RectC(x, y, csz.cx, csz.cy));
+				}
+				else
+				if(blinkingtext && cell.IsBlinking()) {
+					blinking_cells++;
+					if(!invalid)
+						rblink.Union(RectC(x, y, csz.cx, csz.cy));
+				}
 			}
 		}
-		if(line.IsInvalid()) {
+		if(invalid) {
+			rdirty.Union(RectC(0, y, wsz.cx, csz.cy));
+			if(i == cnt - 1) rdirty.bottom = wsz.cy;
 			line.Validate();
-			Rect r = RectC(0, i * csz.cy - (csz.cy * pos), wsz.cx, csz.cy).Inflated(4);
-			if(i == cnt - 1) r.bottom = wsz.cy;
-			Refresh(r);
 		}
-	}
 
+	}
+	
+	if(!rdirty.IsEmpty())
+		Refresh(rdirty.Inflated(4));
+	
+	if(!plaintext) {
+		if(!rblink.IsEmpty())
+			Refresh(rblink.Inflated(4));
+		
+		if(!rhtext.IsEmpty())
+			Refresh(rhtext.Inflated(4));
+	}
+	
 	PlaceCaret();
 	Blink(blinking_cells > 0);
 }
@@ -759,9 +782,9 @@ bool TerminalCtrl::IsMouseTracking(dword keyflags) const
 {
 	return (keyflags & overridetracking) != overridetracking
 		&& (modes[XTX10MM]
-	     || modes[XTX11MM]
-		 || modes[XTANYMM]
-		 || modes[XTDRAGM]);
+		|| modes[XTX11MM]
+		|| modes[XTANYMM]
+		|| modes[XTDRAGM]);
 }
 
 Point TerminalCtrl::ClientToPagePos(Point pt, bool ignoresb) const
@@ -1103,7 +1126,7 @@ void TerminalCtrl::HideAnnotation()
 }
 
 void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly, bool co,
-                                   Gate<const VectorMap<int, WString>&, const WString&> fn)
+								Gate<const VectorMap<int, WString>&, const WString&> fn)
 {
 	if(searching || s.IsEmpty() || begin >= end)
 		return;
@@ -1149,25 +1172,25 @@ void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly
 }
 
 void TerminalCtrl::Find(const WString& s, int begin, int end, bool visibleonly,
-                         Gate<const VectorMap<int, WString>&, const WString&> fn)
+						Gate<const VectorMap<int, WString>&, const WString&> fn)
 {
 	Search(s, begin, end, visibleonly, false, fn);
 }
 
 void TerminalCtrl::Find(const WString& s, bool visibleonly,
-     Gate<const VectorMap<int, WString>&, const WString&> fn)
+	Gate<const VectorMap<int, WString>&, const WString&> fn)
 {
 	Search(s, 0, page->GetLineCount(), visibleonly, false, fn);
 }
 
 void TerminalCtrl::CoFind(const WString& s, int begin, int end, bool visibleonly,
-                           Gate<const VectorMap<int, WString>&, const WString&> fn)
+						Gate<const VectorMap<int, WString>&, const WString&> fn)
 {
 	Search(s, begin, end, visibleonly, true, fn);
 }
 
 void TerminalCtrl::CoFind(const WString& s, bool visibleonly,
-       Gate<const VectorMap<int, WString>&, const WString&> fn)
+	Gate<const VectorMap<int, WString>&, const WString&> fn)
 {
 	Search(s, 0, page->GetLineCount(), visibleonly, true, fn);
 }
