@@ -32,7 +32,7 @@ void TerminalCtrl::ReportMode(const VTInStream::Sequence& seq)
 	
 	if(mid >= 0)
 		switch(mid) {
-		case GATM:		// Currently we dont actively support these ANSI (ECMA-48) modes.
+		case GATM:		 // Currently we dont actively support these ANSI (ECMA-48) modes.
 		case SRTM:
 		case VEM:
 		case HEM:
@@ -44,9 +44,10 @@ void TerminalCtrl::ReportMode(const VTInStream::Sequence& seq)
 		case SATM:
 		case TSM:
 		case EBM:
+		case XTGRAPHEME: // U++ has no grapheme cluster support (yet).
 			reply = 4;
 			break;
-		case XTSPREG:	// We don't support shared color registers for sixel images.
+		case XTSPREG:	 // We don't support shared color registers for sixel images.
 			reply = 3;
 			break;
 		default:

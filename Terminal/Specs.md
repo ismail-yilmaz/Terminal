@@ -153,10 +153,11 @@
 |XTASBM     |1049    | Alternate screen buffer mode. (Ver. 3)                      |xterm private | Level 1      |  
 |XTSPREG    |1070    | Use private registers for sixel color palette.              |xterm private | Level 1      |                             
 |XTBRPM     |2004    | Bracketed paste mode.                                       |xterm private | Level 1      |  
+|XTGRAPHEME |2027    | Unicode grapheme cluster processing.                        |xterm private | Level 1      |  
 
 #### Notes
 
-- GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, SATM, TSM, EBM modes are set as "permanently reset".
+- GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, SATM, TSM, EBM, and XTGRAPHEME modes are set as "permanently reset".
 - XTSPREG is always set. TerminalCtrl does not support shared color palette for sixel images.
 
 
@@ -634,4 +635,6 @@
 - `SetBackgroundImageFile`  argument specifies the background image change command.
 - `path` should contain the path to an image file and must be base64 encoded.
 - *Allowing arbitrary file paths may pose a security risk.* It is strongly recommended that client code prompts for user confirmation before applying any changes to ensure safety and prevent unauthorized modifications.
+
+
 

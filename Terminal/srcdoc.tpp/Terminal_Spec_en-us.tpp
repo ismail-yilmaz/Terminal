@@ -512,10 +512,16 @@ channels.]&]
 :: [s0; [G 2004]]
 :: [s0; [G Bracketed paste mode.]]
 :: [s0; [G xterm private]]
+:: [s0; [G Level 1]]
+:: [s0; [G XTGRAPHEME]]
+:: [s0; [G 2027]]
+:: [s0; [G Unicode grapheme cluster processing.]]
+:: [s0; [G xterm private]]
 :: [s0; [G Level 1]]}}&]
 [s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O1; [G GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, 
-SATM, TSM, EBM modes are set as `"permanently reset`".]&]
+SATM, TSM, EBM, and XTGRAPHEME modes are set as `"permanently 
+reset`".]&]
 [s0;l200;i200;b20;O1; [G XTSPREG is always set. TerminalCtrl does not 
 support shared color palette for sixel images.]&]
 [s0;b20;a20;ph:7:t300; [*G^`#esc`-sequences^4 Supported Escape Sequences]&]
