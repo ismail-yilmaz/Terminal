@@ -86,30 +86,32 @@ void sTextRenderer::Flush()
 	
 	LTIMING("sTextRenderer::Flush");
 
+	const int fcx = font.GetMonoWidth();
+	
 	for(int i = 0; i < cache.GetCount(); i++) {
 		Chrs& c = cache[i];
 		if(c.x.GetCount()) {
 			const Tuple<dword, Color>& fc = cache.GetKey(i);
-			int x = c.x[0], cx = c.x.Top();
-			for(int i = 0; i < c.x.GetCount() - 1; i++)
-				c.x[i] = c.x[i + 1] - c.x[i];
-			c.x.Top() = c.width.Top();
+			const int x = c.x[0], cx = c.x.Top() + fcx;
 			font.Bold(fc.a & VTCell::SGR_BOLD)
 			    .Italic(fc.a & VTCell::SGR_ITALIC)
 				.Strikeout(fc.a & VTCell::SGR_STRIKEOUT)
 				.Underline(fc.a & VTCell::SGR_UNDERLINE);
+			for(int i = 0; i < c.x.GetCount() - 1; i++)
+				c.x[i] = c.x[i + 1] - c.x[i];
+			c.x.Top() = c.width.Top();
 			if(fc.a & VTCell::SGR_OVERLINE) {
 				int h = font.GetDescent() - 2;
-				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_SOLID, fc.b);
+				w.DrawLine(x, y + h, cx, y + h, PEN_SOLID, fc.b);
 			}
 			if(canhyperlink && fc.a & VTCell::SGR_HYPERLINK) {
 				int h = font.GetAscent() + 2;
-				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_DOT, fc.b);
+				w.DrawLine(x, y + h, cx, y + h, PEN_DOT, fc.b);
 				font.NoUnderline();
 			}
 			if(canannotate && fc.a & VTCell::SGR_ANNOTATION) {
 				int h = font.GetAscent() + 2;
-				w.DrawLine(x, y + h, cx + font.GetMonoWidth(), y + h, PEN_SOLID, annotationcolor);
+				w.DrawLine(x, y + h, cx, y + h, PEN_SOLID, annotationcolor);
 				font.NoUnderline();
 			}
 			w.DrawText(x, y, c.text, font, fc.b, c.x);
@@ -126,11 +128,13 @@ void sTextRenderer::DrawChar(const VTCell& cell, const CellPaintData& data)
 		y = p.y;
 	}
 
-	Chrs *c = &cache.GetAdd(MakeTuple(cell.sgr, data.ink));
+	Tuple<dword, Color> key = MakeTuple(cell.sgr, data.ink);
+
+	Chrs *c = &cache.GetAdd(key);
 	
 	if(c->x.GetCount() && c->x.Top() > p.x || (cell.IsUnderlined() || cell.IsHypertext()) && cache.GetCount() > 1) {
 		Flush();
-		c = &cache.GetAdd(MakeTuple(cell.sgr, data.ink));
+		c = &cache.GetAdd(key);
 	}
 
 	icount += (int) cell.sgr & VTCell::SGR_IMAGE;
