@@ -47,14 +47,17 @@ TerminalCtrl& TerminalCtrl::ResetColors()
 
 void TerminalCtrl::SetInkAndPaperColor(const VTCell& cell, Color& ink, Color& paper)
 {
-	ink = GetColorFromIndex(cell, COLOR_INK);
-	paper = GetColorFromIndex(cell, COLOR_PAPER);
+    ink = GetColorFromIndex(cell, COLOR_INK);
+    paper = GetColorFromIndex(cell, COLOR_PAPER);
 
-	if(cell.IsInverted())
-		Swap(ink, paper);
-	if(modes[DECSCNM])
-		Swap(ink, paper);
-	if((hyperlinks || annotations) && cell.IsHypertext() && activehtext == cell.data)
+	// This is a hot-path. Hence, the slightly obscured but optimized code.
+	// Logic: Odd numbers (1-3) should swap, and even numbers (0, 2) should retain colors.
+
+	int invert = (int) cell.IsInverted()
+			   + (int) modes[DECSCNM]
+	           + (int) ((hyperlinks || annotations) && cell.IsHypertext() && activehtext == cell.data);
+	
+	if(invert & 1)
 		Swap(ink, paper);
 }
 
