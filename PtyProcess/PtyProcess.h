@@ -61,7 +61,7 @@ public:
     Gate<termios&> WhenAttrs;
 
     int          GetPid() const                      { return pid; }
-    int          GetSocket() const					 { return master; }
+    int          GetSocket() const                   { return master; }
 
     void         Kill() final;
     bool         IsRunning() final;
@@ -138,6 +138,33 @@ private:
 
 #if defined(flagWIN10)
 
+// Enable the newest ConPty library if available.
+// We can now use/ship the conpty.dll + OpenConsole.exe (as does Windows Terminal)
+
+class ConPtyDll {
+public:
+    ConPtyDll();
+    virtual ~ConPtyDll();
+    
+    bool        Init();
+    HRESULT     Create(COORD size, HANDLE hInput, HANDLE hOutput, DWORD dwFlags, HPCON* phPC);
+    void        Close(HPCON hPC);
+    HRESULT     Resize(HPCON hPC, COORD size);
+    
+private:
+    HMODULE     hConPtyLib;
+
+    // Function pointer types
+    typedef     HRESULT(WINAPI* create_t)(COORD size, HANDLE hInput, HANDLE hOutput, DWORD dwFlags, HPCON* phPC);
+    typedef     VOID(WINAPI* close_t)(HPCON hPC);
+    typedef     HRESULT(WINAPI* resize_t)(HPCON hPC, COORD size);
+
+    // Function pointers
+    create_t    pCreate;
+    close_t     pClose;
+    resize_t    pResize;
+};
+
 class ConPtyProcess : public WindowsPtyProcess {
 public:
     ConPtyProcess()                                                                                                    { Init(); }
@@ -154,6 +181,7 @@ private:
     void        Free() final;
     bool        DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd) final;
 
+    ConPtyDll   conptylib;
     HPCON       hConsole;
     PPROC_THREAD_ATTRIBUTE_LIST hProcAttrList;
 };

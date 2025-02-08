@@ -358,6 +358,65 @@ bool WinPtyProcess::SetSize(Size sz)
 
 #if defined(flagWIN10)
 
+ConPtyDll::ConPtyDll()
+: hConPtyLib(nullptr)
+, pCreate(nullptr)
+, pClose(nullptr)
+, pResize(nullptr)
+{
+}
+
+ConPtyDll::~ConPtyDll()
+{
+	if(hConPtyLib)
+		FreeLibrary(hConPtyLib);
+}
+
+bool ConPtyDll::Init()
+{
+	// First try loading the rewritten version of conpty.dll (uses OpenConsole.exe)
+
+	if(hConPtyLib = LoadLibraryW(L"conpty.dll"); !hConPtyLib) {
+		LLOG("Warning: Couldn't load the new conpty.dll. Falling back to the default API.");
+		if(hConPtyLib = LoadLibraryW(L"kernel32.dll"); !hConPtyLib) {
+			LLOG("Failed to load kernel32.dll. Error: " << GetLastError());
+			return false;
+		}
+	}
+	
+	LLOG("ConPty API is succesfully initialized.");
+
+
+	// Get function addresses
+	pCreate = reinterpret_cast<create_t>(GetProcAddress(hConPtyLib, "CreatePseudoConsole"));
+	pClose  = reinterpret_cast<close_t>(GetProcAddress(hConPtyLib, "ClosePseudoConsole"));
+	pResize = reinterpret_cast<resize_t>(GetProcAddress(hConPtyLib, "ResizePseudoConsole"));
+	if(!pCreate || !pClose || !pResize) {
+		LLOG("Failed to retrieve ConPty function addresses. Error: " << GetLastError());
+		FreeLibrary(hConPtyLib);
+		hConPtyLib = nullptr;
+		return false;
+	}
+
+	return true;
+}
+
+HRESULT ConPtyDll::Create(COORD size, HANDLE hInput, HANDLE hOutput, DWORD dwFlags, HPCON *phPC)
+{
+	return pCreate ? pCreate(size, hInput, hOutput, dwFlags, phPC) : E_FAIL;
+}
+
+void ConPtyDll::Close(HPCON hPC)
+{
+	if(pClose)
+		pClose(hPC);
+}
+
+HRESULT ConPtyDll::Resize(HPCON hPC, COORD size)
+{
+	return pResize ? pResize(hPC, size) : E_FAIL;
+}
+
 bool Win32CreateProcess(const char *cmdptr, const char *envptr, STARTUPINFOEX& si, PROCESS_INFORMATION& pi, const char *cd)
 {
 	Vector<WCHAR> cmd = ToSystemCharsetW(cmdptr);
@@ -389,7 +448,7 @@ void ConPtyProcess::Free()
 	WindowsPtyProcess::Free();
 
 	if(hConsole) {
-		ClosePseudoConsole(hConsole);
+		conptylib.Close(hConsole);
 		hConsole = nullptr;
 	}
 	if(hProcAttrList) {
@@ -400,9 +459,10 @@ void ConPtyProcess::Free()
 
 bool ConPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd)
 {
-	if(!WindowsPtyProcess::DoStart(cmd, args, env, cd))
+	if(!WindowsPtyProcess::DoStart(cmd, args, env, cd) || !conptylib.Init())
 		return false;
 
+	
 	HANDLE hOutputReadTmp, hOutputWrite;
 	HANDLE hInputWriteTmp, hInputRead;
 	HANDLE hErrorWrite;
@@ -429,7 +489,7 @@ bool ConPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const c
 	size.X = 80;
 	size.Y = 24;
 	
-	if(CreatePseudoConsole(size, hInputRead, hOutputWrite, 0, &hConsole) != S_OK) {
+	if(conptylib.Create(size, hInputRead, hOutputWrite, 0, &hConsole) != S_OK) {
 		LLOG("CreatePseudoConsole() failed.");
 		Free();
 		return false;
@@ -509,7 +569,7 @@ bool ConPtyProcess::SetSize(Size sz)
 		COORD size;
 		size.X = (SHORT) max(2, sz.cx);
 		size.Y = (SHORT) max(2, sz.cy);
-		if(ResizePseudoConsole(hConsole, size) == S_OK) {
+		if(conptylib.Resize(hConsole, size) == S_OK) {
 			LLOG("Pty size is set to: " << sz);
 			cSize = sz;
 			return true;
