@@ -148,38 +148,22 @@ TerminalCtrl& TerminalCtrl::Put0(int c, int cnt)
 
 	c &= 0xFF;
 
-	while(cnt-- > 0)
+	do
 	{
-		if(c >= 0x00 && c <= 0x7F)
-		{
+		if(c <= 0x7F) {
 			out.Cat(c);
 		}
 		else
-		if(c >= 0x80 && c <= 0x9F)
-		{
-			if(bit8)
-			{
-				 out.Cat(c);
-			}
-			else
-			{
+		if(c <= 0x9F) {
+			if(!bit8)
 				out.Cat(0x1B);
-				out.Cat(c - 0x40);
-			}
+			out.Cat(bit8 ? c : c - 0x40);
 		}
-		else
-		if(c >= 0xA0 && c <= 0xFF)
-		{
-			if(lvl2)
-			{
-				out.Cat(c);
-			}
-			else
-			{
-				out.Cat(c & 0x7F);
-			}
+		else {	// 0xA0 - 0xFF
+			out.Cat(lvl2 ? c : c - 0x80);
 		}
 	}
+	while (--cnt > 0);
 
 	return *this;
 }
@@ -357,7 +341,7 @@ void TerminalCtrl::Serialize(Stream& s)
 {
 	ColorTableSerializer cts(colortable);
 	String chrset = CharsetName(charset);
-    
+	
 	int version = 1;
 	s / version;
 
@@ -415,57 +399,57 @@ void TerminalCtrl::Serialize(Stream& s)
 
 void TerminalCtrl::Jsonize(JsonIO& jio)
 {
-    ColorTableSerializer cts(colortable);
-    String chrset  = CharsetName(charset);
+	ColorTableSerializer cts(colortable);
+	String chrset  = CharsetName(charset);
 
-    jio ("ConformanceLevel",    clevel)
-        ("EightBit",            eightbit)
-        ("Charset",             chrset)
-        ("LegacyCharsets",      legacycharsets)
-        ("GSets",               gsets)
-        ("Page",                dpage)
-        ("Font",                font)
-        ("CellPadding",         padding)
-        ("Caret",               caret)
-        ("ReverseWrap",         reversewrap)
-        ("KeyNavigation",       keynavigation)
-        ("MetaKeyFlags",        metakeyflags)
-        ("PCStyleFunctionKeys", pcstylefunctionkeys)
-        ("TreatAmbiguousCharsAsWideChars",  ambiguouschartowide)
-        ("UDK",                 userdefinedkeys)
-        ("LockUDK",             userdefinedkeyslocked)
-        ("ScrollToEnd",         scrolltoend)
-        ("AlternateScroll",     alternatescroll)
-        ("WheelStep",           wheelstep)
-        ("AutoHideMouseCursor", hidemousecursor)
-        ("TrackingOverrideKey", overridetracking)
-        ("WindowActions",       windowactions)
-        ("WindowReports",       windowreports)
-        ("SixelGraphics",       sixelimages)
-        ("JexerGraphics",       jexerimages)
-        ("iTerm2Graphics",      iterm2images)
-        ("Hyperlinks",          hyperlinks)
-        ("Annotations",         annotations)
-        ("ClipboardAccess",     clipaccess)
-        ("DelayedRefresh",      delayedrefresh)
-        ("LazyResize",          lazyresize)
-        ("SizeHint",            sizehint)
-        ("BrightBoldText",      intensify)
-        ("BlinkingText",        blinkingtext)
-        ("TextBlinkInterval",   blinkinterval)
-        ("DynamicColors",       dynamiccolors)
-        ("LightColors",         lightcolors)
-        ("AdjustColorstoTheme", adjustcolors)
-        ("TransparentBackground", nobackground)
-        ("Highlight",           highlight)
-        ("NotifyProgress",      notifyprogress)
-        ("ColorTable",          cts);
-        
-    if(jio.IsLoading()) {
-        SetCharset(CharsetByName(chrset));
-        SetEmulation(clevel, false);
-        Layout();
-    }
+	jio ("ConformanceLevel",    clevel)
+		("EightBit",            eightbit)
+		("Charset",             chrset)
+		("LegacyCharsets",      legacycharsets)
+		("GSets",               gsets)
+		("Page",                dpage)
+		("Font",                font)
+		("CellPadding",         padding)
+		("Caret",               caret)
+		("ReverseWrap",         reversewrap)
+		("KeyNavigation",       keynavigation)
+		("MetaKeyFlags",        metakeyflags)
+		("PCStyleFunctionKeys", pcstylefunctionkeys)
+		("TreatAmbiguousCharsAsWideChars",  ambiguouschartowide)
+		("UDK",                 userdefinedkeys)
+		("LockUDK",             userdefinedkeyslocked)
+		("ScrollToEnd",         scrolltoend)
+		("AlternateScroll",     alternatescroll)
+		("WheelStep",           wheelstep)
+		("AutoHideMouseCursor", hidemousecursor)
+		("TrackingOverrideKey", overridetracking)
+		("WindowActions",       windowactions)
+		("WindowReports",       windowreports)
+		("SixelGraphics",       sixelimages)
+		("JexerGraphics",       jexerimages)
+		("iTerm2Graphics",      iterm2images)
+		("Hyperlinks",          hyperlinks)
+		("Annotations",         annotations)
+		("ClipboardAccess",     clipaccess)
+		("DelayedRefresh",      delayedrefresh)
+		("LazyResize",          lazyresize)
+		("SizeHint",            sizehint)
+		("BrightBoldText",      intensify)
+		("BlinkingText",        blinkingtext)
+		("TextBlinkInterval",   blinkinterval)
+		("DynamicColors",       dynamiccolors)
+		("LightColors",         lightcolors)
+		("AdjustColorstoTheme", adjustcolors)
+		("TransparentBackground", nobackground)
+		("Highlight",           highlight)
+		("NotifyProgress",      notifyprogress)
+		("ColorTable",          cts);
+		
+	if(jio.IsLoading()) {
+		SetCharset(CharsetByName(chrset));
+		SetEmulation(clevel, false);
+		Layout();
+	}
 }
 
 void TerminalCtrl::Xmlize(XmlIO& xio)
