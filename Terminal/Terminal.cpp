@@ -683,6 +683,9 @@ Image TerminalCtrl::MouseEvent(int event, Point pt, int zdelta, dword keyflags)
 
 void TerminalCtrl::VTMouseEvent(Point pt, dword event, dword keyflags, int zdelta)
 {
+	if(IsReadOnly())
+		return;
+	
 	int  mouseevent = 0;
 
 	// Some interactive applications, particularly those using a Text User Interface (TUI),

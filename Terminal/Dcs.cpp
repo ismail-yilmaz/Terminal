@@ -253,7 +253,7 @@ void TerminalCtrl::ParseSixelGraphics(const VTInStream::Sequence& seq)
 	ImageString imgs;
 	imgs.data = seq.payload;
 	imgs.encoded = false;
-	imgs.transparent = seq.GetInt(2, 0) == 0;
+	imgs.transparent = seq.GetInt(2, 0) != 2;
 
 	RenderImage(imgs, !modes[DECSDM]);
 }
