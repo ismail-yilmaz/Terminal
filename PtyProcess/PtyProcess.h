@@ -7,6 +7,7 @@
     #include <sys/ioctl.h>
     #include <sys/wait.h>
     #include <termios.h>
+    #include <poll.h>
 #elif PLATFORM_WIN32
     #include <windows.h>
     #include "lib/libwinpty.h"
@@ -88,10 +89,14 @@ private:
 
 using PtyProcess = PosixPtyProcess;
 
+template <>
+inline constexpr bool is_upp_guest<pollfd> = true;
+
 #elif defined(PLATFORM_WIN32)
 
 class WindowsPtyProcess : public APtyProcess {
-    public:
+	friend class PtyWaitEvent;
+public:
     WindowsPtyProcess()                                                                                                    { Init(); }
     virtual ~WindowsPtyProcess()                                                                                           { Kill(); }
 
@@ -103,7 +108,7 @@ class WindowsPtyProcess : public APtyProcess {
     void        Write(String s) override;
 
     HANDLE      GetProcessHandle() const;
-    
+
 protected:
     void        Init() override;
     void        Free() override;
@@ -194,6 +199,42 @@ using PtyProcess = WinPtyProcess;
 #endif
 
 #endif
+
+class PtyWaitEvent {
+public:
+	PtyWaitEvent();
+	~PtyWaitEvent();
+	
+	void            Clear();
+	void            Add(const APtyProcess& s, dword events);
+	bool            Wait(int timeout);
+	dword           Get(int i) const;
+	dword           operator[](int i) const;
+	
+private:
+	PtyWaitEvent(const PtyWaitEvent&);
+
+#ifdef PLATFORM_WIN32
+
+	struct Slot : Moveable<Slot> {
+        HANDLE hProcess;
+        HANDLE hRead;
+        HANDLE hWrite;
+        HANDLE hError;
+        OVERLAPPED oRead  = {0};
+        OVERLAPPED oWrite = {0};
+        OVERLAPPED oError = {0};
+	};
+	HANDLE hIocp;
+	Vector<Slot> slots;
+    LPOVERLAPPED lastOverlapped = nullptr;  // Store last overlapped event
+
+#elif PLATFORM_POSIX
+
+	Vector<pollfd> slots;
+
+#endif
+};
 
 }
 

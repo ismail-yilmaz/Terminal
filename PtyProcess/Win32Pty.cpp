@@ -194,25 +194,20 @@ int WindowsPtyProcess::GetExitCode()
 bool WindowsPtyProcess::Read(String& s)
 {
 	String rread;
-	constexpr const int BUFSIZE = 4096;
+	constexpr const DWORD BUFSIZE = 4096;
 
 	s = rbuffer;
 	rbuffer.Clear();
 	bool running = IsRunning();
 	char buffer[BUFSIZE];
-	dword n = 0;
-
-	while(hOutputRead
-		&& PeekNamedPipe(hOutputRead, nullptr, 0, nullptr, &n, nullptr)
-		&& n
-		&& ReadFile(hOutputRead, buffer, sizeof(buffer), &n, nullptr) && n)
-			rread.Cat(buffer, n);
-
-	while(hErrorRead
-		&& PeekNamedPipe(hErrorRead, nullptr, 0, nullptr, &n, nullptr)
-		&& n
-		&& ReadFile(hErrorRead, buffer, sizeof(buffer), &n, nullptr) && n)
-			rread.Cat(buffer, n);
+	DWORD n = 0;
+	
+	for(HANDLE hPipe : { hOutputRead, hErrorRead }) {
+		while(hPipe
+			&& PeekNamedPipe(hPipe, nullptr, 0, nullptr, &n, nullptr) && n
+			&& ReadFile(hPipe, buffer, min(n, BUFSIZE), &n, nullptr) && n)
+				rread.Cat(buffer, n);
+	}
 
 	LLOG("Read() -> " << rread.GetLength() << " bytes read.");
 

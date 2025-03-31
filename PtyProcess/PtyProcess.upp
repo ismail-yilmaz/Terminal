@@ -11,6 +11,7 @@ file
 	PtyProcess.h,
 	PosixPty.cpp,
 	Win32Pty.cpp,
+	PtyWaitEvent.cpp,
 	Library readonly separator,
 	lib\libwinpty.h,
 	lib\libwinpty.cpp,
