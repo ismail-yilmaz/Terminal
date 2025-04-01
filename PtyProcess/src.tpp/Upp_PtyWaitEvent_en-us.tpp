@@ -22,14 +22,20 @@ the poll() system call to wait for events on pty/file descriptors.&]
 [ {{10000F(128)G(128)@1 [s0;%% [* Public Method List]]}}&]
 [s3; &]
 [s5;:Upp`:`:PtyWaitEvent`:`:Clear`(`): [@(0.0.255) void] [* Clear]()&]
-[s2;%% Removes all processes from the wait set.&]
+[s2;%% Removes all processes from the wait list.&]
 [s3; &]
 [s4; &]
 [s5;:Upp`:`:PtyWaitEvent`:`:Add`(const APtyProcess`&`,dword`): [@(0.0.255) void] 
 [* Add]([@(0.0.255) const] APtyProcess[@(0.0.255) `&] [*@3 pty], dword 
 [*@3 events])&]
 [s2;%% Adds a [%-*@3 pty] process to the wait set with specified events 
-to monitor. Events can be WAIT`_READ, WAIT`_WRITE or both.&]
+to monitor. Events can be WAIT`_READ, WAIT`_WRITE, WAIT`_IS`_EXCEPTION, 
+or a combination of them.&]
+[s3; &]
+[s4; &]
+[s5;:Upp`:`:PtyWaitEvent`:`:Remove`(const APtyProcess`&`): [@(0.0.255) void] 
+[* Remove]([@(0.0.255) const ]APtyProcess[@(0.0.255) `&] [*@3 pty])&]
+[s2;%% Removes the given [%-*@3 pty] process from the wait list.&]
 [s3; &]
 [s4; &]
 [s5;:Upp`:`:PtyWaitEvent`:`:Wait`(int`): [@(0.0.255) bool] [* Wait]([@(0.0.255) int] 
@@ -45,8 +51,8 @@ a pending event, false if timeout occurred with no events.&]
 ]([@(0.0.255) int] [*@3 i]) [@(0.0.255) const]&]
 [s0;l288;%% Returns events that triggered for pty process at index 
 [%-*@3 i] (indicies are specified by order of Add calls) as binary 
-or of WAIT`_READ, WAIT`_WRITE. If there were no events for requested 
-pty, returns 0.&]
+or of WAIT`_READ, WAIT`_WRITE, WAIT`_IS`_EXCEPTION. If there 
+were no events for requested pty, returns 0.&]
 [s3; &]
 [ {{10000F(128)G(128)@1 [s0;%% [* Constructor detail]]}}&]
 [s3; &]

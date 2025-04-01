@@ -206,7 +206,8 @@ public:
 	~PtyWaitEvent();
 	
 	void            Clear();
-	void            Add(const APtyProcess& s, dword events);
+	void            Add(const APtyProcess& pty, dword events);
+	void            Remove(const APtyProcess& pty);
 	bool            Wait(int timeout);
 	dword           Get(int i) const;
 	dword           operator[](int i) const;
@@ -217,6 +218,8 @@ private:
 #ifdef PLATFORM_WIN32
 
 	struct Slot : Moveable<Slot> {
+		Slot();
+		~Slot();
         HANDLE hProcess;
         HANDLE hRead;
         HANDLE hWrite;
@@ -227,6 +230,8 @@ private:
 	};
 	HANDLE hIocp;
 	Vector<Slot> slots;
+	Index<HANDLE> exceptions;
+	VectorMap<HANDLE, int> handles;
     LPOVERLAPPED lastOverlapped = nullptr;  // Store last overlapped event
 
 #elif PLATFORM_POSIX
