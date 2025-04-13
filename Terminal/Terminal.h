@@ -76,8 +76,8 @@ public:
         PROGRESS_BUSY
     };
     
-   enum TimerIds
-   {
+    enum TimerIds
+    {
         TIMEID_REFRESH = Ctrl::TIMEID_COUNT,
         TIMEID_SIZEHINT,
         TIMEID_BLINK,
@@ -261,10 +261,14 @@ public:
     TerminalCtrl&   NoHyperlinks()                                  { return Hyperlinks(false);     }
     bool            HasHyperlinks() const                           { return hyperlinks; }
 
-    TerminalCtrl&   Annotations(bool b = true)                       { annotations = b; return *this; }
-    TerminalCtrl&   NoAnnotations()                                  { return Annotations(false);     }
-    bool            HasAnnotations() const                           { return annotations; }
+    TerminalCtrl&   Annotations(bool b = true)                      { annotations = b; return *this; }
+    TerminalCtrl&   NoAnnotations()                                 { return Annotations(false);     }
+    bool            HasAnnotations() const                          { return annotations; }
 
+    TerminalCtrl&   SemanticInformation(bool b = true)              { semanticinformation = b; return *this; }
+    TerminalCtrl&   NoSemanticInformation()                         { return SemanticInformation(false); }
+    bool            HasSemanticInformation() const                  { return semanticinformation; }
+    
     TerminalCtrl&   ReverseWrap(bool b = true)                      { XTrewrapm((reversewrap = b)); return *this; }
     TerminalCtrl&   NoReverseWrap()                                 { return ReverseWrap(false); }
     bool            HasReverseWrap() const                          { return reversewrap; }
@@ -669,6 +673,7 @@ private:
     bool        highlight;
     bool        notifyprogress;
     bool        ambiguouschartowide;
+    bool        semanticinformation;
 
 // Down below is the emulator stuff, formerley known as "Console"...
 
@@ -752,6 +757,7 @@ private:
     void        ParseClipboardRequests(const VTInStream::Sequence& seq);
     
     void        ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
+    void        ParseSemanticInformation(const VTInStream::Sequence& seq);
     void        ParseConEmuWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
     void        ParseConEmuMessageBoxMessage(const VTInStream::Sequence& seq);
     

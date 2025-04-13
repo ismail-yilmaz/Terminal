@@ -333,6 +333,33 @@ void VTCell::Reset()
 	data  = 0;
 }
 
+VTCell& VTCell::SetAsPrompt(bool b)
+{
+	attrs &= ~ATTR_SEMANTIC_MASK;
+	attrs |= b ? ATTR_SEMANTIC_PROMPT : 0;
+	return *this;
+}
+
+VTCell& VTCell::SetAsInput(bool b)
+{
+	attrs &= ~ATTR_SEMANTIC_MASK;
+	attrs |= b ? ATTR_SEMANTIC_INPUT : 0;
+	return *this;
+}
+
+VTCell& VTCell::SetAsOutput(bool b)
+{
+	attrs &= ~ATTR_SEMANTIC_MASK;
+	attrs |= b ? ATTR_SEMANTIC_OUTPUT : 0;
+	return *this;
+}
+
+VTCell& VTCell::ClearSemanticInfo()
+{
+	attrs &= ~ATTR_SEMANTIC_MASK;
+	return *this;
+}
+
 bool VTCell::IsNullInstance() const
 {
 	return IsVoid()
@@ -348,6 +375,13 @@ const VTCell& VTCell::Void()
 {
 	static VTCell sCell;
 	return sCell;
+}
+
+hash_t VTCell::GetHashValue() const
+{
+	hash_t a = CombineHash(chr, data, attrs, sgr);
+	hash_t b = CombineHash(ink, paper);
+	return CombineHash(a, b);
 }
 
 void VTCell::Serialize(Stream& s)

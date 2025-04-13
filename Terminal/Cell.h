@@ -20,25 +20,29 @@ struct VTCell : Moveable<VTCell> {
     Color   paper;
 
     enum Attrs : word { // It is possible to have both DEC and ISO selective erases...
-        ATTR_PROTECTION_DEC = 0x0001,
-        ATTR_PROTECTION_ISO = 0x0002,
-        ATTR_PROTECTION_ALL = ATTR_PROTECTION_DEC | ATTR_PROTECTION_ISO
+        ATTR_PROTECTION_DEC  = 0x0001,
+        ATTR_PROTECTION_ISO  = 0x0002,
+        ATTR_PROTECTION_ALL  = ATTR_PROTECTION_DEC | ATTR_PROTECTION_ISO,
+        ATTR_SEMANTIC_PROMPT = 0x0004,
+        ATTR_SEMANTIC_INPUT  = 0x0008,
+        ATTR_SEMANTIC_OUTPUT = 0x0010,
+        ATTR_SEMANTIC_MASK   = ATTR_SEMANTIC_PROMPT | ATTR_SEMANTIC_INPUT | ATTR_SEMANTIC_OUTPUT,
     };
     
     enum Sgr : word {
-        SGR_NORMAL      = 0x0000,
-        SGR_BOLD        = 0x0001,
-        SGR_ITALIC      = 0x0002,
-        SGR_UNDERLINE   = 0x0004,
-        SGR_OVERLINE    = 0x0008,
-        SGR_STRIKEOUT   = 0x0010,
-        SGR_BLINK       = 0x0020,
-        SGR_INVERTED    = 0x0040,
-        SGR_HIDDEN      = 0x0080,
-        SGR_FAINT       = 0x0100,
-        SGR_IMAGE       = 0x0200,
-        SGR_HYPERLINK   = 0x0400,
-        SGR_ANNOTATION  = 0x0800
+        SGR_NORMAL       = 0x0000,
+        SGR_BOLD         = 0x0001,
+        SGR_ITALIC       = 0x0002,
+        SGR_UNDERLINE    = 0x0004,
+        SGR_OVERLINE     = 0x0008,
+        SGR_STRIKEOUT    = 0x0010,
+        SGR_BLINK        = 0x0020,
+        SGR_INVERTED     = 0x0040,
+        SGR_HIDDEN       = 0x0080,
+        SGR_FAINT        = 0x0100,
+        SGR_IMAGE        = 0x0200,
+        SGR_HYPERLINK    = 0x0400,
+        SGR_ANNOTATION   = 0x0800,
     };
 
     enum FillerFlags : dword {
@@ -55,22 +59,28 @@ struct VTCell : Moveable<VTCell> {
     };
     
     VTCell& Normal()                         { sgr = SGR_NORMAL; return *this; }
-    VTCell& Bold(bool b = true)              { sgr = (sgr & ~SGR_BOLD)      | (-word(b) & SGR_BOLD);  return *this;     }
-    VTCell& Faint(bool b = true)             { sgr = (sgr & ~SGR_FAINT)     | (-word(b) & SGR_FAINT); return *this;     }
-    VTCell& Italic(bool b = true)            { sgr = (sgr & ~SGR_ITALIC)    | (-word(b) & SGR_ITALIC); return *this;    }
-    VTCell& Underline(bool b = true)         { sgr = (sgr & ~SGR_UNDERLINE) | (-word(b) & SGR_UNDERLINE); return *this; }
-    VTCell& Overline(bool b = true)          { sgr = (sgr & ~SGR_OVERLINE)  | (-word(b) & SGR_OVERLINE); return *this;  }
-    VTCell& Blink(bool b = true)             { sgr = (sgr & ~SGR_BLINK)     | (-word(b) & SGR_BLINK); return *this;     }
-    VTCell& Strikeout(bool b = true)         { sgr = (sgr & ~SGR_STRIKEOUT) | (-word(b) & SGR_STRIKEOUT); return *this; }
-    VTCell& Invert(bool b = true)            { sgr = (sgr & ~SGR_INVERTED)  | (-word(b) & SGR_INVERTED); return *this;  }
-    VTCell& Conceal(bool b = true)           { sgr = (sgr & ~SGR_HIDDEN)    | (-word(b) & SGR_HIDDEN); return *this;    }
-    VTCell& Image(bool b = true)             { sgr = (sgr & ~SGR_IMAGE)     | (-word(b) & SGR_IMAGE); return *this;     }
-    VTCell& Hyperlink(bool b = true)         { sgr = (sgr & ~SGR_HYPERLINK) | (-word(b) & SGR_HYPERLINK); return *this; }
-    VTCell& Annotation(bool b = true)        { sgr = (sgr & ~SGR_ANNOTATION)| (-word(b) & SGR_ANNOTATION); return *this;}
+    VTCell& Bold(bool b = true)              { sgr = (sgr & ~SGR_BOLD)       | (-word(b) & SGR_BOLD);  return *this;     }
+    VTCell& Faint(bool b = true)             { sgr = (sgr & ~SGR_FAINT)      | (-word(b) & SGR_FAINT); return *this;     }
+    VTCell& Italic(bool b = true)            { sgr = (sgr & ~SGR_ITALIC)     | (-word(b) & SGR_ITALIC); return *this;    }
+    VTCell& Underline(bool b = true)         { sgr = (sgr & ~SGR_UNDERLINE)  | (-word(b) & SGR_UNDERLINE); return *this; }
+    VTCell& Overline(bool b = true)          { sgr = (sgr & ~SGR_OVERLINE)   | (-word(b) & SGR_OVERLINE); return *this;  }
+    VTCell& Blink(bool b = true)             { sgr = (sgr & ~SGR_BLINK)      | (-word(b) & SGR_BLINK); return *this;     }
+    VTCell& Strikeout(bool b = true)         { sgr = (sgr & ~SGR_STRIKEOUT)  | (-word(b) & SGR_STRIKEOUT); return *this; }
+    VTCell& Invert(bool b = true)            { sgr = (sgr & ~SGR_INVERTED)   | (-word(b) & SGR_INVERTED); return *this;  }
+    VTCell& Conceal(bool b = true)           { sgr = (sgr & ~SGR_HIDDEN)     | (-word(b) & SGR_HIDDEN); return *this;    }
+    VTCell& Image(bool b = true)             { sgr = (sgr & ~SGR_IMAGE)      | (-word(b) & SGR_IMAGE); return *this;     }
+    VTCell& Hyperlink(bool b = true)         { sgr = (sgr & ~SGR_HYPERLINK)  | (-word(b) & SGR_HYPERLINK); return *this; }
+    VTCell& Annotation(bool b = true)        { sgr = (sgr & ~SGR_ANNOTATION) | (-word(b) & SGR_ANNOTATION); return *this;}
 
     VTCell& ProtectDEC(bool b = true)        { attrs = (attrs & ~ATTR_PROTECTION_DEC) | (-word(b) & ATTR_PROTECTION_DEC); return *this; }
     VTCell& ProtectISO(bool b = true)        { attrs = (attrs & ~ATTR_PROTECTION_ISO) | (-word(b) & ATTR_PROTECTION_ISO); return *this; }
     VTCell& Protect(bool b = true)           { attrs = (attrs & ~ATTR_PROTECTION_ALL) | (-word(b) & ATTR_PROTECTION_ALL); return *this; }
+    
+    // Semantic information, mutually exclusive
+    VTCell& SetAsPrompt(bool b = true);
+    VTCell& SetAsInput(bool b = true);
+    VTCell& SetAsOutput(bool b = true);
+	VTCell& ClearSemanticInfo();
 
     static const VTCell& Void();
     
@@ -94,6 +104,10 @@ struct VTCell : Moveable<VTCell> {
     bool IsHyperlink() const                 { return sgr & SGR_HYPERLINK;   }
     bool IsAnnotation() const                { return sgr & SGR_ANNOTATION;  }
     bool IsHypertext() const                 { return IsHyperlink() || IsAnnotation(); }
+    bool IsPrompt() const                    { return attrs & ATTR_SEMANTIC_PROMPT;}
+    bool IsInput() const                     { return attrs & ATTR_SEMANTIC_INPUT; }
+    bool IsOutput() const                    { return attrs & ATTR_SEMANTIC_OUTPUT;}
+    bool HasSemanticInfo() const             { return attrs & ATTR_SEMANTIC_MASK;  }
     bool IsProtected() const                 { return attrs & ATTR_PROTECTION_ALL; }
     bool HasDECProtection() const            { return attrs & ATTR_PROTECTION_DEC; }
     bool HasISOProtection() const            { return attrs & ATTR_PROTECTION_ISO; }
@@ -108,6 +122,8 @@ struct VTCell : Moveable<VTCell> {
     void    operator=(dword c)                  { chr = c; }
     operator dword() const                      { return chr; }
 
+    hash_t  GetHashValue() const;
+    
     void    Serialize(Stream& s);
     
     VTCell()                                    { Clear(); }

@@ -1045,6 +1045,36 @@ xplicit hyperlinks] protocol is enabled.&]
 [s2; Return true if the annotations feature is enabled.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:SemanticInformation`(bool`):%- TerminalCtrl[@(0.0.255) `&] 
+[* SemanticInformation]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2;%- Enables or disables [^https`:`/`/gitlab`.freedesktop`.org`/Per`_Bothner`/specifications`/blob`/master`/proposals`/semantic`-prompts`.md^ s
+emantic information] (also known as [/ semantic prompts]). When 
+used with a supporting shell script, this protocol enables a 
+clear separation between the prompt, input, and output sections 
+of terminal output. Returns `*this for method chaining.&]
+[s2;%- &]
+[s2;i150;O0;%- TerminalCtrl currently supports only a minimal—but 
+reasonable—subset of this protocol. This may change in the 
+future.&]
+[s2;i150;O0;%- TerminalCtrl does not process or display semantic 
+information by itself. Instead, it is up to the client code to 
+make use of the protocol, typically in combination with features 
+like cell highlighting or search functionality.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:NoSemanticInformation`(`):%- TerminalCtrl[@(0.0.255) `&] 
+[* NoSemanticInformation]()&]
+[s2;%- Disables [^https`:`/`/gitlab`.freedesktop`.org`/Per`_Bothner`/specifications`/blob`/master`/proposals`/semantic`-prompts`.md^ s
+emantic information] (also known as [/ semantic prompts])[%% . ]Returns 
+`*this for method chaining.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:HasSemanticInformation`(`)const:%- [@(0.0.255) bool] 
+[* HasSemanticInformation]() [@(0.0.255) const]&]
+[s2;%- [%% Returns true if  .][^https`:`/`/gitlab`.freedesktop`.org`/Per`_Bothner`/specifications`/blob`/master`/proposals`/semantic`-prompts`.md^ s
+emantic information] (also known as [/ semantic prompts]) is enabled.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:ReverseWrap`(bool`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T
 erminalCtrl][@(0.0.255) `&]_[* ReverseWrap]([@(0.0.255) bool]_[*@3 b]_`=_[@(0.0.255) true])
 &]
@@ -1169,30 +1199,6 @@ applications that support the clipboard access and manipulation
 protocol.&]
 [s3;%- &]
 [s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:NotifyProgress`(bool`):%- TerminalCtrl[@(0.0.255) `&] 
-[* NotifyProgress]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
-[s2; Enables or disables [^https`:`/`/learn`.microsoft`.com`/en`-us`/windows`/terminal`/tutorials`/progress`-bar`-sequences^ C
-onEmu/Windows terminal`'s progress notification protocol ](OSC 
-9 ;4). Returns `*this for method chaining.&]
-[s2; See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenProgress^ W
-henProgress]&]
-[s3;%- &]
-[s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:NoNotifyProgress`(`):%- TerminalCtrl[@(0.0.255) `&] 
-[* NoNotifyProgress]()&]
-[s2; Disables [^https`:`/`/learn`.microsoft`.com`/en`-us`/windows`/terminal`/tutorials`/progress`-bar`-sequences^ C
-onEmu/Windows terminal`'s progress notification protocol] (OSC 
-9 ;4). Returns `*this for method chaining.&]
-[s2; See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenProgress^ W
-henProgress]&]
-[s3;%- &]
-[s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:IsNotifyingProgress`(`)const:%- [@(0.0.255) bool] 
-[* IsNotifyingProgress]() [@(0.0.255) const]&]
-[s2; Returns true if the progress notification protocol is enabled. 
-.&]
-[s3;%- &]
-[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:PermitClipboardAccess`(bool`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T
 erminalCtrl][@(0.0.255) `&]_[* PermitClipboardAccess]([@(0.0.255) bool]_[*@3 b]_`=_[@(0.0.255) t
 rue])&]
@@ -1215,6 +1221,30 @@ the default setting. Returns `*this for method chaining.&]
 sClipboardAccessPermitted]()_[@(0.0.255) const]&]
 [s2; Returns true if the clipboard access and manipulation protocol 
 is enabled.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:NotifyProgress`(bool`):%- TerminalCtrl[@(0.0.255) `&] 
+[* NotifyProgress]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2; Enables or disables [^https`:`/`/learn`.microsoft`.com`/en`-us`/windows`/terminal`/tutorials`/progress`-bar`-sequences^ C
+onEmu/Windows terminal`'s progress notification protocol ](OSC 
+9 ;4). Returns `*this for method chaining.&]
+[s2; See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenProgress^ W
+henProgress]&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:NoNotifyProgress`(`):%- TerminalCtrl[@(0.0.255) `&] 
+[* NoNotifyProgress]()&]
+[s2; Disables [^https`:`/`/learn`.microsoft`.com`/en`-us`/windows`/terminal`/tutorials`/progress`-bar`-sequences^ C
+onEmu/Windows terminal`'s progress notification protocol] (OSC 
+9 ;4). Returns `*this for method chaining.&]
+[s2; See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenProgress^ W
+henProgress]&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:IsNotifyingProgress`(`)const:%- [@(0.0.255) bool] 
+[* IsNotifyingProgress]() [@(0.0.255) const]&]
+[s2; Returns true if the progress notification protocol is enabled. 
+.&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:PCStyleFunctionKeys`(bool`):%- [_^Upp`:`:TerminalCtrl^ Term

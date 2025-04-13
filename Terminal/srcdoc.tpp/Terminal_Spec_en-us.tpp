@@ -967,6 +967,9 @@ System Commands]&]
 :: [s0; [G 119]]
 :: [s0; [G Reset selection paper color.]]
 :: [s0; [G Level 1]]
+:: [s0; [G 133]]
+:: [s0; [G Semantic information]]
+:: [s0; [G Level 1]]
 :: [s0; [G 444]]
 :: [s0; [G Display inline images. (Jexer)]]
 :: [s0; [G Level 1]]
@@ -1575,4 +1578,29 @@ an image file and must be base64 encoded.]&]
 [s0;l200;i200;b20;O1; [/G Allowing arbitrary file paths may pose a 
 security risk][G . It is strongly recommended that client code 
 prompts for user confirmation before applying any changes to 
-ensure safety and prevent unauthorized modifications.]]]
+ensure safety and prevent unauthorized modifications.]&]
+[s0;b20;a20;pht300; [*G Semantic Information Protocol]&]
+[ {{5035:1631:3334B20;A20;G(220)@(220.225.230) [s0; [G Sequnece]]
+:: [s0; [G Description]]
+:: [s0; [G Device Level]]
+::@2 [s0; [C@5$(245) OSC 133 ; `[command`] ST]]
+:: [s0; [G Sets the semantic information, starting from the cursor position.]]
+:: [s0; [G Level 1]]}}&]
+[s0;b20;a20;pht300; [*G Notes]&]
+[s0;l200;i200;b20;O1; [C@5$(245) command][G  can be one of the following 
+four values (case sensitive):]&]
+[s0;l400;i200;b20;O1; [C@5$(245) A][G : Marks the starting point of the 
+shell prompt.]&]
+[s0;l400;i200;b20;O1; [C@5$(245) B][G : ][G@N Marks the end of the shell 
+prompt and the start of the user input.]&]
+[s0;l400;i200;b20;O1; [C@5$(245) C][G : ][G@N Marks the end of the user 
+input and the start of the command output.]&]
+[s0;l400;i200;b20;O1; [C@5$(245) D][G : ][G@N Marks the end of the command 
+output.]&]
+[s0;l200;i200;b20;O1; [@N TerminalCtrl currently supports only a minimal—but 
+reasonable—subset of this protocol. This may change in the 
+future.]&]
+[s0;l200;i200;b20;O1; [@N TerminalCtrl does not process or display 
+semantic information by itself. Instead, it is up to the client 
+code to make use of the protocol, typically in combination with 
+features like cell highlighting or search functionality.]]]

@@ -42,6 +42,9 @@ void TerminalCtrl::ParseOperatingSystemCommands(const VTInStream::Sequence& seq)
 	case 52:	// Clipboard manipulation protocol.
 		ParseClipboardRequests(seq);
 		break;
+	case 133:   // Semantic information (a.k.a. "semantic prompts")
+		ParseSemanticInformation(seq);
+		break;
 	case 444:	// Jexer inline images protocol.
 		ParseJexerGraphics(seq);
 		break;
@@ -192,10 +195,9 @@ void TerminalCtrl::ParseHyperlinks(const VTInStream::Sequence& seq)
 	}
 	else {
 		uri = UrlDecode(uri);
-		cellattrs.Image(false);
-		cellattrs.Hyperlink(true);
-		cellattrs.Annotation(false);
-		cellattrs.data = RenderHypertext(uri);
+		cellattrs.Image(false)
+				 .Annotation(false)
+				 .Hyperlink(true).data = RenderHypertext(uri);
 	}
 }
 
@@ -238,6 +240,26 @@ void TerminalCtrl::ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence
 	WhenDirectoryChange(seq.GetStr(2));
 }
 
+void TerminalCtrl::ParseSemanticInformation(const VTInStream::Sequence& seq)
+{
+	// For more information on semantic prompts, see:
+	// https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md
+
+	if(!semanticinformation)
+		return;
+	
+	String s = seq.GetStr(2);
+
+	// ATM, we only care about a minimal subset of this protocol.
+
+	switch(s[0]) {
+	case 'A': cellattrs.SetAsPrompt(); break;
+	case 'B': cellattrs.SetAsInput();  break;
+	case 'C': cellattrs.SetAsOutput(); break;
+	default:  cellattrs.ClearSemanticInfo(); break;
+	}
+}
+
 void TerminalCtrl::ParseTerminalCtrlProtocols(const VTInStream::Sequence& seq)
 {
 	if(seq.GetInt(2) == 1)
@@ -261,10 +283,9 @@ void TerminalCtrl::ParseTerminalCtrlAnnotations(const VTInStream::Sequence& seq)
 		cellattrs.data = 0;
 	}
 	else {
-		cellattrs.Image(false);
-		cellattrs.Hyperlink(false);
-		cellattrs.Annotation(true);
-		cellattrs.data = RenderHypertext(anno);
+		cellattrs.Image(false)
+				 .Hyperlink(false)
+				 .Annotation(true).data = RenderHypertext(anno);
 	}
 }
 

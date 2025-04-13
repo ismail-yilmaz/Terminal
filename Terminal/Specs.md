@@ -329,6 +329,7 @@
 |110        | Reset ink color.                           | Level 1      |
 |111        | Reset paper color.                         | Level 1      |
 |119        | Reset selection paper color.               | Level 1      |
+|133        | Semantic information.                      | Level 1      |
 |444        | Display inline images. (Jexer)             | Level 1      |
 |1337       | Display inline images. (iTerm2)            | Level 1      |
 
@@ -635,6 +636,24 @@
 - `SetBackgroundImageFile`  argument specifies the background image change command.
 - `path` should contain the path to an image file and must be base64 encoded.
 - *Allowing arbitrary file paths may pose a security risk.* It is strongly recommended that client code prompts for user confirmation before applying any changes to ensure safety and prevent unauthorized modifications.
+
+
+### Semantic Information Protocol
+
+| Sequence                               | Description                                                         | Device Level |
+| ---                                    | ---                                                                 | ---          |
+|`OSC 133 ; [command] ST`                | Sets the semantic information, starting from the cursor position.   | Level 1      |
+
+#### Notes
+
+- `command` can be one of the following four values (case sensitive):
+   - `A`: Marks the starting point of the shell prompt.
+   - `B`: Marks the end of the shell prompt and the start of the user input.
+   - `C`: Marks the end of the user input and the start of the command output.
+   - `D`: Marks the end of the command output.
+
+- TerminalCtrl currently supports only a minimal—but reasonable—subset of this protocol. This may change in the future.
+- TerminalCtrl does not process or display semantic information by itself. Instead, it is up to the client code to make use of the protocol, typically in combination with features like cell highlighting or search functionality.
 
 
 
