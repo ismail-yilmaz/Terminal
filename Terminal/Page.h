@@ -272,8 +272,8 @@ private:
     int             CellRemove(int pos, int n, const VTCell& attrs, bool pan);
     int             SetTabStop(int col, bool b);
     bool            IsTabStop(int col) const                                        { return tabs[col]; }
-    void            AdjustHistorySize();
-    bool            SaveToHistory(int pos);
+    void            AdjustHistorySize(int n = 0);
+    bool            SaveToHistory(int pos, int n);
     void            UnwindHistory(const Size& prevsize);
     void            RewindHistory(const Size& prevsize);
     Rect            AdjustRect(const Rect& r, bool displaced = true);

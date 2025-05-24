@@ -274,32 +274,36 @@ void VTPage::SetHistorySize(int sz)
 	AdjustHistorySize();
 }
 
-void VTPage::AdjustHistorySize()
+void VTPage::AdjustHistorySize(int n)
 {
-	int count = saved.GetCount();
+	const int count = saved.GetCount() + n;
 	if(count > historysize) {
 		saved.DropHead(count - historysize);
 		LLOG("AdjustHistorySize() -> Before: " << count << ", after: " << saved.GetCount());
 	}
 }
 
-bool VTPage::SaveToHistory(int pos)
+bool VTPage::SaveToHistory(int pos, int n)
 {
-	if(margins != GetView())
+	if(margins != GetView() || n <= 0)
 		return false;
-	AdjustHistorySize();
-	saved.AddTail(pick(lines[pos - 1]));
+	AdjustHistorySize(n);
+	for(int i = 0; i < n; i++)
+		saved.AddTail(pick(lines[pos - 1 + i]));
 	return true;
 }
 
 void VTPage::UnwindHistory(const Size& prevsize)
 {
-	int delta =  min(size.cy - prevsize.cy, saved.GetCount());
+	int delta =  min(size.cy - prevsize.cy, saved.GetCount()), n = delta;
+	if(delta <= 0 )
+		return;
+	lines.InsertN(0, delta);
 	while(delta-- > 0) {
-		lines.Insert(0, pick(saved.Tail()));
+		lines[delta] = pick(saved.Tail());
 		saved.DropTail();
-		cursor.y++;
 	}
+	cursor.y += n;
 }
 
 void VTPage::RewindHistory(const Size& prevsize)
@@ -760,16 +764,14 @@ int VTPage::LineInsert(int pos, int n, const VTCell& attrs)
 			r.top = pos;
 			r.bottom = pos + n - 1;
 			RectFill(r, cellattrs, VTCell::FILL_NORMAL);
-			scrolled++;
+			scrolled = n;
 		}
 		else {
-			for(int i = 0; i < n; i++)
-			{
-				VTLine& line = lines.Insert(pos - 1);
-				line.Adjust(size.cx, attrs);
-				lines.Remove(margins.bottom);
-				scrolled++;
-			}
+			lines.InsertN(pos - 1, n);
+			for(int i = pos - 1; i < pos - 1 + n; i++)
+				lines[i].Adjust(size.cx, attrs);
+			lines.Remove(margins.bottom, n);
+			scrolled = n;
 		}
 
 		Invalidate(pos - 1, margins.bottom);
@@ -798,20 +800,17 @@ int VTPage::LineRemove(int pos, int n, const VTCell& attrs)
 			RectCopy(margins.TopLeft(), r, margins);
 			r.top = margins.bottom - n + 1;
 			RectFill(r, cellattrs, VTCell::FILL_NORMAL);
-			scrolled++;
+			scrolled = n;
 		}
 		else {
-			for(int i = 0; i < n; i++)
-			{
-				VTLine& line = lines.Insert(margins.bottom);
-				line.Adjust(size.cx, attrs);
-				if(history && GetAbsRow(pos) == 1)
-				{
-					SaveToHistory(pos);
-				}
-				lines.Remove(pos - 1);
-				scrolled++;
-			}
+			// Batch insert lines at bottom once
+			lines.InsertN(margins.bottom, n);
+			for(int i = margins.bottom; i < margins.bottom + n; i++)
+				lines[i].Adjust(size.cx, attrs);
+			if(history && GetAbsRow(pos) == 1)
+				SaveToHistory(pos, n);
+			lines.Remove(pos - 1, n);
+			scrolled = n;
 		}
 
 		Invalidate(pos - 1, margins.bottom);
@@ -1228,19 +1227,13 @@ void VTPage::FetchCellsMutable(Point pl, Point ph, Event<VTCell&> consumer)
 
 const VTLine& VTPage::FetchLine(int i) const
 {
-	int count = GetLineCount();
+	const int slen = saved.GetCount();
+	const int llen = lines.GetCount();
 	
-	if(0 <= i && i < count)
-	{
-		int slen = saved.GetCount();
-		int llen = lines.GetCount();
-	
-		if(slen && i < slen)
-			return saved[i];
-		else
-		if(llen && i >= slen)
-			return lines[i - slen];
-	}
+	if(i >= 0 && i < slen)
+		return saved[i];
+	if(i >= slen && i < slen + llen)
+		return lines[i - slen];
 	
 	return VTLine::Void();
 }
@@ -1333,6 +1326,7 @@ void VTPage::LineFill(int pos, int begin, int end, const VTCell& filler, dword f
 	if(lines[pos - 1].Fill(begin, end, filler, flags))
 		ClearEol();
 }
+
 
 void VTPage::RectCopy(const Point &p, const Rect& r, const Rect& rr, dword flags)
 {
@@ -1531,7 +1525,7 @@ String VTPage::Cursor::ToString() const
 Tuple<int, int> VTPage::GetLineSpan(int i, int limit) const
 {
 	LLOG("GetLineSpan(" << i << ")");
-	
+
 	int lo = i, hi = i, minlo = 0, maxhi = GetLineCount();
 
 	if(limit > 0) {
@@ -1543,8 +1537,9 @@ Tuple<int, int> VTPage::GetLineSpan(int i, int limit) const
 		lo--;
 	while(hi < maxhi && FetchLine(hi).IsWrapped())
 		hi++;
-	
+
 	return MakeTuple(lo, hi);
+
 }
 
 WString AsWString(const VTPage& page, const Rect& r, bool rectsel, bool tspaces)

@@ -80,7 +80,7 @@ struct VTCell : Moveable<VTCell> {
     VTCell& SetAsPrompt(bool b = true);
     VTCell& SetAsInput(bool b = true);
     VTCell& SetAsOutput(bool b = true);
-	VTCell& ClearSemanticInfo();
+    VTCell& ClearSemanticInfo();
 
     static const VTCell& Void();
     
@@ -103,6 +103,8 @@ struct VTCell : Moveable<VTCell> {
     bool IsImage() const                     { return sgr & SGR_IMAGE;       }
     bool IsHyperlink() const                 { return sgr & SGR_HYPERLINK;   }
     bool IsAnnotation() const                { return sgr & SGR_ANNOTATION;  }
+    bool IsWideCharTrail() const             { return chr == 1;              }
+    bool IsSpecial() const                   { return chr < 32;              }
     bool IsHypertext() const                 { return IsHyperlink() || IsAnnotation(); }
     bool IsPrompt() const                    { return attrs & ATTR_SEMANTIC_PROMPT;}
     bool IsInput() const                     { return attrs & ATTR_SEMANTIC_INPUT; }
