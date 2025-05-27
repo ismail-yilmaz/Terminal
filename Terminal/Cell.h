@@ -104,7 +104,7 @@ struct VTCell : Moveable<VTCell> {
     bool IsHyperlink() const                 { return sgr & SGR_HYPERLINK;   }
     bool IsAnnotation() const                { return sgr & SGR_ANNOTATION;  }
     bool IsWideCharTrail() const             { return chr == 1;              }
-    bool IsSpecial() const                   { return chr < 32;              }
+    bool IsSpecial() const                   { return chr > 0 && chr < 32;   }
     bool IsHypertext() const                 { return IsHyperlink() || IsAnnotation(); }
     bool IsPrompt() const                    { return attrs & ATTR_SEMANTIC_PROMPT;}
     bool IsInput() const                     { return attrs & ATTR_SEMANTIC_INPUT; }
