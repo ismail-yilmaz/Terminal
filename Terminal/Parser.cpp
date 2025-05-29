@@ -378,8 +378,6 @@ VT_END_STATE_MAP;
 #undef VT_BEGIN_STATE_MAP
 #undef VT_END_STATE_MAP
 
-namespace {
-
 force_inline
 bool sCheckRange(int c, int lo, int hi)
 {
@@ -396,18 +394,6 @@ int sCheckSplit(const char *s, int len)
 		if(n >= 4 && ((s[i] & 0xF8) == 0xF0)) return len - (i + 4);
 	}
 	return 0;
-}
-
-template<class T, class F> force_inline
-void sCollectInto(T& out, int c, byte*& ptr, const byte* limit, F&& valid)
-{
-	const byte  *b = ptr;
-	while((ptr < limit) && valid(*ptr))
-		ptr++;
-	out.Cat(c);
-	out.Cat(b, ptr - b);
-}
-
 }
 
 void VTInStream::Parse(const void *data, int size, bool utf8)
@@ -575,38 +561,33 @@ int VTInStream::GetChr()
 force_inline
 void VTInStream::CollectChr(int c)
 {
-	LTIMING("VTInStream::CollectChr");
+	LTIMING("VtInStream::CollectChr()");
 
 	int p = -1;
-	do {
-		if(!sCheckRange(c, 0x20, 0x7E) && c <= 0x9F)
-			break;
+	while(sCheckRange(c, 0x20, 0x7E) || c > 0x9F) {
 		WhenChr(c);
 		p = GetPos();
 		c = GetChr();
 	}
-	while(c != -1);
-	
 	if(c != -1)
 		Seek(p);
 	waschr = true;
 }
-
 
 force_inline
 void VTInStream::CollectIntermediate(int c)
 {
 	LTIMING("VtInStream::CollectParameter()");
 	
-	byte *b = ptr;
+	const byte *b = ptr;
 	int   n = 0;
 
 	sequence.intermediate[0] = c;
-	while((b < rdlim) && sCheckRange(*b, 0x20, 0x2F) && ++n < 4) {
-		sequence.intermediate[n] = *b++;
+	while((b < rdlim) && sCheckRange(*b++, 0x20, 0x2F) && ++n < 4) {
+		sequence.intermediate[n] = *b;
 	}
 	
-	ptr = b;
+	ptr += n;
 }
 
 force_inline
@@ -614,9 +595,15 @@ void VTInStream::CollectParameter(int c)
 {
 	LTIMING("VtInStream::CollectParameter()");
 	
-	sCollectInto(collected, c, ptr, rdlim, [](byte ch) {
-		return sCheckRange(ch, 0x30, 0x3B);
-	});
+	const byte  *b = ptr;
+	int  n = 0;
+	
+	while((b < rdlim) && sCheckRange(*b++, 0x30, 0x3B)) {
+		++n;
+	}
+
+	collected.Cat(ptr - 1, n + 1);
+	ptr += n;
 }
 
 force_inline
@@ -624,19 +611,29 @@ void VTInStream::CollectPayload(int c)
 {
 	LTIMING("VtInStream::CollectPayload()");
 
-	sCollectInto(sequence.payload, c, ptr, rdlim, [](byte c) {
-		return sCheckRange(c, 0x20, 0x7E) || sCheckRange(c, 0x00, 0x17) || c == 0x19;
-	});
+	const byte  *b = ptr;
+	int  n = 0;
+	
+	while((b < rdlim) && (sCheckRange(c = *b++, 0x20, 0x7E) || sCheckRange(c, 0x00, 0x17) || c == 0x19)) {
+		++n;
+	}
+	sequence.payload.Cat(ptr - 1, n + 1);
+	ptr += n;
 }
 
 force_inline
 void VTInStream::CollectString(int c)
 {
 	LTIMING("VtInStream::CollectString()");
+	
+	const byte  *b = ptr;
+	int  n = 0;
 
-	sCollectInto(sequence.payload, c, ptr, rdlim, [&](byte ch) {
-		return sCheckRange(ch, 0x20, 0x7F) || (utf8mode && ch >= 0xA0);
-	});
+	while((b < rdlim) && (sCheckRange(c = *b++, 0x20, 0x7F) || (utf8mode && c >= 0xA0))) {
+			++n;
+	}
+	sequence.payload.Cat(ptr - 1, n + 1);
+	ptr += n;
 }
 
 force_inline
