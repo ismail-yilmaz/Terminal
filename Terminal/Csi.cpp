@@ -195,7 +195,7 @@ void TerminalCtrl::ReportDeviceAttributes(const VTInStream::Sequence& seq)
 void TerminalCtrl::ReportExtendedDeviceAttributes(const VTInStream::Sequence& seq)
 {
 	// Extended device attributes.
-	PutDCS(Nvl(deviceid, "TerminalCtrl"));
+	PutDCS(">|" + Nvl(deviceid, "TerminalCtrl 0.9"));
 }
 
 void TerminalCtrl::ReportPresentationState(const VTInStream::Sequence& seq)
