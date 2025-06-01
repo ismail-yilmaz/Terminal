@@ -243,52 +243,139 @@ bool TerminalCtrl::ResetLoadColor(int index)
 	savedcolors.Remove(i);
 	return true;
 }
-
 static int sParseExtendedColorFormat(Color& color, int& which, int& palette, const String& s, int format)
 {
-	// TODO: This function can be more streamlined.
-
-	Vector<String> h = Split(s, [](int c) { return findarg(c, ':', ';') >= 0 ? 1 : 0; });
-
-	int count = h.GetCount();
-	if(3 <= count && count < 8 && (h[0].IsEqual("38") || h[0].IsEqual("48"))) {
-		which = StrInt(h[0]);
-		palette  = StrInt(h[1]);
-		int index = 2;
-		if(palette == 2 && count > 4) {						// True color (RGB)
-			index += int(count > 5 && format != 3);
-			int r =	clamp(StrInt(h[index++]), 0, 255);
-			int g =	clamp(StrInt(h[index++]), 0, 255);
-			int b =	clamp(StrInt(h[index]),   0, 255);
-			color = Color(r, g, b);
-			return index;
+	const char *p = s.Begin(), *e = s.End();
+	int values[8] = { 0 };
+	int count = 0;
+	
+	// Lambda: Try to parse number at current position
+	auto tryParseNumber = [&]() -> bool {
+		bool negative = false;
+		if(*p == '-') {
+			negative = true;
+			p++;
 		}
-		else
-		if(palette == 3 && count > 4) {						// True color (CMY)
-			index += int(count > 5 && format != 3);
-			double c = StrInt(h[index++]) * 0.01;
-			double m = StrInt(h[index++]) * 0.01;
-			double y = StrInt(h[index])   * 0.01;
-			color = CmykColorf(c, m, y, 0.0);
-			return index;
+		
+		int val = 0;
+		bool has_digits = false;
+		while(p < e && IsDigit(*p)) {
+			val = val * 10 + (*p++ - '0');
+			has_digits = true;
 		}
-		else
-		if(palette == 4 && (6 == count || count == 7)) {	// True color (CMYK)
-			index += int(count > 6 && format != 3);
-			double c = StrInt(h[index++]) * 0.01;
-			double m = StrInt(h[index++]) * 0.01;
-			double y = StrInt(h[index++]) * 0.01;
-			double k = StrInt(h[index])   * 0.01;
-			color = CmykColorf(c, m, y, k);
-			return index;
+		
+		if(has_digits) {
+			if(negative)
+				val = 0;  // Clamp negative to zero
+			values[count++] = val;
+			return true;
 		}
-		else
-		if(palette == 5) {									// Indexed (256-color, 6x6x6 cube)
-			int ix = clamp(StrInt(h[index]), 0, 255);
-			color = Color::Special(ix);
-			return index;
+		return false;
+	};
+	
+	// Lambda: Handle non-digit token
+	auto handleNonDigitToken = [&]() {
+		// Non-digit character that's not a separator – count it as a token anyway
+		if(p < e && *p != ':' && *p != ';') {
+			count++;
 		}
+	};
+	
+	// Lambda: Skip separator if present
+	auto skipSeparator = [&]() -> bool {
+		if(p < e && (*p == ':' || *p == ';')) {
+			p++;
+			return true;
+		}
+		return false;
+	};
+	
+	// Lambda: Check if we should stop parsing
+	auto shouldStopParsing = [&]() -> bool {
+		// Non-separator, non-digit character, stop parsing tokens
+		return (p < e && *p != ':' && *p != ';' && !IsDigit(*p) && *p != '-');
+	};
+	
+	// Lambda: Validate basic format requirements
+	auto isValidFormat = [&]() -> bool {
+		return !(count < 3 || count >= 8 || (values[0] != 38 && values[0] != 48));
+	};
+	
+	// Lambda: Create RGB color
+	auto createRGB = [&](int index) -> int {
+		if(count <= 4)
+			return 1;
+		index += int(count == 6 && format != 3);
+		int r = clamp(values[index++], 0, 255);
+		int g = clamp(values[index++], 0, 255);
+		int b = clamp(values[index], 0, 255);
+		color = Color(r, g, b);
+		return index;
+	};
+	
+	// Lambda: Create CMY color
+	auto createCMY = [&](int index) -> int {
+		if(count <= 4)
+			return 1;
+		index += int(count == 6 && format != 3);
+		double c = values[index++] * 0.01;
+		double m = values[index++] * 0.01;
+		double y = values[index] * 0.01;
+		color = CmykColorf(c, m, y, 0.0);
+		return index;
+	};
+	
+	// Lambda: Create CMYK color
+	auto createCMYK = [&](int index) -> int {
+		if(!(count == 6 || count == 7))
+			return 1;
+		index += int(count > 6 && format != 3);
+		double c = values[index++] * 0.01;
+		double m = values[index++] * 0.01;
+		double y = values[index++] * 0.01;
+		double k = values[index] * 0.01;
+		color = CmykColorf(c, m, y, k);
+		return index;
+	};
+	
+	// Lambda: Create indexed color
+	auto createIndexed = [&](int index) -> int {
+		int ix = clamp(values[index], 0, 255);
+		color = Color::Special(ix);
+		return index;
+	};
+	
+	// Parse tokens separated by ':' or ';'
+	while(p < e && count < 8) {
+		if(!tryParseNumber())
+			handleNonDigitToken();
+		if(!skipSeparator() && shouldStopParsing())
+				break;
 	}
+	
+	if(!isValidFormat())
+		return 1;
+	
+	which = values[0];
+	palette = values[1];
+	int index = 2;
+	
+	if(palette == 2 && count > 4) {						// True color (RGB)
+		return createRGB(index);
+	}
+	else
+	if(palette == 3 && count > 4) {						// True color (CMY)
+		return createCMY(index);
+	}
+	else
+	if(palette == 4 && (count == 6 || count == 7)) {	// True color (CMYK)
+		return createCMYK(index);
+	}
+	else
+	if(palette == 5) {									// Indexed (256-color)
+		return createIndexed(index);
+	}
+	
 	return 1;
 }
 
@@ -346,13 +433,13 @@ void TerminalCtrl::ParseExtendedColors(VTCell& attrs, const Vector<String>& opco
 	int palette = 0;
 	int remaining = opcodes.GetCount() - index;
 		
-	if(Count(opcodes[index], ':')) {
+	if(opcodes[index].Find(':') >= 0) {
 		int format = 1;
 		index += sParseExtendedColorFormat(color, which, palette, opcodes[index], format);
 	}
 	else
 	if(remaining > 1) {
-		if(Count(opcodes[index + 1], ':')) {
+		if(opcodes[index + 1].Find(':') >= 0) {
 			int format = 2;
 			String s = opcodes[index] + ":" + opcodes[index + 1];
 			index += sParseExtendedColorFormat(color, which, palette, s, format);
@@ -427,23 +514,49 @@ int ConvertHashColorSpec::Filter(int chr) const
 
 Value ConvertHashColorSpec::Scan(const Value& text) const
 {
-	String s = Upp::Filter((const String&) text, sCharFilterHashHex);
-	if(!s.IsEmpty() && s[0] == '#') {
-		int64 x = ScanInt64(~s + 1, nullptr, 16);
-		switch(s.GetCount() - 1) {
-		case 3:		// Hash3
-			return Color(byte(x >> 4) & 0xF0, byte(x) & 0xF0, byte(x << 4));
-		case 6:		// Hash6
-			return Color(byte(x >> 16), byte(x >> 8), byte(x));
-		case 9:		// Hash9
-			return Color(byte(x >> 28), byte(x >> 16), byte(x >> 4));
-		case 12:	// Hash12
-			return Color(byte(x >> 40), byte(x >> 24), byte(x >> 8));
-		default:
-			break;
-		}
-	}
-	return Upp::ErrorValue(t_("Bad hash color text format"));
+    const String& s = text;
+    if(s.IsEmpty() || s[0] != '#')
+        return ErrorValue(t_("Bad hash color text format"));
+    
+    const char *p = ~s;
+    int len = 0;
+    uint64 x = 0;
+    
+    // Fast filter and parse in single pass
+    for(p++; *p; p++) {
+        byte c = *p;
+        if(c >= '0' && c <= '9') {
+            if(len < 16)
+				x = (x << 4) | (c - '0');
+            len++;
+        }
+        else
+        if((c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
+            if(len < 16)
+				x = (x << 4) | ((c & 0x0F) + 9);
+            len++;
+        }
+        else
+        if(c != ' ' && c != '\t') {
+            break; // Stop at first non-hex, non-whitespace
+        }
+    }
+    
+    if(len != 3 && len != 6 && len != 9 && len != 12)
+        return ErrorValue(t_("Bad hash color text format"));
+    
+    switch(len) {
+    case 3:  // Hash3
+        return Color(byte(x >> 4) & 0xF0, byte(x) & 0xF0, byte(x << 4));
+    case 6:  // Hash6
+        return Color(byte(x >> 16), byte(x >> 8), byte(x));
+    case 9:  // Hash9
+        return Color(byte(x >> 28), byte(x >> 16), byte(x >> 4));
+    case 12: // Hash12
+        return Color(byte(x >> 40), byte(x >> 24), byte(x >> 8));
+    default:
+        return ErrorValue(t_("Bad hash color text format"));
+    }
 }
 
 Value ConvertHashColorSpec::Format(const Value& q) const
@@ -463,38 +576,59 @@ int ConvertRgbColorSpec::Filter(int chr) const
 
 Value ConvertRgbColorSpec::Scan(const Value& text) const
 {
-	auto Delimiters = [](int c) -> int
-	{
-		return c == ':' || c == '/' || c == ',';
-	};
-	
-	Vector<String> h = Split(ToLower((const String&) text), Delimiters);
-	int count = h.GetCount();
+		const String& s = text;
+		const char *p = ~s;
+		int components[4] = {0, 0, 0, 255};
+		int count = 0;
+		int radix = 10;
+		bool is_rgba = false;
 
-	if(count == 3
-    ||(count == 4 && h[0].IsEqual("rgb"))                   // rgb : %04x / %04x / %04x
-    ||(count == 5 && h[0].IsEqual("rgba"))) {               // rgb : %02z / %02x / %02x
-        int index = 0;                                      // rgba : %04x / %04x / %04x / %04x
-        int radix = 10;                                     // rgba : %02x / %02x / %02x / %02x
-        if(count > 3) { index = 1; radix = 16; }            // %u , %u, %u
-		int r = ScanInt(~h[index++], nullptr, radix);
-		int g = ScanInt(~h[index++], nullptr, radix);
-		int b = ScanInt(~h[index++], nullptr, radix);
-		int a = count == 5 ? ScanInt(~h[index], nullptr, radix) : 255;
-		if(!IsNull(r)
-		&& !IsNull(g)
-		&& !IsNull(b)
-		&& !IsNull(a)) {
+		auto IsDelimiter = [&](const char c) {
+			return (c == ':' || c == '/' || c == ',' || c == '(' || c == ')');
+		};
+		
+		// Skip "rgb"/"rgba" prefix if present
+		if(s.GetLength() >= 3 && (*p == 'r' || *p == 'R')) {
+			if((p[1] == 'g' || p[1] == 'G') && (p[2] == 'b' || p[2] == 'B')) {
+				p += 3;
+				is_rgba = (*p == 'a' || *p == 'A');
+				if(is_rgba) p++;
+				radix = 16;
+				
+				// Skip delimiter after prefix
+				while(*p && IsDelimiter(*p))
+					p++;
+			}
+		}
+
+		// Parse components
+		while(count < 4 && *p) {
+			const char* start = p;
+			while(*p && !IsDelimiter(*p))
+				p++;
+			
+			if(p > start) {
+				int val = ScanInt(String(start, p - start), nullptr, radix);
+				if(IsNull(val))
+					break;
+				components[count++] = val;
+			}
+			
+			// Skip delimiter
+			while(*p && IsDelimiter(*p))
+				p++;
+		}
+
+		if((count == 3) || (is_rgba && count == 4)) {
 			RGBA rgba;
-			rgba.r = byte(r > 255 ? r >> 8 : r);
-			rgba.g = byte(g > 255 ? g >> 8 : g);
-			rgba.b = byte(b > 255 ? b >> 8 : b);
-			rgba.a = byte(a > 255 ? a >> 8 : a);
+			rgba.r = byte(components[0] > 255 ? components[0] >> 8 : components[0]);
+			rgba.g = byte(components[1] > 255 ? components[1] >> 8 : components[1]);
+			rgba.b = byte(components[2] > 255 ? components[2] >> 8 : components[2]);
+			rgba.a = byte(count == 4 ? (components[3] > 255 ? components[3] >> 8 : components[3]) : 255);
 			return Color(rgba);
 		}
-	}
-	
-	return Upp::ErrorValue(t_("Bad rgb/a color text format"));
+
+		return ErrorValue(t_("Bad rgb/a color text format"));
 }
 
 Value ConvertRgbColorSpec::Format(const Value& q) const
