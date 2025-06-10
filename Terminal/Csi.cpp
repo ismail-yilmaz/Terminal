@@ -181,6 +181,7 @@ void TerminalCtrl::ReportDeviceAttributes(const VTInStream::Sequence& seq)
 		if(jexerimages)  s << ";444";
 		if(iterm2images) s << ";1337";
 		if(annotations)  s << ";8100";
+		if(clipaccess & CLIP_WRITE) s << ";52";
 		
 		PutCSI(s + "c");
 	}
