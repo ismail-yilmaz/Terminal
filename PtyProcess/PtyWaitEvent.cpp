@@ -72,7 +72,6 @@ void PtyWaitEvent::Clear()
 
 	handles.Clear();
 	exceptions.Clear();
-	lastOverlapped = nullptr;
 
 #endif
 }
