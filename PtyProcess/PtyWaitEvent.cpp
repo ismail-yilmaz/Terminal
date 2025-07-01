@@ -25,6 +25,7 @@ PtyWaitEvent::Slot::Slot()
 , hRead(nullptr)
 , hWrite(nullptr)
 , hError(nullptr)
+, lastOverlapped(nullptr)
 {
 }
 
@@ -162,36 +163,43 @@ bool PtyWaitEvent::Wait(int timeout)
 
 	DWORD bytesTransferred;
 	ULONG_PTR completionKey;
-	lastOverlapped = nullptr;  // Reset before waiting
+	LPOVERLAPPED overlapped;
 
-	BOOL success = GetQueuedCompletionStatus(hIocp, &bytesTransferred, &completionKey, &lastOverlapped, timeout);
+	BOOL success = GetQueuedCompletionStatus(
+		hIocp, &bytesTransferred, &completionKey, &overlapped, timeout
+	);
 
-	// First check for exceptional condition (operation completed with an error)
 	if(!success) {
-		if(lastOverlapped) {
-			DWORD error = GetLastError();
-			if(IsException(error) && exceptions.Find((HANDLE) completionKey) >= 0) {
-				LLOG("Exception occured while waiting for pipe #" << completionKey);
+		DWORD error = GetLastError();
+		if(overlapped && IsException(error)) {
+			if(int i = handles.Find((HANDLE) completionKey); i >= 0) {
+				slots[i].lastOverlapped = overlapped;
 				return true;
 			}
 		}
 		return false;
 	}
-	return handles.Find((HANDLE) completionKey) >= 0;
 
+	if(overlapped) {
+		if(int i = handles.Find((HANDLE) completionKey); i >= 0) {
+			slots[i].lastOverlapped = overlapped;
+			return true;
+		}
+	}
+	return false;
 
 #elif PLATFORM_POSIX
 
-    int rc = 0;
-    do {
-        rc = poll((pollfd*) slots.begin(), slots.GetCount(), timeout);
-    }
-    while(rc == -1 && errno == EINTR);  // Retry on signal interruption
+	int rc = 0;
+	do {
+		rc = poll((pollfd*) slots.begin(), slots.GetCount(), timeout);
+	}
+	while(rc == -1 && errno == EINTR);  // Retry on signal interruption
 
-    if(rc == -1)
-        LLOG("poll() failed: " << strerror(errno));
+	if(rc == -1)
+		LLOG("poll() failed: " << strerror(errno));
 
-    return rc > 0;
+	return rc > 0;
 
 #endif
 }
@@ -200,55 +208,56 @@ dword PtyWaitEvent::Get(int i) const
 {
 #ifdef PLATFORM_WIN32
 
-	if(slots.IsEmpty() || i < 0 || i >= slots.GetCount() || !lastOverlapped)
+	if (slots.IsEmpty() || i < 0 || i >= slots.GetCount())
+		return 0;
+
+	const Slot& slot = slots[i];
+	if (!slot.lastOverlapped)
 		return 0;
 
 	dword events = 0;
-
-	if(lastOverlapped == &slots[i].oRead
-	|| lastOverlapped == &slots[i].oError)
+	
+	if (slot.lastOverlapped == &slot.oRead || slot.lastOverlapped == &slot.oError)
 		events |= WAIT_READ;
-	if(lastOverlapped == &slots[i].oWrite)
+	if (slot.lastOverlapped == &slot.oWrite)
 		events |= WAIT_WRITE;
 
-	// Check for exceptional condition
-	HANDLE handle = nullptr;
-	if(lastOverlapped == &slots[i].oRead)
-		handle = slots[i].hRead;
-	else
-	if(lastOverlapped == &slots[i].oWrite)
-		handle = slots[i].hWrite;
-	else
-	if(lastOverlapped == &slots[i].oError)
-		handle = slots[i].hError;
+	// Check for exceptions by examining the overlapped operation result
+	DWORD bytesTransferred;
+	HANDLE hPipe = (slot.lastOverlapped == &slot.oRead) ? slot.hRead :
+				   (slot.lastOverlapped == &slot.oWrite) ? slot.hWrite : slot.hError;
 	
-	if(handle
-	&& (WaitForSingleObject(handle, 0) == WAIT_OBJECT_0) // For rare but potential deadlocks
-	&& !GetOverlappedResult(handle, lastOverlapped, nullptr, FALSE)) {
+	if(!GetOverlappedResult(hPipe, slot.lastOverlapped, &bytesTransferred, FALSE)) {
 		DWORD error = GetLastError();
-		if(IsException(error) && exceptions.Find(handle) >= 0) {
+		if(IsException(error) && exceptions.Find(hPipe) >= 0) {
 			events |= WAIT_IS_EXCEPTION;
 		}
 	}
 
+	return events;
+	
 #elif PLATFORM_POSIX
 
 	if(slots.IsEmpty() || i < 0 || i >= slots.GetCount())
 		return 0;
 
-	dword events = 0;
-
 	const pollfd& q = slots[i];
+	if(q.fd < 0)  // Check for invalid descriptor
+		return 0;
+
+	dword events = 0;
+	
 	if(q.revents & POLLIN)
 		events |= WAIT_READ;
 	if(q.revents & POLLOUT)
 		events |= WAIT_WRITE;
 	if(q.revents & POLLPRI)
 		events |= WAIT_IS_EXCEPTION;
-
-#endif
+	if(q.revents & (POLLERR | POLLHUP | POLLNVAL))
+		events |= WAIT_IS_EXCEPTION;  // Handle all error conditions
 
 	return events;
+#endif
 }
 
 dword PtyWaitEvent::operator[](int i) const

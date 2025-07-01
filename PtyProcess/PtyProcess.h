@@ -227,12 +227,12 @@ private:
         OVERLAPPED oRead  = {0};
         OVERLAPPED oWrite = {0};
         OVERLAPPED oError = {0};
+        LPOVERLAPPED lastOverlapped;  // Store last overlapped event
 	};
 	HANDLE hIocp;
 	Vector<Slot> slots;
 	Index<HANDLE> exceptions;
 	VectorMap<HANDLE, int> handles;
-    LPOVERLAPPED lastOverlapped = nullptr;  // Store last overlapped event
 
 #elif PLATFORM_POSIX
 
