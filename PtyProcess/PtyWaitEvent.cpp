@@ -182,7 +182,16 @@ bool PtyWaitEvent::Wait(int timeout)
 
 #elif PLATFORM_POSIX
 
-	return poll((pollfd*) slots.begin(), slots.GetCount(), timeout) > 0;
+    int rc = 0;
+    do {
+        rc = poll((pollfd*) slots.begin(), slots.GetCount(), timeout);
+    }
+    while(rc == -1 && errno == EINTR);  // Retry on signal interruption
+
+    if(rc == -1)
+        LLOG("poll() failed: " << strerror(errno));
+
+    return rc > 0;
 
 #endif
 }
