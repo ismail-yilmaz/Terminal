@@ -5,6 +5,21 @@ namespace Upp {
 #define LLOG(x)	// RLOG("PtyWaitEvent: " << x);
 
 #ifdef PLATFORM_WIN32
+
+namespace {
+
+bool IsException(DWORD error)
+{
+	return error == ERROR_BROKEN_PIPE
+		|| error == ERROR_PIPE_NOT_CONNECTED
+		|| error == ERROR_OPERATION_ABORTED
+		|| error == ERROR_HANDLE_EOF
+		|| error == ERROR_NO_DATA
+		|| error == ERROR_BAD_PIPE;
+}
+
+}
+
 PtyWaitEvent::Slot::Slot()
 : hProcess(nullptr)
 , hRead(nullptr)
@@ -21,16 +36,6 @@ PtyWaitEvent::Slot::~Slot()
 		CloseHandle(oWrite.hEvent);
 	if(oError.hEvent)
 		CloseHandle(oError.hEvent);
-}
-
-static bool IsException(DWORD error)
-{
-	return error == ERROR_BROKEN_PIPE
-		|| error == ERROR_PIPE_NOT_CONNECTED
-		|| error == ERROR_OPERATION_ABORTED
-		|| error == ERROR_HANDLE_EOF
-		|| error == ERROR_NO_DATA
-		|| error == ERROR_BAD_PIPE;
 }
 
 #endif
