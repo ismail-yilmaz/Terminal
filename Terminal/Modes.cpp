@@ -45,6 +45,7 @@ void TerminalCtrl::ReportMode(const VTInStream::Sequence& seq)
 		case TSM:
 		case EBM:
 		case XTGRAPHEME: // U++ has no grapheme cluster support (yet).
+		case XTSYNCOUT:  // No synchronized output mode (yet).
 			reply = 4;
 			break;
 		case XTSPREG:	 // We don't support shared color registers for sixel images.

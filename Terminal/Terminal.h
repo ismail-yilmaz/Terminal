@@ -1096,6 +1096,7 @@ private:
         XTX11MM,
         XTSHOWSB,
         XTGRAPHEME,
+        XTSYNCOUT,
         VTMODECOUNT
     };
 };
