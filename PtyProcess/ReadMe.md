@@ -8,7 +8,11 @@ This package provides a unified and simple interface for both POSIX-compliant sy
 
 1.  Statically linked [winpty library and agent](https://github.com/rprichard/winpty). This library allows `PtyProcess` to run native console applications on Windows XP/Vista/7/8/10. You will also need to compile the `PtyAgent` package. This is the **default** backend. 
 
-2.  Native Windows 10 pseudoconsole API (ConEmu). This backend requires at least Windows 10 with pty support and it can be switched on via the `WIN10` build flag.
+2.  Native Windows 10 pseudoconsole API (ConPty). This backend requires at least Windows 10 with pty support and it can be switched on via the `WIN10` build flag.
+
+Additionally, this package provides a `PtyWaitEvent` class that allows `PtyProcess` derived classes to properly wait for events across all supported platforms (Windows, POSIX)
+
+
 
 ## License
 
