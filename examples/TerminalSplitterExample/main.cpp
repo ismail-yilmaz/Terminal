@@ -20,6 +20,11 @@ const int  MAXPANECOUNT = 4;  // You can increase the number of panes if you lik
 
 using namespace Upp;
 
+PtyWaitEvent& GetEventList()
+{
+	return Single<PtyWaitEvent>();
+}
+
 struct TerminalPane : TerminalCtrl, PtyProcess {
 	Splitter& parent;
 	TerminalPane(Splitter& ctrl) : parent(ctrl)
@@ -28,8 +33,15 @@ struct TerminalPane : TerminalCtrl, PtyProcess {
 		TerminalCtrl::WhenBell   = [=]()         { BeepExclamation();    };
 		TerminalCtrl::WhenOutput = [=](String s) { PtyProcess::Write(s); };
 		TerminalCtrl::WhenResize = [=]()         { PtyProcess::SetSize(GetPageSize()); };
-		PtyProcess::Start(GetEnv(tshell), Environment(), GetHomeDirectory());
-		parent.Add(TerminalCtrl::SizePos());
+		if(PtyProcess::Start(GetEnv(tshell), Environment(), GetHomeDirectory())) {
+			AddToEventList();
+			parent.Add(TerminalCtrl::SizePos());
+		}
+	}
+	
+	~TerminalPane()
+	{
+		RemoveFromEventList();
 	}
 	
 	void Do()
@@ -40,7 +52,17 @@ struct TerminalPane : TerminalCtrl, PtyProcess {
 			parent.Layout();
 		}
 	}
+
+	void AddToEventList()
+	{
+		GetEventList().Add(static_cast<PtyProcess&>(*this), WAIT_READ | WAIT_IS_EXCEPTION);
+	}
 	
+	void RemoveFromEventList()
+	{
+		GetEventList().Remove(static_cast<PtyProcess&>(*this));
+	}
+		
 	bool Key(dword key, int count) override
 	{
 		// Let the parent handle the SHIFT + CTRL + T key.
@@ -73,8 +95,9 @@ struct TerminalSplitterExample : TopWindow {
 		OpenMain();
 		while(IsOpen() && splitter.GetCount()) {
 			ProcessEvents();
-			for(TerminalPane& pane : panes) pane.Do();
-			Sleep(10);
+			if(GetEventList().Wait(10))
+				for(TerminalPane& pane : panes)
+					pane.Do();
 		}
 	}
 };

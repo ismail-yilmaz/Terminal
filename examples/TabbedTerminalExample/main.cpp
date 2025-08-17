@@ -21,6 +21,11 @@ const int MAXTABS = 10;
 
 using namespace Upp;
 
+PtyWaitEvent& GetEventList()
+{
+	return Single<PtyWaitEvent>();
+}
+
 struct TerminalTab : TerminalCtrl, PtyProcess {
 	TerminalTab()
 	{
@@ -28,13 +33,29 @@ struct TerminalTab : TerminalCtrl, PtyProcess {
 		WhenBell   = [=]()         { BeepExclamation();    };
 		WhenOutput = [=](String s) { PtyProcess::Write(s); };
 		WhenResize = [=]()         { PtyProcess::SetSize(GetPageSize()); };
-		Start(GetEnv(tshell), Environment(), GetHomeDirectory());
+		if(Start(GetEnv(tshell), Environment(), GetHomeDirectory()))
+			AddToEventList();
+	}
+	
+	~TerminalTab()
+	{
+		RemoveFromEventList();
 	}
 	
 	bool Do()
 	{
 		WriteUtf8(PtyProcess::Get());
 		return PtyProcess::IsRunning();
+	}
+	
+	void AddToEventList()
+	{
+		GetEventList().Add(static_cast<PtyProcess&>(*this), WAIT_READ | WAIT_IS_EXCEPTION);
+	}
+	
+	void RemoveFromEventList()
+	{
+		GetEventList().Remove(static_cast<PtyProcess&>(*this));
 	}
 	
 	bool Key(dword key, int count) override
@@ -92,15 +113,16 @@ struct TabbedTerminal : TopWindow {
 		OpenMain();
 		while(IsOpen() && !tabs.IsEmpty()) {
 			ProcessEvents();
-			for(int i = 0; i < tabs.GetCount(); i++) {
-				TerminalTab& tt = tabs[i];
-				if(!tt.Do()) {
-					tabbar.RemoveCtrl(tt);
-					tabs.Remove(i);
-					break;
+			if(GetEventList().Wait(10)) {
+				for(int i = 0; i < tabs.GetCount(); i++) {
+					TerminalTab& tt = tabs[i];
+					if(!tt.Do()) {
+						tabbar.RemoveCtrl(tt);
+						tabs.Remove(i);
+						break;
+					}
 				}
 			}
-			Sleep(10);
 		}
 	}
 };

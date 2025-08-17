@@ -23,7 +23,7 @@
 ## [Requirements](#requirements)
 
 - [U++](www.ultimatepp.org), cross-platform C/C++ rapid application development framework.
-- A C/C++ compiler, that supports at least C++14.
+- A C/C++ compiler, that supports at least C++17.
  
 ## [Supported Platforms](#platforms)
 
@@ -41,7 +41,7 @@
 | 2                     | VT 2xx            | Supported |
 | 3                     | VT 3xx            | Supported |
 | 4                     | VT 4xx (default)  | Supported |
-| 5                     | VT 5xx            | TODO      |
+| 5                     | VT 5xx            | Partial   |
 
 #### Notes
 
@@ -153,11 +153,12 @@
 |XTASBM     |1049    | Alternate screen buffer mode. (Ver. 3)                      |xterm private | Level 1      |  
 |XTSPREG    |1070    | Use private registers for sixel color palette.              |xterm private | Level 1      |                             
 |XTBRPM     |2004    | Bracketed paste mode.                                       |xterm private | Level 1      |  
+|XTSYNCOUT  |2026    | Synchronized output mode.                                   |xterm private | Level 1      |  
 |XTGRAPHEME |2027    | Unicode grapheme cluster processing.                        |xterm private | Level 1      |  
 
 #### Notes
 
-- GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, SATM, TSM, EBM, and XTGRAPHEME modes are set as "permanently reset".
+- GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, SATM, TSM, EBM, XTSYNCOUT and XTGRAPHEME modes are set as "permanently reset".
 - XTSPREG is always set. TerminalCtrl does not support shared color palette for sixel images.
 
 

@@ -8,12 +8,6 @@
 // HTML-5 canvas and websockets. Turtle can be switched on or off by
 // a compile-time flag.
 
-// On Windows platform PtyProcess class uses statically linked *winpty*
-// library and the supplementary PtyAgent pacakges as its *default* pty
-// backend. However, it also supports the Windows 10 (tm) pseudoconsole
-// API via the WIN10 compiler flag. This flag can be enabled or disable
-// easily via TheIDE's main package configuration dialog. (E.g: "GUI WIN10")
-
 #ifdef PLATFORM_POSIX
 const char *tshell = "SHELL";
 #elif PLATFORM_WIN32
@@ -26,27 +20,25 @@ struct TerminalExample : TopWindow {
 	TerminalCtrl  term;
 	PtyProcess    pty;  // This class is completely optional
 	
-	TerminalExample()
+	void Run()
 	{
-		SetRect(term.GetStdSize());	// 80 x 24 cells (scaled)
+		SetRect(term.GetStdSize());	// 80 x 24 cells (scaled).
 		Sizeable().Zoomable().CenterScreen().Add(term.SizePos());
-
-		term.WhenBell   = [=]()         { BeepExclamation(); };
-		term.WhenTitle  = [=](String s) { Title(s);	};
-		term.WhenResize = [=]()         { pty.SetSize(term.GetPageSize()); };
-		term.WhenOutput = [=](String s) { PutGet(s); };
+		term.WhenBell   = [=]()                { BeepExclamation();  };
+		term.WhenTitle  = [=](String s)        { Title(s);           };
+		term.WhenOutput = [=](String s)        { pty.Write(s);       };
+		term.WhenLink   = [=](const String& s) { PromptOK(DeQtf(s)); };
+		term.WhenResize = [=]()                { pty.SetSize(term.GetPageSize()); };
 		term.InlineImages().Hyperlinks().WindowOps();
-		
-		SetTimeCallback(-1, [=] { PutGet(); });
 		pty.Start(GetEnv(tshell), Environment(), GetHomeDirectory());
-	}
-	
-	void PutGet(String out = Null)
-	{
-		term.WriteUtf8(pty.Get());
-		pty.Write(out);
-		if(!pty.IsRunning())
-			Break();
+		PtyWaitEvent we;
+		we.Add(pty, WAIT_READ | WAIT_IS_EXCEPTION);
+		OpenMain();
+		while(IsOpen() && pty.IsRunning()) {
+			if(we.Wait(10))
+				term.WriteUtf8(pty.Get());
+			ProcessEvents();
+		}
 	}
 };
 

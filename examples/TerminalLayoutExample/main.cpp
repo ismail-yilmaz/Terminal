@@ -1,12 +1,6 @@
 // This example demonstrates a simple, cross-platform (POSIX/Windows)
 // terminal example.
 
-// On Windows platform PtyProcess class uses statically linked *winpty*
-// library and the supplementary PtyAgent pacakges as its *default* pty
-// backend. However, it also supports the Windows 10 (tm) pseudoconsole
-// API via the WIN10 compiler flag. This flag can be enabled or disable
-// easily via TheIDE's main package configuration dialog. (E.g: "GUI WIN10")
-
 #include "TerminalLayoutExample.h"
 
 #ifdef PLATFORM_POSIX
@@ -66,13 +60,13 @@ void TerminalExample::Run()
 	pty.WhenAttrs = [=](termios& t) { t.c_iflag |= IUTF8; return true; };
 #endif
 	pty.Start(GetEnv(tshell), Environment(), GetHomeDirectory());
+	PtyWaitEvent we;
+	we.Add(pty, WAIT_READ | WAIT_IS_EXCEPTION);
 	OpenMain();
 	while(IsOpen() && pty.IsRunning()) {
+		if(we.Wait(10))
+			term.WriteUtf8(pty.Get());
 		ProcessEvents();
-		String s = pty.Get();
-		int    l = s.GetLength();
-		term.WriteUtf8(s);
-		Sleep(l >= 1024 ? 1024 * 10 / l : 10); // Scale to workload.
 	}
 }
 

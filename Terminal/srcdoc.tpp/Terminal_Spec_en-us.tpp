@@ -64,7 +64,7 @@ uirements]&]
 [s0;l200;i200;b20;O1; [G^https`:`/`/www`.ultimatepp`.org^ U`+`+][G , 
 cross`-platform C/C`+`+ rapid application development framework.]&]
 [s0;l200;i200;b20;O1; [G A C/C`+`+ compiler, that supports at least 
-C`+`+14.]&]
+C`+`+17.]&]
 [s0;b20;a20;ph:2:t300; [*G^`#platforms^4 Supported Platforms]&]
 [s0;l200;i200;b20;O1; [G POSIX`-compliant OSes (Linux, BSD, etc.)]&]
 [s0;l200;i200;b20;O1; [G Microsoft Windows (tm)]&]
@@ -91,7 +91,7 @@ Levels]&]
 :: [s0; [G Supported]]
 :: [s0; [G 5]]
 :: [s0; [G VT 5xx]]
-:: [s0; [G TODO]]}}&]
+:: [s0; [G Partial]]}}&]
 [s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O1; [G In reality, there is no such conformance level 
 as `"0`". However, since the VT 52 emulation has to be treated 
@@ -513,6 +513,11 @@ channels.]&]
 :: [s0; [G Bracketed paste mode.]]
 :: [s0; [G xterm private]]
 :: [s0; [G Level 1]]
+:: [s0; [G XTSYNCOUT]]
+:: [s0; [G 2026]]
+:: [s0; [G Synchronized output mode.]]
+:: [s0; [G xterm private]]
+:: [s0; [G Level 1]]
 :: [s0; [G XTGRAPHEME]]
 :: [s0; [G 2027]]
 :: [s0; [G Unicode grapheme cluster processing.]]
@@ -520,7 +525,7 @@ channels.]&]
 :: [s0; [G Level 1]]}}&]
 [s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O1; [G GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, 
-SATM, TSM, EBM, and XTGRAPHEME modes are set as `"permanently 
+SATM, TSM, EBM, XTSYNCOUT and XTGRAPHEME modes are set as `"permanently 
 reset`".]&]
 [s0;l200;i200;b20;O1; [G XTSPREG is always set. TerminalCtrl does not 
 support shared color palette for sixel images.]&]

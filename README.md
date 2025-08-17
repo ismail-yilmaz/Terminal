@@ -21,7 +21,7 @@ Terminal package is designed from the ground up with modularity and maintainabil
 
 ## [Requirements](#requirements)
 
-- U++ (ver. >= 2024.1)
+- U++ (ver. >= 2025.1)
 - POSIX (GNU/Linux, FreeBSD, etc.), Windows, or MacOS
 - A decent C/C++ compiler that supports at least C++17. (GCC/CLANG/MinGW/MSC)
 - Snacks & beer.
@@ -36,7 +36,7 @@ There are three ways to install the source code of Ultimate++ terminal widget:
 
 ##  [Version](#version)  
   
-`Terminal` package loosely follows the release cycles of U++. Releases are tagged twice a year. Currently it is tagged as `2025.1` (v 0.9).
+`Terminal` package loosely follows the release cycles of U++. Releases are tagged twice a year. Currently it is tagged as `2025.2`.
 
 ## [Highlights](#highlights)
 
@@ -73,7 +73,7 @@ Thanks to U++ team, it is possible to run U++ GUI applications from within a web
 
 - Supports whatever platform U++ supports. (Linux, Windows, MacOS).
 - Supports `POSIX`, `Windows (tm) 10`, and `winpty` pseudoconsole APIs via a unified, basic interface, using the PtyProcess class.
-- Supports VT52/VT1xx/VT2xx, partial VT4XX/5XX, and xterm emulation modes.
+- Supports VT52/VT1xx/VT2xx, partial VT3XX/4XX/5XX, and xterm emulation modes.
 - Supports user configurable device conformance levels (1, 2, 3, 4, and 0 as VT52 emulation).
 - Supports both 7-bit and 8-bit I/O.
 - Supports Unicode/UTF8.
@@ -157,7 +157,7 @@ As it is already noted above, one of the strengths of TerminalCtrl is that it al
 
 #### Basic Terminal Example
 
-This example demonstrates the basic usage of the TerminalCtrl and its interaction with the PtyProcess class. Creating an xterm-compatible virtual terminal emulator with inline images and mouse tracking support requires only 29 sLoC:	
+This example demonstrates the basic usage of the TerminalCtrl and its interaction with the PtyProcess class. Creating an xterm-compatible virtual terminal emulator with inline images and mouse tracking support requires less than 50 sLoC:	
 
 ```C++    	
 #include <Terminal/Terminal.h>
@@ -167,12 +167,6 @@ using namespace Upp;
 
 // This example demonstrates a simple, cross-platform (POSIX/Windows)
 // terminal example.
-
-// On Windows platform PtyProcess class uses statically linked *winpty*
-// library and the supplementary PtyAgent packags as its *default* pty
-// backend. However, it also supports the Windows 10 (tm) pseudoconsole
-// API via the WIN10 compiler flag. This flag can be enabled or disable
-// easily via TheIDE's main package configuration dialog. (E.g: "GUI WIN10")
 
 #ifdef PLATFORM_POSIX
 const char *tshell = "SHELL";
@@ -184,7 +178,7 @@ struct TerminalExample : TopWindow {
 	TerminalCtrl term;
 	PtyProcess   pty;
 	
-	TerminalExample()
+	void Run()
 	{
 		SetRect(term.GetStdSize());	// 80 x 24 cells (scaled).
 		Sizeable().Zoomable().CenterScreen().Add(term.SizePos());
@@ -195,12 +189,14 @@ struct TerminalExample : TopWindow {
 		term.WhenResize = [=]()                { pty.SetSize(term.GetPageSize()); };
 		term.InlineImages().Hyperlinks().WindowOps();
 		pty.Start(GetEnv(tshell), Environment(), GetHomeDirectory());
-		SetTimeCallback(-1, [=] ()
-		{
-			term.WriteUtf8(pty.Get());
-			if(!pty.IsRunning())
-				Break();
-		});
+		PtyWaitEvent we;
+		we.Add(pty, WAIT_READ | WAIT_IS_EXCEPTION);
+		OpenMain();
+		while(IsOpen() && pty.IsRunning()) {
+			if(we.Wait(10))
+				term.WriteUtf8(pty.Get());
+			ProcessEvents();
+		}
 	}
 };
 
