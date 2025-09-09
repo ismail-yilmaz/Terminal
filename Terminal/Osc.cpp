@@ -262,7 +262,7 @@ void TerminalCtrl::ParseSemanticInformation(const VTInStream::Sequence& seq)
 
 void TerminalCtrl::ParseTerminalCtrlProtocols(const VTInStream::Sequence& seq)
 {
-	if(seq.GetInt(2) == 1)
+	if(seq.GetInt(2, 0) == 1)
 		ParseTerminalCtrlAnnotations(seq);
 }
 
@@ -294,7 +294,7 @@ void TerminalCtrl::ParseConEmuProtocols(const VTInStream::Sequence& seq)
 	// For more information on ConEMU specific commands, see:
 	// https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC
 	
-	int opcode = seq.GetInt(2);
+	int opcode = seq.GetInt(2, 0);
 	
 	switch(opcode) {
 	case 2: ParseConEmuMessageBoxMessage(seq);             break;
@@ -311,9 +311,9 @@ void TerminalCtrl::ParseConEmuProgressEvent(const VTInStream::Sequence& seq)
 	if(!notifyprogress)
 		return;
 	
-	int n = seq.GetInt(4);
+	int n = seq.GetInt(4, 0);
            
-	switch(seq.GetInt(3)) {
+	switch(seq.GetInt(3, 0)) {
 	case 1: WhenProgress(PROGRESS_NORMAL, clamp(n, 0, 100));  break;
 	case 2: WhenProgress(PROGRESS_ERROR, n);   break;
 	case 3: WhenProgress(PROGRESS_BUSY, 0);    break;
