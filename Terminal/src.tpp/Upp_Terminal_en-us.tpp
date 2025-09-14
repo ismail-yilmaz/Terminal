@@ -268,6 +268,16 @@ with the current annotation (edit). TerminalCtrl will only accept
 the new value of the String if the gate returns true.&]
 [s3; &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenSelectorCustomKey:%- Gate<dword> 
+[* WhenSelectorCustomKey]&]
+[s0;l288; This event is triggered during key scanning in selector 
+mode, following the same pattern as [^topic`:`/`/CtrlLib`/src`/Bar`_en`-us`#Bar`:`:Scan`(Callback1`<Bar`&`>`,dword`)^ B
+ar`::Scan]. Returning true indicates that the client code has 
+handled the key. The event allows client code to define and process 
+custom actions while in selector mode. The currently pressed 
+key is provided as parameter.&]
+[s3; &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenProgress:%- Event<[@(0.0.255) int], 
 [@(0.0.255) int]> [* WhenProgress]&]
 [s6;%- This event is a part of ConEmu `& Windows Terminal`'s protocol 
@@ -297,8 +307,8 @@ of the map represent the vertical position(s) of the line (row)
 in the buffer and the values represent the corresponding line(s) 
 as 0`-based indices: If the map contains multiple lines (i.e. 
 count > 1), they should be treated as a [/ wrapped], single and 
-continous line. The main purpose of this event is to allow custom 
-text highlighting by the client code.&]
+contiguous line. The main purpose of this event is to allow custom 
+cell highlighting by the client code.&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenWindowMinimize:%- [_^Upp`:`:Event^ Event]<[@(0.0.255) boo

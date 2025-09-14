@@ -112,6 +112,7 @@ public:
     Event<const String&> WhenDirectoryChange;
     Event<const String&> WhenBackgroundChange;
     Gate<Point, String&> WhenAnnotation;
+    Gate<dword>          WhenSelectorScan;
   
     Event<VectorMap<int, VTLine>&> WhenHighlight;
     

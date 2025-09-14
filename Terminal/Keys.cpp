@@ -17,6 +17,10 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 	
 	dword k = 0;
 
+	// Check for custom keyboard actions.
+	if(WhenSelectorScan(key))
+		return;
+	
 	if(Match(AK_SELECTOR_EXIT, key) || key  == K_ESCAPE) {
 		EndSelectorMode();
 		return;
