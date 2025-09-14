@@ -268,8 +268,7 @@ with the current annotation (edit). TerminalCtrl will only accept
 the new value of the String if the gate returns true.&]
 [s3; &]
 [s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:WhenSelectorCustomKey:%- Gate<dword> 
-[* WhenSelectorCustomKey]&]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenSelectorScan:%- Gate<dword> [* WhenSelectorScan]&]
 [s0;l288; This event is triggered during key scanning in selector 
 mode, following the same pattern as [^topic`:`/`/CtrlLib`/src`/Bar`_en`-us`#Bar`:`:Scan`(Callback1`<Bar`&`>`,dword`)^ B
 ar`::Scan]. Returning true indicates that the client code has 
