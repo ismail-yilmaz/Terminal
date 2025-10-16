@@ -202,8 +202,8 @@ using PtyProcess = WinPtyProcess;
 
 class PtyWaitEvent {
 public:
-	PtyWaitEvent();
-	~PtyWaitEvent();
+	PtyWaitEvent()  {}
+	~PtyWaitEvent() {}
 	
 	void            Clear();
 	void            Add(const APtyProcess& pty, dword events);
@@ -224,16 +224,15 @@ private:
         HANDLE hRead;
         HANDLE hWrite;
         HANDLE hError;
-        OVERLAPPED oRead  = {0};
-        OVERLAPPED oWrite = {0};
-        OVERLAPPED oError = {0};
-        LPOVERLAPPED lastOverlapped;  // Store last overlapped event
+        bool   eRead;
+        bool   eWrite;
+        bool   eError;
+        bool   eException;
+        dword  events;
 	};
-	HANDLE hIocp;
+	
 	Vector<Slot> slots;
-	Index<HANDLE> exceptions;
-	VectorMap<HANDLE, int> handles;
-
+	
 #elif PLATFORM_POSIX
 
 	Vector<pollfd> slots;

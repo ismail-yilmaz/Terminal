@@ -25,55 +25,23 @@ PtyWaitEvent::Slot::Slot()
 , hRead(nullptr)
 , hWrite(nullptr)
 , hError(nullptr)
-, lastOverlapped(nullptr)
+, eRead(false)
+, eWrite(false)
+, eError(false)
+, eException(false)
+, events(0)
 {
 }
 
 PtyWaitEvent::Slot::~Slot()
 {
-	if(oRead.hEvent)
-		CloseHandle(oRead.hEvent);
-	if(oWrite.hEvent)
-		CloseHandle(oWrite.hEvent);
-	if(oError.hEvent)
-		CloseHandle(oError.hEvent);
 }
 
 #endif
-
-PtyWaitEvent::PtyWaitEvent()
-{
-#ifdef PLATFORM_WIN32
-
-	hIocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
-	if(!hIocp) {
-		LLOG("Failed to create IO Completion Port!");
-		Exit(1);
-	}
-
-#endif
-}
-
-PtyWaitEvent::~PtyWaitEvent()
-{
-#ifdef PLATFORM_WIN32
-
-	if(hIocp)
-		CloseHandle(hIocp);
-
-#endif
-}
 
 void PtyWaitEvent::Clear()
 {
 	slots.Clear();
-
-#ifdef PLATFORM_WIN32
-
-	handles.Clear();
-	exceptions.Clear();
-
-#endif
 }
 
 void PtyWaitEvent::Add(const APtyProcess& pty, dword events)
@@ -82,34 +50,15 @@ void PtyWaitEvent::Add(const APtyProcess& pty, dword events)
 
 	const auto& p = static_cast<const WindowsPtyProcess&>(pty);
 
-	Slot& slot    = slots.Add();
-	slot.hProcess = p.hProcess;
-	slot.hRead    = p.hOutputRead;
-	slot.hWrite   = p.hInputWrite;
-	slot.hError   = p.hErrorRead;
-
-	// Register pipes
-	CreateIoCompletionPort(slot.hRead,  hIocp, (ULONG_PTR) slot.hRead,  0);
-	CreateIoCompletionPort(slot.hWrite, hIocp, (ULONG_PTR) slot.hWrite, 0);
-	CreateIoCompletionPort(slot.hError, hIocp, (ULONG_PTR) slot.hError, 0);
-
-	int index = slots.GetCount() - 1;
-	handles.Add(slot.hRead, index);
-	handles.Add(slot.hWrite, index);
-	handles.Add(slot.hError, index);
-	
-	if(events & WAIT_READ) {
-		slot.oRead.hEvent  = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-		slot.oError.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-	}
-	if(events & WAIT_WRITE) {
-		slot.oWrite.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-	}
-	if(events & WAIT_IS_EXCEPTION) {
-		exceptions.Add(slot.hRead);
-		exceptions.Add(slot.hWrite);
-		exceptions.Add(slot.hError);
-	}
+	Slot& slot      = slots.Add();
+	slot.hProcess   = p.hProcess;
+	slot.hRead      = p.hOutputRead;
+	slot.hWrite     = p.hInputWrite;
+	slot.hError     = p.hErrorRead;
+	slot.eRead      = false;
+	slot.eWrite     = false;
+	slot.eError     = false;
+	slot.events     = events;
 
 #elif PLATFORM_POSIX
 
@@ -132,18 +81,7 @@ void PtyWaitEvent::Remove(const APtyProcess& pty)
 
 	const auto& q = static_cast<const WindowsPtyProcess&>(pty);
 	slots.RemoveIf([this, &q](int i) {
-		const Slot& s = slots[i];
-		if(s.hProcess == q.hProcess) {
-			// Is there a better way?
-			handles.RemoveKey(s.hRead);
-			handles.RemoveKey(s.hWrite);
-			handles.RemoveKey(s.hError);
-			exceptions.RemoveKey(s.hRead);
-			exceptions.RemoveKey(s.hWrite);
-			exceptions.RemoveKey(s.hError);
-			return true;
-		}
-		return false;
+		return slots[i].hProcess == q.hProcess;
 	});
 
 #elif PLATFORM_POSIX
@@ -160,32 +98,45 @@ bool PtyWaitEvent::Wait(int timeout)
 {
 #ifdef PLATFORM_WIN32
 
-	DWORD bytesTransferred;
-	ULONG_PTR completionKey;
-	LPOVERLAPPED overlapped;
-
-	BOOL success = GetQueuedCompletionStatus(
-		hIocp, &bytesTransferred, &completionKey, &overlapped, timeout
-	);
-
-	if(!success) {
-		DWORD error = GetLastError();
-		if(overlapped && IsException(error)) {
-			if(int i = handles.Find((HANDLE) completionKey); i >= 0) {
-				slots[i].lastOverlapped = overlapped;
+	auto CheckPipe = [](HANDLE h, bool& dataFlag, bool& exceptionFlag, dword events, bool& hasEvents) -> bool {
+		if(!h)
+			return false;
+		
+		DWORD n = 0;
+		if(PeekNamedPipe(h, nullptr, 0, nullptr, &n, nullptr)) {
+			if(n > 0) {
+				dataFlag = true;
+				hasEvents = true;
 				return true;
 			}
 		}
-		return false;
-	}
-
-	if(overlapped) {
-		if(int i = handles.Find((HANDLE) completionKey); i >= 0) {
-			slots[i].lastOverlapped = overlapped;
+		else
+		if((events & WAIT_IS_EXCEPTION) && IsException(GetLastError())) {
+			exceptionFlag = true;
+			hasEvents = true;
 			return true;
 		}
+		return false;
+	};
+
+	bool hasEvents = false;
+	for(Slot& slot : slots) {
+		slot.eRead = slot.eWrite = slot.eError = slot.eException = false;
+		if(slot.events & WAIT_READ) {
+			CheckPipe(slot.hRead, slot.eRead, slot.eException, slot.events, hasEvents);
+			CheckPipe(slot.hError, slot.eError, slot.eException, slot.events, hasEvents);
+		}
+		if((slot.events & WAIT_WRITE) && slot.hWrite) {
+			slot.eWrite = true;
+			hasEvents = true;
+		}
 	}
-	return false;
+	
+	// If no events are pending, sleep for the specified timeout
+	if(!hasEvents && timeout > 0)
+		Sleep(timeout);
+	
+	return hasEvents;
 
 #elif PLATFORM_POSIX
 
@@ -207,31 +158,18 @@ dword PtyWaitEvent::Get(int i) const
 {
 #ifdef PLATFORM_WIN32
 
-	if (slots.IsEmpty() || i < 0 || i >= slots.GetCount())
+	if(slots.IsEmpty() || i < 0 || i >= slots.GetCount())
 		return 0;
 
 	const Slot& slot = slots[i];
-	if (!slot.lastOverlapped)
-		return 0;
-
 	dword events = 0;
 	
-	if (slot.lastOverlapped == &slot.oRead || slot.lastOverlapped == &slot.oError)
+	if((slot.events & WAIT_READ) && (slot.eRead || slot.eError))
 		events |= WAIT_READ;
-	if (slot.lastOverlapped == &slot.oWrite)
+	if((slot.events & WAIT_WRITE) && slot.eWrite)
 		events |= WAIT_WRITE;
-
-	// Check for exceptions by examining the overlapped operation result
-	DWORD bytesTransferred;
-	HANDLE hPipe = (slot.lastOverlapped == &slot.oRead) ? slot.hRead :
-				   (slot.lastOverlapped == &slot.oWrite) ? slot.hWrite : slot.hError;
-	
-	if(!GetOverlappedResult(hPipe, slot.lastOverlapped, &bytesTransferred, FALSE)) {
-		DWORD error = GetLastError();
-		if(IsException(error) && exceptions.Find(hPipe) >= 0) {
-			events |= WAIT_IS_EXCEPTION;
-		}
-	}
+	if((slot.events & WAIT_IS_EXCEPTION) && slot.eException)
+		events |= WAIT_IS_EXCEPTION;
 
 	return events;
 	
@@ -241,7 +179,7 @@ dword PtyWaitEvent::Get(int i) const
 		return 0;
 
 	const pollfd& q = slots[i];
-	if(q.fd < 0)  // Check for invalid descriptor
+	if(q.fd < 0)
 		return 0;
 
 	dword events = 0;
@@ -253,7 +191,7 @@ dword PtyWaitEvent::Get(int i) const
 	if(q.revents & POLLPRI)
 		events |= WAIT_IS_EXCEPTION;
 	if(q.revents & (POLLERR | POLLHUP | POLLNVAL))
-		events |= WAIT_IS_EXCEPTION;  // Handle all error conditions
+		events |= WAIT_IS_EXCEPTION;
 
 	return events;
 #endif
