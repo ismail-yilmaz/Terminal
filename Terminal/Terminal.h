@@ -81,6 +81,7 @@ public:
         TIMEID_REFRESH = Ctrl::TIMEID_COUNT,
         TIMEID_SIZEHINT,
         TIMEID_BLINK,
+        TIMEID_FLASH,
         TIMEID_COUNT
     };
 
@@ -450,6 +451,8 @@ public:
 
     void            SetDeviceId(const String& s)                    { deviceid = s;   }
     void            AnswerBackMessage(const String& s)              { answerback = s; }
+    
+    void            FlashDisplay();
 
     void            State(int reason) override;
 
@@ -635,6 +638,7 @@ private:
     bool        searching        = false;
     bool        resizing         = false;
     bool        hinting          = false;
+    bool        flashing         = false;
     bool        blinking         = false;
     int         blinkinterval    = 500;
     int         wheelstep        = GUI_WheelScrollLines();

@@ -1732,6 +1732,12 @@ eginSelectorMode], [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:Ter
 ndSelectorMode].&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:FlashDisplay`(`):%- [@(0.0.255) void] [* FlashDisplay]()&]
+[s2; Flashes the terminal display. Usually used in conjunction with 
+[^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenBell^ W
+henBell ]for event notification.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:Serialize`(Upp`:`:Stream`&`)override:%- [@(0.0.255) void]_[* S
 erialize]([_^Upp`:`:Stream^ Stream][@(0.0.255) `&]_[*@3 s])_override&]
 [s2; Serializes the current configuration of TerminalCtrl to [%-*@3 s].&]

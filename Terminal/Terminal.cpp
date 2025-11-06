@@ -79,6 +79,7 @@ TerminalCtrl::~TerminalCtrl()
 	KillTimeCallback(TIMEID_REFRESH);
 	KillTimeCallback(TIMEID_SIZEHINT);
 	KillTimeCallback(TIMEID_BLINK);
+	KillTimeCallback(TIMEID_FLASH);
 }
 
 TerminalCtrl& TerminalCtrl::SetFont(Font f)
@@ -1419,6 +1420,13 @@ void TerminalCtrl::State(int reason)
 {
 	if(reason == Ctrl::OPEN)
 		WhenResize();
+}
+
+void TerminalCtrl::FlashDisplay()
+{
+	flashing = true;
+	Refresh();
+	KillSetTimeCallback(100, [this] { flashing = false; Refresh();  }, TIMEID_FLASH);
 }
 
 int TerminalCtrl::ReadInt(const String& s, int def)

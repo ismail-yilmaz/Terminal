@@ -263,6 +263,10 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 	if(IsSelectorMode() || (modes[DECTCEM] && HasFocus() && (print || !caret.IsBlinking())))
 		w.DrawRect(caretrect, InvertColor);
 
+	// Flash the screen.
+	if(flashing && IsVisible())
+		w.DrawRect(wsz, InvertColor());
+
 	// Hint new size.
 	if(sizehint && hinting && IsVisible())
 		PaintSizeHint(w);
