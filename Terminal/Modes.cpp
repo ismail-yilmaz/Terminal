@@ -313,10 +313,18 @@ void TerminalCtrl::XTpcfkeym(bool b)
 	LDUMP(XTPCFKEYM);
 }
 
-void TerminalCtrl::XTResizeRep(bool b)
+void TerminalCtrl::XTResizerep(bool b)
 {
 	modes.Set(XTRESIZEREP, b);
 	LDUMP(XTRESIZEREP);
 }
+
+void TerminalCtrl::XTScrlbar(bool b)
+{
+	modes.Set(XTSCRLBAR, b);
+	ShowScrollBar(b);
+	LDUMP(XTSCRLBAR);
+}
+
 
 }

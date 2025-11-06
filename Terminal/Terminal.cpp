@@ -228,6 +228,14 @@ void TerminalCtrl::SyncSize(bool notify)
 	Size newsize = GetPageSize();
 	resizing = page->GetSize() != newsize;
 
+	auto ReportResize = [&]
+	{
+		if(modes[XTRESIZEREP]) {
+			Size wsz = PageSizeToClient(newsize);
+			PutCSI(Format("48;%d;%d;%d;%dt", newsize.cy, newsize.cx, wsz.cy, wsz.cx));
+		}
+	};
+
 	auto OnSizeHint	= [=]
 	{
 		RefreshSizeHint();
@@ -238,18 +246,11 @@ void TerminalCtrl::SyncSize(bool notify)
 	{
 		ClearSelection();
 		resizing = false;
+		ReportResize();
 		WhenResize();
 		ScheduleRefresh();
 	};
-	
-	auto ReportResize = [&]
-	{
-		if(modes[XTRESIZEREP]) {
-			Size wsz = PageSizeToClient(newsize);
-			PutCSI(Format("48;%d;%d;%d;%dt", newsize.cy, newsize.cx, wsz.cy, wsz.cx));
-		}
-	};
-	
+
 	if(resizing && newsize.cx > 1 && 1 < newsize.cy) {
 		page->SetSize(newsize);
 		if(notify) {
@@ -264,7 +265,6 @@ void TerminalCtrl::SyncSize(bool notify)
 		}
 		else
 			resizing = false;
-		ReportResize();
 	}
 	else {
 		page->Invalidate();

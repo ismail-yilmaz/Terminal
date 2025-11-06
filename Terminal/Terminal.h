@@ -905,7 +905,8 @@ private:
     void        XTutf8mm(bool b);
     void        XTx10mm(bool b);
     void        XTx11mm(bool b);
-    void        XTResizeRep(bool b);
+    void        XTResizerep(bool b);
+    void        XTScrlbar(bool b);
 
     void        SetMode(const VTInStream::Sequence& seq, bool enable);
 
@@ -1100,6 +1101,7 @@ private:
         XTGRAPHEME,
         XTSYNCOUT,
         XTRESIZEREP,
+        XTSCRLBAR,
         VTMODECOUNT
     };
 };

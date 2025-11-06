@@ -137,6 +137,7 @@
 |DECLRMM    |69      | Enable/disable horizontal margins.                          |DEC private   | Level 4      |       
 |DECSDM     |80      | Enable/disable sixel scrolling.                             |DEC private   | Level 3      |  
 |XTX10MM    |9       | X10 mouse button tracking mode. (Compatibility mode.)       |xterm private | Level 1      |         
+|XTSCRLBAR  |30      | Show/hide scroll bar. (rxvt)                                |xterm private | Level 1      |
 |XTREWRAPM  |45      | Reverse wrap mode.                                          |xterm private | Level 1      |                    
 |XTASBM     |47      | Alternate screen buffer mode. (Ver. 1)                      |xterm private | Level 1      |         
 |XTX11MM    |1000    | X11 mouse button tracking mode. (Normal mode.)              |xterm private | Level 1      |                                                                                                                              
