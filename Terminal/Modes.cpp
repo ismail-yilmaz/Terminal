@@ -313,4 +313,10 @@ void TerminalCtrl::XTpcfkeym(bool b)
 	LDUMP(XTPCFKEYM);
 }
 
+void TerminalCtrl::XTResizeRep(bool b)
+{
+	modes.Set(XTRESIZEREP, b);
+	LDUMP(XTRESIZEREP);
+}
+
 }

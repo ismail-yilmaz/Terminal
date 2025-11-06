@@ -300,6 +300,7 @@ const TerminalCtrl::CbMode* TerminalCtrl::FindModePtr(word modenum, byte modetyp
         VT_MODE(XTBRPM,     2004,   '?',    LEVEL_1, LEVEL_4,  { t.XTbrpm(b);    }),    // Bracketed paste mode
         VT_MODE(XTSYNCOUT,  2026,   '?',    LEVEL_1, LEVEL_4,  { /* NOP */       }),    // Synchronized output mode (permanently reset)
         VT_MODE(XTGRAPHEME, 2027,   '?',    LEVEL_1, LEVEL_4,  { /* NOP */       }),    // Unicode grapheme support (permanently reset)
+        VT_MODE(XTRESIZEREP,2048,   '?',    LEVEL_1, LEVEL_4,  { t.XTResizeRep(b); })   // In-band terminal resize notification
     };
     }
     

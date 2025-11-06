@@ -155,6 +155,7 @@
 |XTBRPM     |2004    | Bracketed paste mode.                                       |xterm private | Level 1      |  
 |XTSYNCOUT  |2026    | Synchronized output mode.                                   |xterm private | Level 1      |  
 |XTGRAPHEME |2027    | Unicode grapheme cluster processing.                        |xterm private | Level 1      |  
+|XTRESIZEREP|2048    | In-band resize notification.                                |xterm private | Level 1      |
 
 #### Notes
 

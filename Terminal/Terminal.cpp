@@ -242,6 +242,14 @@ void TerminalCtrl::SyncSize(bool notify)
 		ScheduleRefresh();
 	};
 	
+	auto ReportResize = [&]
+	{
+		if(modes[XTRESIZEREP]) {
+			Size wsz = PageSizeToClient(newsize);
+			PutCSI(Format("48;%d;%d;%d;%dt", newsize.cx, newsize.cy, wsz.cx, wsz.cy));
+		}
+	};
+	
 	if(resizing && newsize.cx > 1 && 1 < newsize.cy) {
 		page->SetSize(newsize);
 		if(notify) {
@@ -256,6 +264,7 @@ void TerminalCtrl::SyncSize(bool notify)
 		}
 		else
 			resizing = false;
+		ReportResize();
 	}
 	else {
 		page->Invalidate();
