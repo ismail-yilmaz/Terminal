@@ -246,7 +246,7 @@ void TerminalCtrl::SyncSize(bool notify)
 	{
 		if(modes[XTRESIZEREP]) {
 			Size wsz = PageSizeToClient(newsize);
-			PutCSI(Format("48;%d;%d;%d;%dt", newsize.cx, newsize.cy, wsz.cx, wsz.cy));
+			PutCSI(Format("48;%d;%d;%d;%dt", newsize.cy, newsize.cx, wsz.cy, wsz.cx));
 		}
 	};
 	
