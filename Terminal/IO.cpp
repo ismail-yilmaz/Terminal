@@ -66,6 +66,7 @@ void TerminalCtrl::Reset(bool full)
 	modes.Set(DECTCEM);
 	modes.Set(DECANM);
 	modes.Set(DECAWM);
+	modes.Set(DECCOLMA);
 
 	dpage.SetTabs(8);
 	dpage.Displaced(false);

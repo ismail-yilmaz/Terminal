@@ -885,6 +885,7 @@ private:
     void        DECbkm(bool b);
     void        DECckm(bool b);
     void        DECcolm(bool b);
+    void        DECcolma(bool b);
     void        DECkpam(bool b);
     void        DEClrmm(bool b);
     void        DECom(bool b);
@@ -909,8 +910,8 @@ private:
     void        XTutf8mm(bool b);
     void        XTx10mm(bool b);
     void        XTx11mm(bool b);
-    void        XTResizerep(bool b);
-    void        XTScrlbar(bool b);
+    void        XTresizerep(bool b);
+    void        XTscrlbar(bool b);
 
     void        SetMode(const VTInStream::Sequence& seq, bool enable);
 
@@ -1078,6 +1079,7 @@ private:
         DECBKM,
         DECCKM,
         DECCOLM,
+        DECCOLMA,
         DECKPAM,
         DECLRMM,
         DECOM,

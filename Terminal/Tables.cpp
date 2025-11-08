@@ -276,12 +276,13 @@ const TerminalCtrl::CbMode* TerminalCtrl::FindModePtr(word modenum, byte modetyp
         VT_MODE(DECAWM,     7,      '?',    LEVEL_1, LEVEL_4,  { t.DECawm(b);    }),    // Autowrap mode
         VT_MODE(DECARM,     8,      '?',    LEVEL_1, LEVEL_4,  { t.DECarm(b);    }),    // Autorepeat mode
         VT_MODE(DECTCEM,    25,     '?',    LEVEL_2, LEVEL_4,  { t.DECtcem(b);   }),    // Show/hide caret
+        VT_MODE(DECCOLMA,   40,     '?',    LEVEL_1, LEVEL_4,  { t.DECcolma(b);  }),    // Allow 80 -> 132 (DECCOLM) mode
         VT_MODE(DECBKM,     67,     '?',    LEVEL_3, LEVEL_4,  { t.DECbkm(b);    }),    // Send backspace when backarrow key is pressed
         VT_MODE(DECLRMM,    69,     '?',    LEVEL_4, LEVEL_4,  { t.DEClrmm(b);   }),    // Enable/disable horizontal margins
         VT_MODE(DECSDM,     80,     '?',    LEVEL_3, LEVEL_4,  { t.DECsdm(b);    }),    // Enable/disable sixel scrolling
         // Private mode extensions
         VT_MODE(XTX10MM,    9,      '?',    LEVEL_1, LEVEL_4,  { t.XTx10mm(b);   }),    // X10 mouse button tracking mode (compat.)
-        VT_MODE(XTSCRLBAR,  30,     '?',    LEVEL_1, LEVEL_4,  { t.XTScrlbar(b); }),    // Show/hide scrollbar (rxvt)
+        VT_MODE(XTSCRLBAR,  30,     '?',    LEVEL_1, LEVEL_4,  { t.XTscrlbar(b); }),    // Show/hide scrollbar (rxvt)
         VT_MODE(XTREWRAPM,  45,     '?',    LEVEL_1, LEVEL_4,  { t.XTrewrapm(b); }),    // Reverse wrap mode
         VT_MODE(XTASBM,     47,     '?',    LEVEL_1, LEVEL_4,  { t.XTasbm(n, b); }),    // Alternate screen buffer mode (ver. 1)
         VT_MODE(XTX11MM,    1000,   '?',    LEVEL_1, LEVEL_4,  { t.XTx11mm(b);   }),    // X11 mouse button tracking mode (normal)
@@ -301,7 +302,7 @@ const TerminalCtrl::CbMode* TerminalCtrl::FindModePtr(word modenum, byte modetyp
         VT_MODE(XTBRPM,     2004,   '?',    LEVEL_1, LEVEL_4,  { t.XTbrpm(b);    }),    // Bracketed paste mode
         VT_MODE(XTSYNCOUT,  2026,   '?',    LEVEL_1, LEVEL_4,  { /* NOP */       }),    // Synchronized output mode (permanently reset)
         VT_MODE(XTGRAPHEME, 2027,   '?',    LEVEL_1, LEVEL_4,  { /* NOP */       }),    // Unicode grapheme support (permanently reset)
-        VT_MODE(XTRESIZEREP,2048,   '?',    LEVEL_1, LEVEL_4,  { t.XTResizerep(b); })    // In-band terminal resize notification
+        VT_MODE(XTRESIZEREP,2048,   '?',    LEVEL_1, LEVEL_4,  { t.XTresizerep(b); })    // In-band terminal resize notification
     };
     }
     

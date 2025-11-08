@@ -153,11 +153,19 @@ void TerminalCtrl::DECkpam(bool b)
 
 void TerminalCtrl::DECcolm(bool b)
 {
-	modes.Set(DECCOLM, b);
-	DECom(false);
-	page->ErasePage();
-	SetColumns(b ? 132 : 80);
-	LDUMP(DECCOLM);
+	if(modes[DECCOLMA]) {
+		modes.Set(DECCOLM, b);
+		DECom(false);
+		page->ErasePage();
+		SetColumns(b ? 132 : 80);
+		LDUMP(DECCOLM);
+	}
+}
+
+void TerminalCtrl::DECcolma(bool b)
+{
+	modes.Set(DECCOLMA, b);
+	LDUMP(DECCOLMA);
 }
 
 void TerminalCtrl::DECsclm(bool b)
@@ -313,13 +321,13 @@ void TerminalCtrl::XTpcfkeym(bool b)
 	LDUMP(XTPCFKEYM);
 }
 
-void TerminalCtrl::XTResizerep(bool b)
+void TerminalCtrl::XTresizerep(bool b)
 {
 	modes.Set(XTRESIZEREP, b);
 	LDUMP(XTRESIZEREP);
 }
 
-void TerminalCtrl::XTScrlbar(bool b)
+void TerminalCtrl::XTscrlbar(bool b)
 {
 	modes.Set(XTSCRLBAR, b);
 	ShowScrollBar(b);

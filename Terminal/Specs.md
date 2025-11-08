@@ -133,6 +133,7 @@
 |DECAWM     |7       | Auto wrap mode.                                             |DEC private   | Level 1      |  
 |DECARM     |8       | Auto repeat mode.                                           |DEC private   | Level 1      |  
 |DECTCEM    |25      | Show/hide caret.                                            |DEC private   | Level 2      |  
+|DECCOLMA   |40      | Allow/Disallow DECCOLM (80/132) mode.                       |DEC private   | Level 1      |
 |DECBKM     |67      | Send backspace when backarrow key is pressed.               |DEC private   | Level 3      |                                                                          
 |DECLRMM    |69      | Enable/disable horizontal margins.                          |DEC private   | Level 4      |       
 |DECSDM     |80      | Enable/disable sixel scrolling.                             |DEC private   | Level 3      |  
