@@ -98,34 +98,31 @@ void SixelStream::LineFeed()
 
 static Color sHSLColor(int h, int s, int l)
 {
-	// See: https://en.wikipedia.org/wiki/HSL_and_HSV?oldformat=true#HSL_to_RGB
-
-	if(s == 0) return Color(l, l, l);
-
-	double h1 = fmod((h + 240) / 60, 6);
-	double l1 = l * 0.01;
-	double s1 = s * 0.01;
-
-	double c = (1.0 - abs((2.0 * s1) - 1.0)) * l1;
-	double x = c * (1.0 - abs(fmod(h1, 2.0) - 1.0));
-
-	double r, g, b;
-	switch(ffloor(h1)) {
-	case 1: r = c; g = x; b = 0; break;
-	case 2: r = x; g = c; b = 0; break;
-	case 3: r = 0; g = c; b = x; break;
-	case 4: r = 0; g = x; b = c; break;
-	case 5: r = x; g = 0; b = c; break;
-	case 6: r = c; g = 0; b = x; break;
-	default: return Color(100, 100, 100);
-	}
-
-	double m = s1 - (c * 0.5);
-
-	return Color(
-		(int) clamp((r + m) * 100.0 + 0.5, 0.0, 100.0),
-		(int) clamp((g + m) * 100.0 + 0.5, 0.0, 100.0),
-		(int) clamp((b + m) * 100.0 + 0.5, 0.0, 100.0));
+    if(s == 0) return Color(l, l, l);
+    
+    double h1 = fmod(h / 60.0, 6.0);
+    double l1 = l * 0.01;
+    double s1 = s * 0.01;
+    double c = (1.0 - abs(2.0 * l1 - 1.0)) * s1;
+    double x = c * (1.0 - abs(fmod(h1, 2.0) - 1.0));
+    
+    double r, g, b;
+    int sector = (int)ffloor(h1);
+    switch(sector) {
+    case 0: r = c; g = x; b = 0; break;
+    case 1: r = x; g = c; b = 0; break;
+    case 2: r = 0; g = c; b = x; break;
+    case 3: r = 0; g = x; b = c; break;
+    case 4: r = x; g = 0; b = c; break;
+    case 5: r = c; g = 0; b = x; break;
+    default: r = 0; g = 0; b = 0; break;
+    }
+    
+    double m = l1 - (c * 0.5);
+    return Color(
+        (int) clamp((r + m) * 100.0 + 0.5, 0.0, 100.0),
+        (int) clamp((g + m) * 100.0 + 0.5, 0.0, 100.0),
+        (int) clamp((b + m) * 100.0 + 0.5, 0.0, 100.0));
 }
 
 force_inline
