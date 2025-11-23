@@ -542,8 +542,6 @@ channels.]&]
 [s0;l200;i200;b20;O1; [G GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, 
 SATM, TSM, EBM, XTSYNCOUT and XTGRAPHEME modes are set as `"permanently 
 reset`".]&]
-[s0;l200;i200;b20;O1; [G XTSPREG is always set. TerminalCtrl does not 
-support shared color palette for sixel images.]&]
 [s0;b20;a20;ph:7:t300; [*G^`#esc`-sequences^4 Supported Escape Sequences]&]
 [ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Mnemonic]]
 :: [s0; [G Description]]

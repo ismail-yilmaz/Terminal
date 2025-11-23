@@ -42,6 +42,7 @@ void TerminalCtrl::Reset(bool full)
 
 	if(full) {
 		AlternateScreenBuffer(false);
+		DECcolma(true);
 		DECcolm(false);
 		dpage.Reset();
 		apage.Reset();
@@ -60,13 +61,15 @@ void TerminalCtrl::Reset(bool full)
 	cellattrs.Clear();
 
 	udk.Clear();
-
+	
 	modes.Clear();
+
 	modes.Set(SRM);
 	modes.Set(DECTCEM);
 	modes.Set(DECANM);
 	modes.Set(DECAWM);
 	modes.Set(DECCOLMA);
+	modes.Set(XTSPREG);
 
 	dpage.SetTabs(8);
 	dpage.Displaced(false);

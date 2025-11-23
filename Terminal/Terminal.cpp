@@ -1422,11 +1422,11 @@ void TerminalCtrl::State(int reason)
 		WhenResize();
 }
 
-void TerminalCtrl::FlashDisplay()
+void TerminalCtrl::FlashDisplay(int ms)
 {
 	flashing = true;
 	Refresh();
-	KillSetTimeCallback(100, [this] { flashing = false; Refresh();  }, TIMEID_FLASH);
+	KillSetTimeCallback(max(1, ms), [this] { flashing = false; Refresh();  }, TIMEID_FLASH);
 }
 
 int TerminalCtrl::ReadInt(const String& s, int def)

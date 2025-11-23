@@ -452,7 +452,7 @@ public:
     void            SetDeviceId(const String& s)                    { deviceid = s;   }
     void            AnswerBackMessage(const String& s)              { answerback = s; }
     
-    void            FlashDisplay();
+    void            FlashDisplay(int ms = 100);
 
     void            State(int reason) override;
 
@@ -559,8 +559,10 @@ private:
         bool    encoded:1;
         bool    keepratio:1;
         bool    transparent:1;
-        dword   GetHashValue() const                            { return FoldHash(CombineHash(data, size, encoded, keepratio)); }
-        void    SetNull()                                       { data = Null; size = Null; encoded = keepratio = true; }
+        SixelStream::Palette *palette = nullptr;
+        dword   Pack() const                                    { return (keepratio << 0) | (encoded << 1) | (transparent << 2); }
+        dword   GetHashValue() const                            { return FoldHash(CombineHash(data, size, palette, Pack())); }
+        void    SetNull()                                       { data = Null; size = Null; encoded = keepratio = true; palette = nullptr; }
         bool    IsNullInstance() const                          { return Upp::IsNull(data); }
         ImageString()                                           { SetNull(); }
         ImageString(const Nuller&)                              { SetNull(); }
@@ -620,6 +622,7 @@ private:
 
     Gate<const VTCell&> cellfilter;
     const Display *imgdisplay;
+    SixelStream::Palette         sixelpalette; // Shared palette
     VScrollBar  sb;
     Scroller    scroller;
     Point       mousepos;
@@ -907,6 +910,7 @@ private:
     void        XTsgrmm(bool b);
     void        XTsgrpxmm(bool b);
     void        XTsrcm(bool b);
+    void        XTspreg(bool b);
     void        XTutf8mm(bool b);
     void        XTx10mm(bool b);
     void        XTx11mm(bool b);
@@ -922,7 +926,7 @@ private:
     const CbFunction* FindFunctionPtr(const VTInStream::Sequence& seq);
     const CbMode*     FindModePtr(word modenum, byte modetype);
     void              DispatchCtl(byte ctl);
-
+    
 private:
     // Key manipulation and VT and PC-style function keys support.
     struct FunctionKey : Moveable<FunctionKey> {

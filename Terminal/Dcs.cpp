@@ -255,6 +255,9 @@ void TerminalCtrl::ParseSixelGraphics(const VTInStream::Sequence& seq)
 	imgs.encoded = false;
 	imgs.transparent = seq.GetInt(2, 0) != 2;
 
+	if(!modes[XTSPREG])
+		imgs.palette = &sixelpalette;
+
 	RenderImage(imgs, !modes[DECSDM]);
 }
 }

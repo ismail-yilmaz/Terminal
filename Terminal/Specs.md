@@ -162,7 +162,6 @@
 #### Notes
 
 - GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, SATM, TSM, EBM, XTSYNCOUT and XTGRAPHEME modes are set as "permanently reset".
-- XTSPREG is always set. TerminalCtrl does not support shared color palette for sixel images.
 
 
 ## [Supported Escape Sequences](#esc-sequences)
@@ -603,7 +602,7 @@
 - The `clipboard` parameter can be empty or `s0`. Currently, TerminalCtrl omits this parameter.
 - When the `data` is a `?`, TerminalCtrl will reply to the host with the selection/clipboard data encoded using the same protocol.
 - When the `data` is *neither a base64 string nor a `?`*, TerminalCtrl will clear the selection/clipboard.
-- 
+
 ### Progress Notification Protocol
 
 | Sequence                               | Description                                                         | Device Level |

@@ -298,7 +298,7 @@ const TerminalCtrl::CbMode* TerminalCtrl::FindModePtr(word modenum, byte modetyp
         VT_MODE(XTASBM,     1047,   '?',    LEVEL_1, LEVEL_4,  { t.XTasbm(n, b); }),    // Alternate screen buffer mode (ver. 2)
         VT_MODE(XTSRCM,     1048,   '?',    LEVEL_1, LEVEL_4,  { t.XTsrcm(b);    }),    // Save/restore cursor
         VT_MODE(XTASBM,     1049,   '?',    LEVEL_1, LEVEL_4,  { t.XTasbm(n, b); }),    // Alternate screen buffer mode (ver. 3)
-        VT_MODE(XTSPREG,    1070,   '?',    LEVEL_1, LEVEL_4,  { /* NOP */       }),    // Use private color registers for each sixel (permanently set)
+        VT_MODE(XTSPREG,    1070,   '?',    LEVEL_3, LEVEL_4,  { t.XTspreg(b);   }),    // Use private color registers for each sixel
         VT_MODE(XTBRPM,     2004,   '?',    LEVEL_1, LEVEL_4,  { t.XTbrpm(b);    }),    // Bracketed paste mode
         VT_MODE(XTSYNCOUT,  2026,   '?',    LEVEL_1, LEVEL_4,  { /* NOP */       }),    // Synchronized output mode (permanently reset)
         VT_MODE(XTGRAPHEME, 2027,   '?',    LEVEL_1, LEVEL_4,  { /* NOP */       }),    // Unicode grapheme support (permanently reset)
@@ -314,3 +314,5 @@ const TerminalCtrl::CbMode* TerminalCtrl::FindModePtr(word modenum, byte modetyp
     return (p && clevel >= p->b && clevel <= p->c) ? p : nullptr;
 }
 }
+
+

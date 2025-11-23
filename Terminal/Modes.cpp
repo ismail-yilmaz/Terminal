@@ -29,7 +29,7 @@ void TerminalCtrl::ReportMode(const VTInStream::Sequence& seq)
 	// 4: Permanently reset
 
 	int reply = 0, mid = p ? p->a : - 1;
-	
+
 	if(mid >= 0)
 		switch(mid) {
 		case GATM:		 // Currently we dont actively support these ANSI (ECMA-48) modes.
@@ -48,14 +48,11 @@ void TerminalCtrl::ReportMode(const VTInStream::Sequence& seq)
 		case XTSYNCOUT:  // No synchronized output mode (yet).
 			reply = 4;
 			break;
-		case XTSPREG:	 // We don't support shared color registers for sixel images.
-			reply = 3;
-			break;
 		default:
 			reply = modes[mid] ? 1 : 2;
 			break;
 		}
-		
+
 	PutCSI(Format("%[1:?;]s%d;%d`$y", seq.mode == '?', modenum, reply));
 }
 
@@ -223,7 +220,7 @@ void TerminalCtrl::XTbrpm(bool b)
 void TerminalCtrl::XTrewrapm(bool b)
 {
 	// Let reverse wrap require auto wrapping.
-	
+
 	if((reversewrap && modes[DECAWM]) || !b) {
 		modes.Set(XTREWRAPM, b);
 		page->ReverseWrap(b);
@@ -236,6 +233,13 @@ void TerminalCtrl::XTsrcm(bool b)
 	modes.Set(XTSRCM, b);
 	b ? Backup() : Restore(); // This mode is used in conjunction with the private mode 1047.
 	LDUMP(XTSRCM);
+}
+
+void TerminalCtrl::XTspreg(bool b)
+{
+	modes.Set(XTSPREG, b);
+	b ? sixelpalette.Clear() : sixelpalette.Init();
+	LDUMP(XTSPREG);
 }
 
 void TerminalCtrl::XTasbm(int mode, bool b)

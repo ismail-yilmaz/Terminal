@@ -8,12 +8,14 @@ namespace Upp{
 
 class SixelStream : MemReadStream {
 public:
-    SixelStream(const void *data, int64 size);
-    SixelStream(const String& data);
+    struct Palette : Vector<RGBA> {  void Init(); };
     
+    SixelStream(const void *data, int64 size, Palette *shared_palette = nullptr);
+    SixelStream(const String& data, Palette *shared_palette = nullptr);
+
     SixelStream&    Background(bool b = true)       { background = b; return *this;  }
     operator        Image();
-    
+
 private:
     void            Clear();
     inline void     Return();
@@ -28,7 +30,8 @@ private:
 
 private:
     ImageBuffer     buffer;
-    Vector<RGBA>    palette;
+    Palette         private_palette;
+    Palette*        paletteptr;
     RGBA            ink;
     RGBA            paper;
     int             repeat;
@@ -36,7 +39,7 @@ private:
     int             coords[6];
     Size            size;
     Point           cursor;
-    bool            background;
+    bool            background:1;
 };
 }
 #endif

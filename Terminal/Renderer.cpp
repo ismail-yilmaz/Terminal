@@ -363,10 +363,10 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 {
 	LTIMING("TerminalCtrl::ImageDataMaker::Make");
 
-	auto ToCellSize = [this](Sizef sz) -> Size
+	auto ToCellSize = [this](Size sz) -> Size
 	{
-		sz = sz / Sizef(fontsize);
-		return Size(fround(sz.cx), fround(sz.cy));
+		sz = sz / Size(fontsize);
+		return Size(max(1, sz.cx), max(1, sz.cy));
 	};
 
 	auto AdjustSize = [this](Size sr, Size sz) -> Size
@@ -389,7 +389,7 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 
 	Image img;
 	if(!imgs.encoded) {
-		img = (Image) SixelStream(imgs.data).Background(!imgs.transparent);
+		img = (Image) SixelStream(imgs.data, imgs.palette).Background(!imgs.transparent);
 	}
 	else {
 		img = StreamRaster::LoadStringAny(Base64Decode(imgs.data));
