@@ -29,11 +29,10 @@ bool TerminalCtrl::Convert7BitC1To8BitC1(const VTInStream::Sequence& seq)
 
 void TerminalCtrl::VT52MoveCursor()
 {
-	if(parser.Peek() >= 32) {
-		page->MoveToLine(parser.Get() - 31);
-		if(parser.Peek() >= 32)
-			page->MoveToColumn(parser.Get() - 31);
-	}
+	if(int row = parser.Get() - 31; row >= 1 && row <= 24)
+		page->MoveToLine(row);
+	if(int col = parser.Get() - 31; col >= 1 && col <= 80)
+		page->MoveToColumn(col);
 }
 
 void TerminalCtrl::DisplayAlignmentTest()
