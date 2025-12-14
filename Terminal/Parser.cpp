@@ -476,7 +476,6 @@ void VTInStream::Parse(const void *data, int size, bool utf8)
 		buffer = iutf8;
 }
 
-
 void VTInStream::NextState(State::Id  sid)
 {
 	LTIMING("VTInStream::NextState");
@@ -560,15 +559,61 @@ int VTInStream::GetChr()
 {
 	LTIMING("VtInStream::GetChr()");
 	
-	if(Term() < 0x80 || !utf8mode)
-		return Get();
-	int p = GetPos() + 1;
-	int c = GetUtf8();
-	if(c == -1 && !IsEof()) {
-		Seek(p);
+	if(*ptr < 0x80 || !utf8mode)
+		return *ptr++;
+	
+	// Using read-ahead.
+	
+	byte *saved_ptr = ptr + 1;
+	int code = *ptr++;
+	
+	// Check for invalid start byte
+	if(code < 0xC2) {
+		ptr = saved_ptr;
+		LoadError();
 		return 0xFFFD;
 	}
-	return c;
+	
+	// 2-byte sequence
+	if(code < 0xE0) {
+		if(const byte *p = GetPtr(1); p && (p[0] & 0xC0) == 0x80) {
+			return ((code & 0x1F) << 6) | (p[0] & 0x3F);
+		}
+	}
+	// 3-byte sequence
+	else if(code < 0xF0) {
+		if(const byte *p = GetPtr(2); p) {
+			byte b0 = p[0];
+			byte b1 = p[1];
+			if(((b0 & 0xC0) == 0x80) & ((b1 & 0xC0) == 0x80)) {
+				int c = ((code & 0x0F) << 12) | ((b0 & 0x3F) << 6) | (b1 & 0x3F);
+				if((c >= 0x800) & (c < 0x10000))
+					return c;
+			}
+		}
+	}
+	// 4-byte sequence
+	else if(code < 0xF8) {
+		if(const byte *p = GetPtr(3); p) {
+			byte b0 = p[0];
+			byte b1 = p[1];
+			byte b2 = p[2];
+			if(((b0 & 0xC0) == 0x80) & ((b1 & 0xC0) == 0x80) & ((b2 & 0xC0) == 0x80)) {
+				int c = ((code & 0x07) << 18) | ((b0 & 0x3F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F);
+				if((c >= 0x10000) & (c < 0x110000))
+					return c;
+			}
+		}
+	}
+
+	if(!IsEof()) {
+		ptr = saved_ptr;
+		return 0xFFFD;
+	}
+
+	ptr = saved_ptr;
+	LoadError();
+	return -1;
 }
 
 force_inline
@@ -576,14 +621,15 @@ void VTInStream::CollectChr(int c)
 {
 	LTIMING("VtInStream::CollectChr()");
 
-	int p = -1;
-	while(sCheckRange(c, 0x20, 0x7E) || c > 0x9F) {
+	byte *p = ptr;
+	do {
 		WhenChr(c);
-		p = GetPos();
+		p = ptr;
 		c = GetChr();
-	}
+	} while(sCheckRange(c, 0x20, 0x7E) || c > 0x9F);
+	
 	if(c != -1)
-		Seek(p);
+		ptr = p;
 	waschr = true;
 }
 
@@ -710,6 +756,10 @@ String VTInStream::Sequence::GetStr(int n) const
 
 dword VTInStream::Sequence::GetHashValue() const
 {
+	constexpr auto Hash32 = [] (byte b0, byte b1, byte b2, byte b3, byte b4) {
+		dword packed = (b0) | (b1 << 8) | (b2 << 16) | (b3 << 24);
+	    return packed ^ (b4 * 0x01000193);
+	};
 	return Hash32(type, opcode, mode, intermediate[0], intermediate[1]);
 }
 

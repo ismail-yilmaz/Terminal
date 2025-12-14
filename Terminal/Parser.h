@@ -97,10 +97,6 @@ public:
     Event<const VTInStream::Sequence&>  WhenDcs;
     Event<const VTInStream::Sequence&>  WhenOsc;
     Event<const VTInStream::Sequence&>  WhenApc;
-    
-    static constexpr dword Hash32(byte h)               { return 0 ^ h; }
-    template<typename... Args>
-    static constexpr dword Hash32(byte h, Args... args) { return (0xacf34ce7 * Hash32(args...)) ^ h; }
 
     VTInStream();
     virtual ~VTInStream() {}
