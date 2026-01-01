@@ -310,7 +310,8 @@ bool PosixPtyProcess::Read(String& s)
 	bool running = IsRunning() || master >= 0;
 	if(running && Wait(WAIT_READ, 0)) { // Poll
 		char buffer[BUFSIZE];
-		int n = 0, done = 0;
+		int n = 0;
+		[[maybe_unused]] int done = 0;
 		while((n = read(master, buffer, BUFSIZE)) > 0) {
 			done += n;
 			rread.Cat(buffer, n);
