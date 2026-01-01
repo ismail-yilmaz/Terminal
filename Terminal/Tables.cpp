@@ -23,14 +23,14 @@ public:
 	}
     template<typename MapType>
     const FnType* Lookup(dword hash, const MapType& map) {
-        int idx = FoldHash(hash) & (N - 1);
+        int i = FoldHash(hash) & (N - 1);
         
-        if(entries[idx].hash == hash)
-            return entries[idx].fn;
+        if(entries[i].hash == hash)
+            return entries[i].fn;
         
         if(const FnType* fn = map.FindPtr(hash); fn) {
-            entries[idx].hash = hash;
-            entries[idx].fn = fn;
+            entries[i].hash = hash;
+            entries[i].fn = fn;
 	        return fn;
         }
         return nullptr;
@@ -39,8 +39,8 @@ public:
 
 constexpr auto Hash32 = [] (byte b0, byte b1, byte b2, byte b3, byte b4)
 {
-		dword packed = (b0) | (b1 << 8) | (b2 << 16) | (b3 << 24);
-	    return packed ^ (b4 * 0x01000193);
+	dword packed = (b0) | (b1 << 8) | (b2 << 16) | (b3 << 24);
+    return packed ^ (b4 * 0x01000193);
 };
 
 }

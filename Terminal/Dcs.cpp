@@ -160,7 +160,7 @@ void TerminalCtrl::RestorePresentationState(const VTInStream::Sequence& seq)
 		int flags = GetInt(6);
 		int gl    = GetInt(7);
 		int gr    = GetInt(8);
-		int sz	  = GetInt(9);
+		//int sz	  = GetInt(9);
 		String gs = GetStr(10);
 		
 		cellattrs.Bold(sgr & 0x01);

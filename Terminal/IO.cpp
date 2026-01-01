@@ -175,7 +175,7 @@ TerminalCtrl& TerminalCtrl::Put0(int c, int cnt)
 TerminalCtrl& TerminalCtrl::Put0(const String& s, int cnt)
 {
 	while(cnt-- > 0)
-		for(const byte& c : s) Put0(c);
+		for(byte c : s) Put0(c);
 	return *this;
 }
 

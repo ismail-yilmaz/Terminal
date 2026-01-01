@@ -30,15 +30,15 @@ void SixelStream::Palette::Init()
 
 SixelStream::SixelStream(const void *data, int64 size, Palette *shared_palette)
 : MemReadStream(data, size)
-, background(true)
 , paletteptr(shared_palette)
+, background(true)
 {
 }
 
 SixelStream::SixelStream(const String& data, Palette *shared_palette)
 : MemReadStream(~data, data.GetLength())
-, background(true)
 , paletteptr(shared_palette)
+, background(true)
 {
 }
 

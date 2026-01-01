@@ -382,7 +382,6 @@ void TerminalCtrl::HandleWindowOpsRequests(const VTInStream::Sequence& seq)
 	if(windowreports && 10 < opcode && opcode < 24) {
 		Rect r;
 		Size sz;
-		Rect wr = GetWorkArea();
 		switch(opcode * 10 + seq.GetInt(2, 0)) {
 		case REPORT_WINDOW_POSITION:
 			r = w->GetRect();
@@ -663,7 +662,7 @@ void TerminalCtrl::ChangeRectAreaAttrs(const VTInStream::Sequence& seq, bool inv
 void TerminalCtrl::ReportRectAreaChecksum(const VTInStream::Sequence& seq)
 {
 	int id = seq.GetInt(1);
-	int pn = seq.GetInt(2, 0);
+	//int pn = seq.GetInt(2, 0);
 
 	Rect view = page->GetView();
 

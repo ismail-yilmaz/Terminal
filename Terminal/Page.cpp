@@ -164,14 +164,14 @@ int GetOffset(const VTLine& line, int begin, int end)
 }
 
 VTPage::VTPage()
-: tabsize(8)
+: size(2, 2)
+, margins(Null)
+, tabsize(8)
+, historysize(1024)
+, ambiguouscellwidth(1)
+, history(false)
 , autowrap(false)
 , reversewrap(false)
-, history(false)
-, historysize(1024)
-, size(2, 2)
-, margins(Null)
-, ambiguouscellwidth(1)
 {
 	Reset();
 }

@@ -577,8 +577,8 @@ private:
         int     Make(InlineImage& imagedata) const override;
         InlineImageMaker(int i, const ImageString& s, const Size& sz)
         : id(i)
-        , imgs(s)
         , fontsize(sz)
+        , imgs(s)
         {
         }
     };

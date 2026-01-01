@@ -26,7 +26,7 @@ public:
 	void Flush();
 
 	sRectRenderer(Draw& w, Color bkg, bool tr)
-		: w(w), background(bkg), transparent(tr), cr(Null), color(Null) {}
+		: w(w), cr(Null), color(Null), background(bkg), transparent(tr) {}
 	~sRectRenderer()              { Flush(); }
 };
 
@@ -206,7 +206,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 				rr.DrawRect(cell, data);
 			}
 		}
-		int icount = 0, lcount = 0;
+		int icount = 0;
 		{
 			// Render the text by combining non-contiguous chunks of chars.
 			sTextRenderer tr(w, GetFont());
@@ -220,7 +220,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 				tr.DrawChar(line.Get(j, GetAttrs()), data);
 			}
 			icount = tr.GetImageCount();
-			lcount = tr.GetLinkCount();
+			// lcount = tr.GetLinkCount();
 		}
 		{
 			if(icount) {

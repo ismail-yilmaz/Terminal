@@ -23,9 +23,15 @@ bool IsWCh(const VTCell& cell, bool line_wrap, Gate<const VTCell&> f = Null)
 }
 
 TerminalCtrl::TerminalCtrl()
-: page(&dpage)
+: eightbit(false)
+, reversewrap(false)
+, keynavigation(true)
 , legacycharsets(false)
-, eightbit(false)
+, scrolltoend(true)
+, alternatescroll(false)
+, pcstylefunctionkeys(true)
+, userdefinedkeys(false)
+, userdefinedkeyslocked(true)
 , windowactions(false)
 , windowreports(false)
 , sixelimages(false)
@@ -33,28 +39,22 @@ TerminalCtrl::TerminalCtrl()
 , iterm2images(false)
 , hyperlinks(false)
 , annotations(false)
-, semanticinformation(false)
-, reversewrap(false)
-, hidemousecursor(false)
-, sizehint(true)
 , delayedrefresh(true)
 , lazyresize(false)
+, sizehint(true)
+, nobackground(false)
+, intensify(false)
 , blinkingtext(true)
+, dynamiccolors(false)
 , adjustcolors(false)
 , lightcolors(false)
-, dynamiccolors(false)
-, intensify(false)
-, nobackground(false)
-, alternatescroll(false)
-, keynavigation(true)
-, userdefinedkeys(false)
-, userdefinedkeyslocked(true)
-, pcstylefunctionkeys(true)
-, streamfill(false)
-, scrolltoend(true)
+, hidemousecursor(false)
 , highlight(false)
 , notifyprogress(false)
 , ambiguouschartowide(false)
+, semanticinformation(false)
+, page(&dpage)
+, streamfill(false)
 {
 	Unicode();
 	SetLevel(LEVEL_4);
@@ -358,7 +358,6 @@ void TerminalCtrl::RefreshDisplay()
 	
 	const int cnt = min(pos + psz.cy, page->GetLineCount());
 	int blinking_cells = 0;
-	int hypertext_cells = 0;
 
 	const bool hypertext = hyperlinks || annotations;
 	const bool plaintext = !hypertext && !blinkingtext;
@@ -378,7 +377,6 @@ void TerminalCtrl::RefreshDisplay()
 				int x = j * csz.cx;
 				if(hypertext && cell.IsHypertext()
 				&& (cell.data == activehtext || cell.data == prevhtext)) {
-					hypertext_cells++;
 						if(!invalid)
 							rhtext.Union(RectC(x, y, csz.cx, csz.cy));
 				}

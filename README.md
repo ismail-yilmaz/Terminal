@@ -231,7 +231,7 @@ The screenshots below are taken from some of the basic examples provided with th
 
 ##  [License](#license)
 ```
-Copyright (c) 2019-2025, İsmail Yılmaz
+Copyright (c) 2019-2026, İsmail Yılmaz
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
