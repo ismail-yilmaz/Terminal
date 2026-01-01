@@ -20,7 +20,7 @@ Additionally, this package provides a `PtyWaitEvent` class that allows `PtyProce
 PtyProcess package for U++
 --------------------------
 
-Copyright (c) 2018-2025, İsmail Yılmaz
+Copyright (c) 2018-2026, İsmail Yılmaz
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
