@@ -337,7 +337,7 @@ void PosixPtyProcess::Write(String s)
 	if(convertcharset)
 		s = ToSystemCharset(s);
 	wbuffer.Cat(s);
-	dword done = 0;
+	[[maybe_unused]] dword done = 0;
 	if(master >= 0 && Wait(WAIT_WRITE, 0)) { // Poll
 		int n = 0;
 		while((n = write(master, ~wbuffer, min(wbuffer.GetLength(), 4096))) > 0 || n == EINTR) {

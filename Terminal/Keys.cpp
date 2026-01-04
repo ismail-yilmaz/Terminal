@@ -503,7 +503,13 @@ bool TerminalCtrl::Key(dword key, int count)
 				key = 0x1B;
 				break;
 			case K_TAB:
-				key = 0x09;
+				if(shiftkey) {// De facto standard...
+					PutCSI("Z");
+					SyncSb(true);
+					goto End;
+				}
+				else
+					key = 0x09;
 				break;
 			case K_CTRL_BREAK:
 				key = 0x03;
