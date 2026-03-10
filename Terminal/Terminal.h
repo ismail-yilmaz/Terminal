@@ -753,6 +753,7 @@ private:
     void        ParseJexerGraphics(const VTInStream::Sequence& seq);
     bool        ParseiTerm2Graphics(const VTInStream::Sequence& seq);
 
+    bool        ParseItem2FeatureReport(const VTInStream::Sequence& seq);
     bool        ParseiTerm2BackgroundChange(const VTInStream::Sequence& seq);
     
     void        ParseHyperlinks(const VTInStream::Sequence& seq);

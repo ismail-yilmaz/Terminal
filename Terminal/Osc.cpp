@@ -93,6 +93,9 @@ void TerminalCtrl::ParseJexerGraphics(const VTInStream::Sequence& seq)
 
 void TerminalCtrl::ParseiTerm2Protocols(const VTInStream::Sequence& seq)
 {
+	if(ParseItem2FeatureReport(seq))
+		return;
+	
 	if(iterm2images
 		&& ParseiTerm2Graphics(seq))
 			return;
@@ -103,6 +106,35 @@ void TerminalCtrl::ParseiTerm2Protocols(const VTInStream::Sequence& seq)
 //		&& ParseiTerm2Annotations(seq))
 //			return;
 	
+}
+
+bool TerminalCtrl::ParseItem2FeatureReport(const VTInStream::Sequence& seq)
+{
+	// https://iterm2.com/feature-reporting/
+	
+	String req = seq.GetStr(2);
+	int i = ToLower(req).Find("capabilities");
+	if(i >= 0) {
+		req = "1337;Capabilities=TMUBGsGoLr";
+		if(IsUtf8Mode())
+			req << "UUwAw";
+		if(HasInlineImages())
+			req << "FSx";
+		if(IsClipboardWritePermitted())
+			req << "Cw";
+		if(!IsCursorLocked())
+			req << "Sc";
+		if(HasHyperlinks())
+			req << "H";
+		if(WhenProgress)
+			req << "P";
+		if(WhenMessage)
+			req << "No";
+		if(WhenTitle)
+			req << "Ts";
+		PutOSC(req);
+	}
+	return i >= 0;
 }
 
 bool TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
