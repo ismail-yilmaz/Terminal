@@ -674,7 +674,7 @@ void TerminalCtrl::ReportRectAreaChecksum(const VTInStream::Sequence& seq)
 
 	dword checksum = 0;
 
-	auto CalcRectAreaChecksum = [=, &checksum](Point pt) -> void
+	auto CalcRectAreaChecksum = [this, &checksum](Point pt) -> void
 	{
 		// I couldn't find any official documentation on how to calculate
 		// a rectangular area's checksum. I was able to figure out that I

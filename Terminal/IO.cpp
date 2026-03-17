@@ -8,13 +8,13 @@ namespace Upp {
 void TerminalCtrl::InitParser(VTInStream& vts)
 {
 	vts.Reset();
-	vts.WhenChr = [=](int c) { PutChar(c); };
-	vts.WhenCtl = [=](byte c) { ParseControlChars(c); };
-	vts.WhenEsc = [=](const VTInStream::Sequence& seq) { ParseEscapeSequences(seq); };
-	vts.WhenCsi = [=](const VTInStream::Sequence& seq) { ParseCommandSequences(seq); };
-	vts.WhenDcs = [=](const VTInStream::Sequence& seq) { ParseDeviceControlStrings(seq); };
-	vts.WhenOsc = [=](const VTInStream::Sequence& seq) { ParseOperatingSystemCommands(seq); };
-	vts.WhenApc = [=](const VTInStream::Sequence& seq) { ParseApplicationProgrammingCommands(seq); };
+	vts.WhenChr = [this](int c) { PutChar(c); };
+	vts.WhenCtl = [this](byte c) { ParseControlChars(c); };
+	vts.WhenEsc = [this](const VTInStream::Sequence& seq) { ParseEscapeSequences(seq); };
+	vts.WhenCsi = [this](const VTInStream::Sequence& seq) { ParseCommandSequences(seq); };
+	vts.WhenDcs = [this](const VTInStream::Sequence& seq) { ParseDeviceControlStrings(seq); };
+	vts.WhenOsc = [this](const VTInStream::Sequence& seq) { ParseOperatingSystemCommands(seq); };
+	vts.WhenApc = [this](const VTInStream::Sequence& seq) { ParseApplicationProgrammingCommands(seq); };
 }
 
 Upp::TerminalCtrl& TerminalCtrl::Set8BitMode(bool b)
@@ -82,7 +82,7 @@ void TerminalCtrl::Reset(bool full)
 	apage.ReverseWrap(false);
 
 	caret = Caret();
-	caret.WhenAction = [=] { ScheduleRefresh(); };
+	caret.WhenAction = [this] { ScheduleRefresh(); };
 
 	CancelOut();
 }

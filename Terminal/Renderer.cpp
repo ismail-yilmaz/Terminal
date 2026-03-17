@@ -58,12 +58,18 @@ class sTextRenderer {
 	Draw&       w;
 	Font        font;
 	int         y, icount = 0, lcount = 0;
+
 	struct Chrs : Moveable<Chrs> {
 		Vector<int> x;
 		Vector<int> width;
 		WString     text;
 	};
+
 	VectorMap< Tuple<dword, Color>, Chrs > cache;
+
+	// Fast-path cache for last style run
+	Tuple<dword, Color> lastkey;
+	Chrs*                last = nullptr;
 
 public:
 	int  GetImageCount() const                     { return icount; }
@@ -74,7 +80,7 @@ public:
 	Color annotationcolor;
 	bool canhyperlink:1;
 	bool canannotate:1;
-	
+
 	sTextRenderer(Draw& w, Font f) : w(w), font(f) { y = Null; }
 	~sTextRenderer()                               { Flush();  }
 };
@@ -83,46 +89,58 @@ void sTextRenderer::Flush()
 {
 	if(cache.GetCount() == 0)
 		return;
-	
+
 	LTIMING("sTextRenderer::Flush");
 
 	const int fcx = font.GetMonoWidth();
-	
+
 	for(int i = 0; i < cache.GetCount(); i++) {
 		Chrs& c = cache[i];
 		if(c.x.GetCount()) {
 			const Tuple<dword, Color>& fc = cache.GetKey(i);
 			const int x = c.x[0], cx = c.x.Top() + fcx;
+
 			font.Bold(fc.a & VTCell::SGR_BOLD)
 			    .Italic(fc.a & VTCell::SGR_ITALIC)
 				.Strikeout(fc.a & VTCell::SGR_STRIKEOUT)
 				.Underline(fc.a & VTCell::SGR_UNDERLINE);
+
 			for(int i = 0; i < c.x.GetCount() - 1; i++)
 				c.x[i] = c.x[i + 1] - c.x[i];
+
 			c.x.Top() = c.width.Top();
+
 			if(fc.a & VTCell::SGR_OVERLINE) {
 				int h = font.GetDescent() - 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_SOLID, fc.b);
 			}
+
 			if(canhyperlink && fc.a & VTCell::SGR_HYPERLINK) {
 				int h = font.GetAscent() + 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_DOT, fc.b);
 				font.NoUnderline();
 			}
+
 			if(canannotate && fc.a & VTCell::SGR_ANNOTATION) {
 				int h = font.GetAscent() + 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_SOLID, annotationcolor);
 				font.NoUnderline();
 			}
+
 			w.DrawText(x, y, c.text, font, fc.b, c.x);
 		}
 	}
+
 	cache.Clear();
+
+	// reset fast-path cache
+	last = nullptr;
 }
 
 void sTextRenderer::DrawChar(const VTCell& cell, const CellPaintData& data)
 {
 	Point p = data.pos;
+
 	if(y != p.y) {
 		Flush();
 		y = p.y;
@@ -130,11 +148,21 @@ void sTextRenderer::DrawChar(const VTCell& cell, const CellPaintData& data)
 
 	Tuple<dword, Color> key = MakeTuple(cell.sgr, data.ink);
 
-	Chrs *c = &cache.GetAdd(key);
-	
-	if(c->x.GetCount() && c->x.Top() > p.x || (cell.IsUnderlined() || cell.IsHypertext()) && cache.GetCount() > 1) {
+	Chrs *c;
+	if(last && key == lastkey)
+		c = last;
+	else {
+		c = &cache.GetAdd(key);
+		last = c;
+		lastkey = key;
+	}
+
+	if(c->x.GetCount() && c->x.Top() > p.x ||
+	   (cell.IsUnderlined() || cell.IsHypertext()) && cache.GetCount() > 1) {
 		Flush();
 		c = &cache.GetAdd(key);
+		last = c;
+		lastkey = key;
 	}
 
 	icount += (int) cell.sgr & VTCell::SGR_IMAGE;
@@ -145,7 +173,7 @@ void sTextRenderer::DrawChar(const VTCell& cell, const CellPaintData& data)
 	hide |= cell.IsImage();
 	hide |= cell.IsConcealed();
 	hide |= (!data.show && !data.highlight && cell.IsBlinking());
-	
+
 	if(hide) {
 		if(c->width.GetCount())
 			c->width.Top() += data.size.cx;
