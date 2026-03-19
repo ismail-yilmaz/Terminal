@@ -23,54 +23,47 @@ topic "Specifications";
 [H8;b73;*+150 $$22,5#07864147445237544204111237153677:subtitle]
 [2 $$0,0#00000000000000000000000000000000:Default]
 [{_} 
-[s2;=:0:%% Terminal Package for U`+`+&]
-[s0;=%% [*1 Copyright © 2019`-2026, ][*^https`:`/`/github`.com`/ismail`-yilmaz^1 İsmail
- Yılmaz]&]
-[s2; [G4 Table of Contents]&]
+[s0;b20;a20;pht300; [*G5 Technical Capabilities of TerminalCtrl]&]
+[s0;b20;a20;pht300; [*G4 Table of Contents]&]
 [s0;l200;i200;b20;N1;t300; [G^`#requirements^ Requirements]&]
-[s0;l200;i200;b20;N1;t300; [G^`#platforms^ Support][G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#2^ e
-][G^`#platforms^ d Platforms]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#3^ S
-upported Emulation Levels]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#4^ S
-upported I/O Modes and Parser Capabilities]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#5^ S
-upported Control Bytes]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#6^ S
-upported Terminal Modes]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#7^ S
-upported Escape Sequences]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#8^ S
-upported Command Sequences]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#9^ S
-upported Device Control Strings]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#10^ S
-upported Operating System Commands]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#11^ S
-upported Graphics Rendition Opcodes]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#12^ S
-upported Extended Color Sequences]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#13^ S
-upported Color Text Specifications]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#14^ S
-upported Extended Inline Image Sequences]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#15^ S
-upported Window Actions and Reports]&]
-[s0;l200;i200;b20;N1;t300; [G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#16^ O
-ther Supported Extensions]&]
+[s0;l200;i200;b20;N1;t300; [G^`#platforms^ Supported Platforms]&]
+[s0;l200;i200;b20;N1;t300; [G^`#emulation`-levels^ Supported Emulation 
+Levels]&]
+[s0;l200;i200;b20;N1;t300; [G^`#Capabilities^ Supported I/O Modes and 
+Parser Capabilities]&]
+[s0;l200;i200;b20;N1;t300; [G^`#controlbytes^ Supported Control Bytes]&]
+[s0;l200;i200;b20;N1;t300; [G^`#modes^ Supported Terminal Modes]&]
+[s0;l200;i200;b20;N1;t300; [G^`#esc`-sequences^ Supported Escape Sequences]&]
+[s0;l200;i200;b20;N1;t300; [G^`@csi`-sequences^ Supported Command Sequences]&]
+[s0;l200;i200;b20;N1;t300; [G^`#dcs`-sequences^ Supported Device Control 
+Strings]&]
+[s0;l200;i200;b20;N1;t300; [G^`#osc`-sequences^ Supported Operating 
+System Commands]&]
+[s0;l200;i200;b20;N1;t300; [G^`#apc`-sequences^ Supported Application 
+Programming Commands]&]
+[s0;l200;i200;b20;N1;t300; [G^`@sgr`-sequences^ Supported Graphics 
+Rendition Opcodes]&]
+[s0;l200;i200;b20;N1;t300; [G^`#sgr`-extended`-sequences^ Supported 
+Extended Color Sequences]&]
+[s0;l200;i200;b20;N1;t300; [G^`#color`-text`-specs^ Supported Color 
+Text Specifications]&]
+[s0;l200;i200;b20;N1;t300; [G^`#inline`-image`-protocols^ Supported 
+Extended Inline Image Sequences]&]
+[s0;l200;i200;b20;N1;t300; [G^`#window`-ops^ Supported Window Actions 
+and Reports]&]
+[s0;l200;i200;b20;N1;t300; [G^`#other`-extensions^ Other Supported 
+Extensions]&]
 [s0;N!t300;G &]
-[s0;b20;a20;ph:1:t300; [*G^topic`:`/`/Terminal`/srcdoc`/Terminal`_Spec`_en`-us`#1^4 Req
-uirements]&]
-[s0;l200;i200;b20;O1; [G^https`:`/`/www`.ultimatepp`.org^ U`+`+][G , 
-cross`-platform C/C`+`+ rapid application development framework.]&]
+[s0;b20;a20;pht300; [*G^`#requirements^4 Requirements]&]
+[s0;l200;i200;b20;O1; [G^www`.ultimatepp`.org^ U`+`+][G , cross`-platform 
+C/C`+`+ rapid application development framework.]&]
 [s0;l200;i200;b20;O1; [G A C/C`+`+ compiler, that supports at least 
 C`+`+17.]&]
-[s0;b20;a20;ph:2:t300; [*G^`#platforms^4 Supported Platforms]&]
+[s0;b20;a20;pht300; [*G^`#platforms^4 Supported Platforms]&]
 [s0;l200;i200;b20;O1; [G POSIX`-compliant OSes (Linux, BSD, etc.)]&]
 [s0;l200;i200;b20;O1; [G Microsoft Windows (tm)]&]
 [s0;l200;i200;b20;O1; [G MacOS (tm)]&]
-[s0;b20;a20;ph:3:t300; [*G^`#emulation`-levels^4 Supported Emulation 
-Levels]&]
+[s0;b20;a20;pht300; [*G^`#emulation`-levels^4 Supported Emulation Levels]&]
 [ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Conformance Level]]
 :: [s0; [G Model Range]]
 :: [s0; [G Status]]
@@ -113,8 +106,8 @@ as some cursor movements and caret customization commands.]&]
 sequences, jexer inline images protocol, or hyperlinks protocol, 
 etc.) apply to all emulation levels, with the reasonable exception 
 of level 0.]&]
-[s0;b20;a20;ph:4:t300; [*G^`#Capabilities^4 Supported I/O Modes and 
-Parser Capabilities]&]
+[s0;b20;a20;pht300; [*G^`#Capabilities^4 Supported I/O Modes and Parser 
+Capabilities]&]
 [ {{2000:2000:2000:2000:2000B20;A20;G(220)@(220.225.230) [s0; [G Mnemonic]]
 :: [s0; [G Description]]
 :: [s0; [G Status]]
@@ -170,7 +163,7 @@ scripting: Future versions of TerminalCtrl will add an internal
 scripting interface. Applications using TerminalCtrl can externally 
 utilize the APCs to create their application specific scripting 
 channels.]&]
-[s0;b20;a20;ph:5:t300; [*G^`#controlbytes^4 Supported Control Bytes]&]
+[s0;b20;a20;pht300; [*G^`#controlbytes^4 Supported Control Bytes]&]
 [ {{2500:2500:2500:2500B20;A20;G(220)@(220.225.230) [s0; [G Mnemonic]]
 :: [s0; [G Byte]]
 :: [s0; [G Description]]
@@ -272,7 +265,9 @@ channels.]&]
 :: [s0; [G String terminator.]]
 :: [s0; [G Level 1]]}}&]
 [s0;b20;a20;pht300; [*G Notes]&]
-[s0;b20;a20;ph:6:t300; [*G^`#modes^4 Supported Terminal Modes]&]
+[s0;l200;i200;b20;O1; [G TerminalCtrl`'s responses to commands and 
+report requests are not included in this table.]&]
+[s0;b20;a20;pht300; [*G^`#modes^4 Supported Terminal Modes]&]
 [ {{2000:2000:2000:2000:2000B20;A20;G(220)@(220.225.230) [s0; [G Mnemonic]]
 :: [s0; [G Number]]
 :: [s0; [G Description]]
@@ -415,7 +410,7 @@ channels.]&]
 :: [s0; [G Level 2]]
 :: [s0; [G DECCOLMA]]
 :: [s0; [G 40]]
-:: [s0; [G Allow/disallow DECCOLM]]
+:: [s0; [G Allow/Disallow DECCOLM (80/132) mode.]]
 :: [s0; [G DEC private]]
 :: [s0; [G Level 1]]
 :: [s0; [G DECBKM]]
@@ -542,7 +537,7 @@ channels.]&]
 [s0;l200;i200;b20;O1; [G GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, 
 SATM, TSM, EBM, XTSYNCOUT and XTGRAPHEME modes are set as `"permanently 
 reset`".]&]
-[s0;b20;a20;ph:7:t300; [*G^`#esc`-sequences^4 Supported Escape Sequences]&]
+[s0;b20;a20;pht300; [*G^`#esc`-sequences^4 Supported Escape Sequences]&]
 [ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Mnemonic]]
 :: [s0; [G Description]]
 :: [s0; [G Device Level]]
@@ -707,7 +702,7 @@ GR]]
 [s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O1; [G TerminalCtrl`'s responses to commands and 
 report requests are not included in this table.]&]
-[s0;b20;a20;ph:8:t300; [*G^`@csi`-sequences^4 Supported Command Sequences]&]
+[s0;b20;a20;pht300; [*G^`@csi`-sequences^4 Supported Command Sequences]&]
 [ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Mnemonic]]
 :: [s0; [G Description]]
 :: [s0; [G Device Level]]
@@ -909,7 +904,7 @@ report requests are not included in this table.]&]
 [s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O1; [G TerminalCtrl`'s responses to commands and 
 report requests are not included in this table.]&]
-[s0;b20;a20;ph:9:t300; [*G^`#dcs`-sequences^4 Supported Device Control 
+[s0;b20;a20;pht300; [*G^`#dcs`-sequences^4 Supported Device Control 
 Strings]&]
 [ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Mnemonic]]
 :: [s0; [G Description]]
@@ -929,8 +924,8 @@ Strings]&]
 [s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O1; [G TerminalCtrl`'s responses to commands and 
 report requests are not included in this table.]&]
-[s0;b20;a20;ph:10:t300; [*G^`#osc`-sequences^4 Supported Operating 
-System Commands]&]
+[s0;b20;a20;pht300; [*G^`#osc`-sequences^4 Supported Operating System 
+Commands]&]
 [ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Opcode]]
 :: [s0; [G Description]]
 :: [s0; [G Device Level]]
@@ -944,7 +939,7 @@ System Commands]&]
 :: [s0; [G Change ANSI colors.]]
 :: [s0; [G Level 1]]
 :: [s0; [G 7]]
-:: [s0; [G Directory change (shell integration)]]
+:: [s0; [G Change working directory]]
 :: [s0; [G Level 1]]
 :: [s0; [G 8]]
 :: [s0; [G Set up hyperlinks.]]
@@ -953,10 +948,10 @@ System Commands]&]
 :: [s0; [G Show a text message.]]
 :: [s0; [G Level 1]]
 :: [s0; [G 9 ; 4]]
-:: [s0; [G Progress notification]]
+:: [s0; [G Progress notification.]]
 :: [s0; [G Level 1]]
-:: [s0; [G 9; 9]]
-:: [s0; [G Directory change (shell integration, ConEmu version)]]
+:: [s0; [G 9 ; 9]]
+:: [s0; [G Change working directory. (ConEmu version)]]
 :: [s0; [G Level 1]]
 :: [s0; [G 10]]
 :: [s0; [G Change ink color.]]
@@ -986,7 +981,7 @@ System Commands]&]
 :: [s0; [G Reset selection paper color.]]
 :: [s0; [G Level 1]]
 :: [s0; [G 133]]
-:: [s0; [G Semantic information]]
+:: [s0; [G Semantic information.]]
 :: [s0; [G Level 1]]
 :: [s0; [G 444]]
 :: [s0; [G Display inline images. (Jexer)]]
@@ -997,7 +992,18 @@ System Commands]&]
 [s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O1; [G TerminalCtrl`'s responses to commands and 
 report requests are not included in this table.]&]
-[s0;b20;a20;ph:11:t300; [*G^`#sgr`-sequences^4 Supported Graphics Rendition 
+[s0;b20;a20;pht300; [*G^`#apc`-sequences^4 Supported Application Programming 
+Commands]&]
+[ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Opcode]]
+:: [s0; [G Description]]
+:: [s0; [G Device Level]]
+::@2 [s0; [G G]]
+:: [s0; [G Display inline images. (Kitty)]]
+:: [s0; [G Level 1]]}}&]
+[s0;b20;a20;pht300; [*G Notes]&]
+[s0;l200;i200;b20;O1; [G TerminalCtrl`'s responses to commands and 
+report requests are not included in this table.]&]
+[s0;b20;a20;pht300; [*G^`#sgr`-sequences^4 Supported Graphics Rendition 
 Opcodes]&]
 [ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Opcode]]
 :: [s0; [G Description]]
@@ -1164,8 +1170,8 @@ Opcodes]&]
 :: [s0; [G 107]]
 :: [s0; [G Set paper color to white.]]
 :: [s0; [G Level 1]]}}&]
-[s0;b20;a20;ph:12:t300; [*G^`#sgr`-extended`-sequences^4 Supported 
-Extended Color Sequences]&]
+[s0;b20;a20;pht300; [*G^`#sgr`-extended`-sequences^4 Supported Extended 
+Color Sequences]&]
 [s0;b20;a20;pht300; [*G ISO/IEC 8613`-6 Format]&]
 [ {{5000:5000B20;A20;G(220)@(220.225.230) [s0; [G Palette]]
 :: [s0; [G CSI/SGR Sequence]]
@@ -1260,8 +1266,8 @@ for indexed color, or 256`-color mode, if you will. It calculates
 the the 6x6x6 cube from the given index.]&]
 [s0;l200;i200;b20;O1; [G Color space identifiers are ignored by TerminalCtrl.]&]
 [s0;l200;i200;b20;O1; [G Transparent colors are not implemented (TODO).]&]
-[s0;b20;a20;ph:13:t300; [*G^`#color`-text`-specs^4 Supported Color 
-Text Specifications]&]
+[s0;b20;a20;pht300; [*G^`#color`-text`-specs^4 Supported Color Text 
+Specifications]&]
 [ {{2500:2500:2500:2500B20;A20;G(220)@(220.225.230) [s0; [G Mnemonic]]
 :: [s0; [G Format]]
 :: [s0; [G Example]]
@@ -1317,8 +1323,8 @@ TerminalCtrl for backward compatibilty. RGB, RGBA, CMY, CMYK
 or Hash6 text specifications should be used wherever it is possible.]&]
 [s0;l200;i200;b20;O1; [G The above listed color text specifications 
 are utilized by xterm`'s dynamic colors feature.]&]
-[s0;b20;a20;ph:14:t300; [*G^`#inline`-image`-protocols^4 Supported 
-Extended Inline Image Sequences]&]
+[s0;b20;a20;pht300; [*G^`#inline`-image`-protocols^4 Supported Extended 
+Inline Image Sequences]&]
 [s0;b20;a20;pht300; [*G Jexer Inline Images Protocol]&]
 [ {{2500:2500:2500:2500B20;A20;G(220)@(220.225.230) [s0; [G Image Format]]
 :: [s0; [G OSC Sequnece]]
@@ -1409,8 +1415,45 @@ value is 1.]&]
 margins of the page and the sixel scrolling mode (][*G DECSDM][G ) 
 is enabled, then the page will be scrolled at the margins. Otherwise 
 the image will be cropped.]&]
-[s0;b20;a20;ph:15:t300; [*G^`#window`-ops^4 Supported Window Actions 
-and Reports]&]
+[s0;b20;a20;pht300; [*G Kitty`'s Inline Images Protocol]&]
+[ {{2500:2500:2500:2500B20;A20;G(220)@(220.225.230) [s0; [G Image Format]]
+:: [s0; [G APC Sequence]]
+:: [s0; [G Description]]
+:: [s0; [G Device Level]]
+::@2 [s0; [G Any]]
+:: [s0; [C@5$(245) G params ; data BEL]]
+:: [s0; [G Displays a raster image at cursor.]]
+:: [s0; [G Level 1]]
+:: [s0; [G Any]]
+:: [s0; [C@5$(245) G params ; data ST]]
+:: [s0; [G Displays a raster image at cursor.]]
+:: [s0; [G Level 1]]}}&]
+[s0;b20;a20;pht300; [*G Notes]&]
+[s0;l200;i200;b20;O1; [G TerminalCtrl implements only a base subset 
+of Kitty`'s graphics protocol.]&]
+[s0;l200;i200;b20;O1; [C@5$(245) G][G : graphics payload indicator (mandatory).]&]
+[s0;l200;i200;b20;O1; [C@5$(245) params][G : comma`-separated key`=value 
+pairs:]&]
+[s0;l400;i200;b20;O1; [C@5$(245) f`=100][G : PNG format (mandatory).]&]
+[s0;l400;i200;b20;O1; [C@5$(245) s`=WIDTH][G : image width in pixels (optional; 
+null if missing).]&]
+[s0;l400;i200;b20;O1; [C@5$(245) v`=HEIGHT][G : image height in pixels 
+(optional; null if missing).]&]
+[s0;l400;i200;b20;O1; [C@5$(245) m`=0`|1][G : more chunks follow (][C@5$(245) 1][G ) 
+or final chunk (][C@5$(245) 0][G ).]&]
+[s0;l200;i200;b20;O1; [C@5$(245) data][G : Base64`-encoded image payload.]&]
+[s0;l200;i200;b20;O1; [G TerminalCtrl ][/G accumulates multi`-chunk images][G  
+until ][C@5$(245) m`=0][G .]&]
+[s0;l200;i200;b20;O1; [G Any image type supported by  U`+`+`'s image 
+decoding factory are supported via PNG mode.]&]
+[s0;l200;i200;b20;O1; [G Width/height are optional; if missing, size 
+is inferred from the decoded image.]&]
+[s0;l200;i200;b20;O1; [G If the image doesn`'t fit into the vertical 
+margins of the page and the sixel scrolling mode (][*G DECSDM][G ) 
+is enabled, then the page will be scrolled at the margins. Otherwise 
+the image will be cropped.]&]
+[s0;b20;a20;pht300; [*G^`#window`-ops^4 Supported Window Actions and 
+Reports]&]
 [s0;b20;a20;pht300; [*G Window Actions]&]
 [ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G CSI Sequnece]]
 :: [s0; [G Description]]
@@ -1488,7 +1531,7 @@ and Reports]&]
 [s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O1; [G These sequences are a part of xterm`'s window 
 ops.]&]
-[s0;b20;a20;ph:16:t300; [*G^`#other`-extensions^4 Other Supported Extensions]&]
+[s0;b20;a20;pht300; [*G^`#other`-extensions^4 Other Supported Extensions]&]
 [s0;b20;a20;pht300; [*G Directory Change Protocol]&]
 [ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Sequence]]
 :: [s0; [G Description]]
@@ -1496,14 +1539,13 @@ ops.]&]
 ::@2 [s0; [C@5$(245) OSC 7 ; PATH ST]]
 :: [s0; [G Notifies the client code that the working directory is changed.]]
 :: [s0; [G Level 1]]
-:: [s0; [C@5$(245) OSC 9; 9 ; PATH ST]]
+:: [s0; [C@5$(245) OSC 9 ; 9 ; PATH ST]]
 :: [s0; [G Notifies the client code that the working directory is changed. 
-(ConEMU/Windows Terminal  version)]]
+(ConEmu / Windows Terminal version)]]
 :: [s0; [G Level 1]]}}&]
 [s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O1; [G TerminalCtrl ][/G does not][G  validate the requested 
-path. It is up to the client`-code to check the path`'s validity. 
-]&]
+path. It is up to the client`-code to check the path`'s validity.]&]
 [s0;b20;a20;pht300; [*G Hyperlinks Protocol]&]
 [ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Sequence]]
 :: [s0; [G Description]]
@@ -1569,56 +1611,52 @@ is optional and ][/G can][G  represents an error code.]&]
 should be ignored.]&]
 [s0;l400;i200;b20;O1; [C@5$(245) 4][G : Warning state.  The ][C@5$(245) value][G  
 is optional and ][/G can][G  represents an warning number.]&]
-[s0;G &]
 [s0;b20;a20;pht300; [*G Message Notification Protocol]&]
-[ {{3330:3336:3334B20;A20;G(220)@(220.225.230) [s0; [G Sequence]]
+[ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Sequence]]
 :: [s0; [G Description]]
 :: [s0; [G Device Level]]
 ::@2 [s0; [C@5$(245) OSC 9 ; 2 ; `[text`] ST]]
 :: [s0; [G Prompts a text message.]]
 :: [s0; [G Level 1]]}}&]
 [s0;b20;a20;pht300; [*G Notes]&]
-[s0;b20;a20;pht300; [G Implements ConEmu`'s message notification protocol.][*G iTerm2`'s 
-Inline Images Protocol]&]
-[s0;b20;a20;pht300;*G &]
+[s0;l200;i200;b20;O1; [G Implements ConEmu`'s message notification 
+protocol.]&]
 [s0;b20;a20;pht300; [*G Background Image Change Protocol]&]
-[ {{5035:1631:3334B20;A20;G(220)@(220.225.230) [s0; [G Sequnece]]
+[ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Sequence]]
 :: [s0; [G Description]]
 :: [s0; [G Device Level]]
 ::@2 [s0; [C@5$(245) OSC 1337 ; SetBackgroundImageFile`=`[path`] ST]]
 :: [s0; [G Requests a background image change.]]
 :: [s0; [G Level 1]]}}&]
-[s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O1; [C@5$(245) SetBackgroundImageFile][G   argument 
 specifies the background image change command.]&]
 [s0;l200;i200;b20;O1; [C@5$(245) path][G  should contain the path to 
 an image file and must be base64 encoded.]&]
 [s0;l200;i200;b20;O1; [/G Allowing arbitrary file paths may pose a 
-security risk][G . It is strongly recommended that client code 
+security risk.][G  It is strongly recommended that client code 
 prompts for user confirmation before applying any changes to 
 ensure safety and prevent unauthorized modifications.]&]
 [s0;b20;a20;pht300; [*G Semantic Information Protocol]&]
-[ {{5035:1631:3334B20;A20;G(220)@(220.225.230) [s0; [G Sequnece]]
+[ {{3333:3333:3334B20;A20;G(220)@(220.225.230) [s0; [G Sequence]]
 :: [s0; [G Description]]
 :: [s0; [G Device Level]]
 ::@2 [s0; [C@5$(245) OSC 133 ; `[command`] ST]]
 :: [s0; [G Sets the semantic information, starting from the cursor position.]]
 :: [s0; [G Level 1]]}}&]
 [s0;b20;a20;pht300; [*G Notes]&]
-[s0;l200;i200;b20;O1; [C@5$(245) command][G  can be one of the following 
+[s0;l200;i200;b20;O1;t300; [C@5$(245) command][G  can be one of the following 
 four values (case sensitive):]&]
 [s0;l400;i200;b20;O1; [C@5$(245) A][G : Marks the starting point of the 
 shell prompt.]&]
-[s0;l400;i200;b20;O1; [C@5$(245) B][G : ][G@N Marks the end of the shell 
-prompt and the start of the user input.]&]
-[s0;l400;i200;b20;O1; [C@5$(245) C][G : ][G@N Marks the end of the user 
-input and the start of the command output.]&]
-[s0;l400;i200;b20;O1; [C@5$(245) D][G : ][G@N Marks the end of the command 
-output.]&]
-[s0;l200;i200;b20;O1; [@N TerminalCtrl currently supports only a minimal—but 
-reasonable—subset of this protocol. This may change in the 
-future.]&]
-[s0;l200;i200;b20;O1; [@N TerminalCtrl does not process or display 
+[s0;l400;i200;b20;O1; [C@5$(245) B][G : Marks the end of the shell prompt 
+and the start of the user input.]&]
+[s0;l400;i200;b20;O1; [C@5$(245) C][G : Marks the end of the user input 
+and the start of the command output.]&]
+[s0;l400;i200;b20;O1; [C@5$(245) D][G : Marks the end of the command output.]&]
+[s0;l200;i200;b20;O1;t300; [G TerminalCtrl currently supports only 
+a minimal—but reasonable—subset of this protocol. This may 
+change in the future.]&]
+[s0;l200;i200;b20;O1;t300; [G TerminalCtrl does not process or display 
 semantic information by itself. Instead, it is up to the client 
 code to make use of the protocol, typically in combination with 
 features like cell highlighting or search functionality.]]]

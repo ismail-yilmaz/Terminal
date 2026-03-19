@@ -1,4 +1,5 @@
 
+
 # Technical Capabilities of TerminalCtrl
 
 ## Table of Contents
@@ -13,12 +14,13 @@
  8.  [Supported Command Sequences](@csi-sequences)
  9.  [Supported Device Control Strings](#dcs-sequences)
  10. [Supported Operating System Commands](#osc-sequences)
- 11. [Supported Graphics Rendition Opcodes](@sgr-sequences)
- 12. [Supported Extended Color Sequences](#sgr-extended-sequences)
- 13. [Supported Color Text Specifications](#color-text-specs)
- 14. [Supported Extended Inline Image Sequences](#inline-image-protocols)
- 15. [Supported Window Actions and Reports](#window-ops)
- 16. [Other Supported Extensions](#other-extensions)
+ 11. [Supported Application Programming Commands](#apc-sequences)
+ 12. [Supported Graphics Rendition Opcodes](@sgr-sequences)
+ 13. [Supported Extended Color Sequences](#sgr-extended-sequences)
+ 14. [Supported Color Text Specifications](#color-text-specs)
+ 15. [Supported Extended Inline Image Sequences](#inline-image-protocols)
+ 16. [Supported Window Actions and Reports](#window-ops)
+ 17. [Other Supported Extensions](#other-extensions)
 
 ## [Requirements](#requirements)
 
@@ -340,6 +342,16 @@
 
 - TerminalCtrl's responses to commands and report requests are not included in this table.
 
+## [Supported Application Programming Commands](#apc-sequences)
+
+| Opcode    | Description                                | Device Level |
+| ---       | ---                                        | ---          | 
+|G          | Display inline images. (Kitty)             | Level 1      |
+
+#### Notes
+
+- TerminalCtrl's responses to commands and report requests are not included in this table.
+- 
 ## [Supported Graphics Rendition Opcodes](#sgr-sequences)
 
 | Opcode | Description                          | Device Level |
@@ -523,6 +535,27 @@
     - `N`%:   `N` percent of the page width or height. Valid range is 1 to 1000.
     - `auto`: The image's original size will be used.
 - The `preserveAspectRatio` argument is optional. If set to 0, then the image's inherent aspect ratio will not be respected; otherwise, it will fill the specified width and height as much as possible without stretching. Default value is 1.
+- If the image doesn't fit into the vertical margins of the page and the sixel scrolling mode (**DECSDM**) is enabled, then the page will be scrolled at the margins. Otherwise the image will be cropped.
+
+### Kitty's Inline Images Protocol
+
+| Image Format  | APC Sequence                        | Description                                 | Device Level  |
+| ---           | ---                                 | ---                                         | ---           |
+| Any    | `G params ; data BEL` | Displays a raster image at cursor. | Level 1       |
+| Any    | `G params ; data ST` | Displays a raster image at cursor. | Level 1       |
+
+#### Notes
+- TerminalCtrl implements only a base subset of Kitty's graphics protocol.
+- `G`: graphics payload indicator (mandatory).  
+- `params`: comma-separated key=value pairs:  
+	- `f=100`: PNG format (mandatory).  
+	- `s=WIDTH`: image width in pixels (optional; null if missing).  
+	- `v=HEIGHT`: image height in pixels (optional; null if missing).  
+	- `m=0|1`: more chunks follow (`1`) or final chunk (`0`).  
+- `data`: Base64-encoded image payload.  
+- TerminalCtrl *accumulates multi-chunk images* until `m=0`.  
+- Any image type supported by  U++'s image decoding factory are supported via PNG mode.  
+- Width/height are optional; if missing, size is inferred from the decoded image.
 - If the image doesn't fit into the vertical margins of the page and the sixel scrolling mode (**DECSDM**) is enabled, then the page will be scrolled at the margins. Otherwise the image will be cropped.
 
 ## [Supported Window Actions and Reports](#window-ops)

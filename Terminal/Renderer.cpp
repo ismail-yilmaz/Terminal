@@ -157,8 +157,8 @@ void sTextRenderer::DrawChar(const VTCell& cell, const CellPaintData& data)
 		lastkey = key;
 	}
 
-	if(c->x.GetCount() && c->x.Top() > p.x ||
-	   (cell.IsUnderlined() || cell.IsHypertext()) && cache.GetCount() > 1) {
+	// Order is important for optimization
+	if((cell.IsUnderlined() || cell.IsHypertext()) && cache.GetCount() > 1) {
 		Flush();
 		c = &cache.GetAdd(key);
 		last = c;
@@ -393,7 +393,11 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 
 	auto ToCellSize = [this](Size sz) -> Size
 	{
-		sz = sz / Size(fontsize);
+		Size fs(fontsize);
+
+		sz.cx = (sz.cx + fs.cx - 1) / fs.cx;
+		sz.cy = (sz.cy + fs.cy - 1) / fs.cy;
+
 		return Size(max(1, sz.cx), max(1, sz.cy));
 	};
 
@@ -401,10 +405,10 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 	{
 		if(imgs.keepratio) {
 			if(sr.cx == 0 && sr.cy > 0)
-				sr.cx = sr.cy * sz.cx / sz.cy;
+				sr.cx = max(1, sr.cy * sz.cx / sz.cy);
 			else
 			if(sr.cy == 0 && sr.cx > 0)
-				sr.cy = sr.cx * sz.cy / sz.cx;
+				sr.cy = max(1, sr.cx * sz.cy / sz.cx);
 		}
 		else {
 			if(sr.cx <= 0)
@@ -412,10 +416,12 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 			if(sr.cy <= 0)
 				sr.cy = sz.cy;
 		}
+
 		return sr != sz ? sr : Null;
 	};
 
 	Image img;
+
 	if(!imgs.encoded) {
 		img = (Image) SixelStream(imgs.data, imgs.palette).Background(!imgs.transparent);
 	}
@@ -425,14 +431,18 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 
 	if(IsNull(img))
 		return 0;
-	if(IsNull(imgs.size))
+
+	if(IsNull(imgs.size)) {
 		imagedata.image = img;
+	}
 	else {
 		Size sz = AdjustSize(imgs.size, img.GetSize());
 		imagedata.image = IsNull(sz) ? img : Rescale(img, sz);
 	}
+
 	imagedata.fontsize = fontsize;
 	imagedata.cellsize = ToCellSize(imagedata.image.GetSize());
+
 	return imagedata.image.GetLength() * 4;
 }
 

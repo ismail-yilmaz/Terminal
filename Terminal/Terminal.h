@@ -243,7 +243,7 @@ public:
     TerminalCtrl&   NoKeyNavigation()                               { return KeyNavigation(false); }
     bool            HasKeyNavigation() const                        { return keynavigation; }
 
-    TerminalCtrl&   InlineImages(bool b = true)                     { sixelimages = jexerimages = iterm2images = b; return *this; }
+    TerminalCtrl&   InlineImages(bool b = true)                     { sixelimages = jexerimages = iterm2images = kittyimages = b; return *this; }
     TerminalCtrl&   NoInlineImages()                                { return InlineImages(false);  }
     bool            HasInlineImages() const                         { return sixelimages || jexerimages || iterm2images; }
 
@@ -256,8 +256,12 @@ public:
     bool            HasJexerGraphics() const                        { return jexerimages; }
 
     TerminalCtrl&   iTerm2Graphics(bool b = true)                   { iterm2images = b; return *this; }
-    TerminalCtrl&   NoiTerm2Graphics(bool b = true)                 { return iTerm2Graphics(false); }
+    TerminalCtrl&   NoiTerm2Graphics()                              { return iTerm2Graphics(false); }
     bool            HasiTerm2Graphics() const                       { return iterm2images; }
+
+    TerminalCtrl&   KittyGraphics(bool b = true)                    { kittyimages = b; return *this; }
+    TerminalCtrl&   NoKittyGraphics()                               { return KittyGraphics(false); }
+    bool            HasKittyGraphics() const                        { return kittyimages; }
 
     TerminalCtrl&   Hyperlinks(bool b = true)                       { hyperlinks = b; return *this; }
     TerminalCtrl&   NoHyperlinks()                                  { return Hyperlinks(false);     }
@@ -651,6 +655,7 @@ private:
     dword       prevhtext         = 0;
     int         overridetracking = K_SHIFT_CTRL;
     Size        padding          = { 0, 0 };
+    String      datachunks;      // for chunked data
     
     bool        eightbit;
     bool        reversewrap;
@@ -666,6 +671,7 @@ private:
     bool        sixelimages;
     bool        jexerimages;
     bool        iterm2images;
+    bool        kittyimages;
     bool        hyperlinks;
     bool        annotations;
     bool        delayedrefresh;
@@ -719,7 +725,7 @@ private:
     void        ParseCommandSequences(const VTInStream::Sequence& seq);
     void        ParseDeviceControlStrings(const VTInStream::Sequence& seq);
     void        ParseOperatingSystemCommands(const VTInStream::Sequence& seq);
-    void        ParseApplicationProgrammingCommands(const VTInStream::Sequence& seq)    { WhenApplicationCommand(seq.payload); }
+    void        ParseApplicationProgrammingCommands(const VTInStream::Sequence& seq);
 
     bool        Convert7BitC1To8BitC1(const VTInStream::Sequence& seq);
 
@@ -749,9 +755,12 @@ private:
     
     void        ParseConEmuProtocols(const VTInStream::Sequence& seq);
     
+//    void        ParseKittyProcotocls(const VTInStream::Sequence& seq);
+    
     void        ParseSixelGraphics(const VTInStream::Sequence& seq);
     void        ParseJexerGraphics(const VTInStream::Sequence& seq);
     bool        ParseiTerm2Graphics(const VTInStream::Sequence& seq);
+    bool        ParseKittyGraphics(const VTInStream::Sequence& seq);
 
     bool        ParseItem2FeatureReport(const VTInStream::Sequence& seq);
     bool        ParseiTerm2BackgroundChange(const VTInStream::Sequence& seq);

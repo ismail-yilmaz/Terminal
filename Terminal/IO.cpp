@@ -370,6 +370,7 @@ void TerminalCtrl::Serialize(Stream& s)
 		s % sixelimages;
 		s % jexerimages;
 		s % iterm2images;
+		s % kittyimages;
 		s % hyperlinks;
 		s % clipaccess;
 		s % delayedrefresh;
@@ -432,6 +433,7 @@ void TerminalCtrl::Jsonize(JsonIO& jio)
 		("SixelGraphics",       sixelimages)
 		("JexerGraphics",       jexerimages)
 		("iTerm2Graphics",      iterm2images)
+		("KittyGraphics",       kittyimages)
 		("Hyperlinks",          hyperlinks)
 		("Annotations",         annotations)
 		("SemanticInformation", semanticinformation)

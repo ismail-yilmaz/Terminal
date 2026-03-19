@@ -17,6 +17,7 @@ file
 	Csi.cpp,
 	Dcs.cpp,
 	Osc.cpp,
+	Apc.cpp,
 	Sgr.cpp,
 	IO.cpp,
 	Cell readonly separator,

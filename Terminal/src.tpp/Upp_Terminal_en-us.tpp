@@ -1005,17 +1005,37 @@ including, but not limited to, JPG, PNG, TIFF. Returns `*this
 for method chaining. This feature is disabled by default.&]
 [s3; &]
 [s4;%- &]
-[s5;:Upp`:`:TerminalCtrl`:`:NoiTerm2Graphics`(bool`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T
-erminalCtrl][@(0.0.255) `&]_[* NoiTerm2Graphics]([@(0.0.255) bool]_[*@3 b]_`=_[@(0.0.255) t
-rue])&]
-[s2;%- [%%  ][@N Disables ][^https`:`/`/iterm2`.com`/documentation`-images`.html^@N iTerm2`'
-s inline images protocol][@N . Returns `*this for method chaining.]&]
-[s3; &]
+[s5;:Upp`:`:TerminalCtrl`:`:NoiTerm2Graphics`(`):%- TerminalCtrl[@(0.0.255) `&] 
+[* NoiTerm2Graphics]()&]
+[s2;%- [@N Disables ][^https`:`/`/iterm2`.com`/documentation`-images`.html^@N iTerm2`'s 
+inline images protocol][@N . Returns `*this for method chaining.]&]
+[s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:HasiTerm2Graphics`(`)const:%- [@(0.0.255) bool]_[* HasiTerm2G
 raphics]()_[@(0.0.255) const]&]
 [s2; Return true if [%-^https`:`/`/iterm2`.com`/documentation`-images`.html^@N iTerm2`'
 s inline images protocol] is enabled.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:KittyGraphics`(bool`):%- TerminalCtrl[@(0.0.255) `&] 
+[* KittyGraphics]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2; Individually enables or disables [^https`:`/`/sw`.kovidgoyal`.net`/kitty`/graphics`-protocol`/^ K
+itty`'s inline images protocol]. This protocol allows TerminalCtrl 
+to display any raster image format that is supported by Ultimate`+`+, 
+including, but not limited to, JPG, PNG, TIFF. Returns `*this 
+for method chaining. This feature is disabled by default.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:NoKittyGraphics`(`):%- TerminalCtrl[@(0.0.255) `&] 
+[* NoKittyGraphics]()&]
+[s2;%- [@N Disables ][%%^https`:`/`/sw`.kovidgoyal`.net`/kitty`/graphics`-protocol`/^ Kit
+ty`'s inline images protocol][@N . Returns `*this for method chaining.]&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:HasKittyGraphics`(`)const:%- [@(0.0.255) bool] 
+[* HasKittyGraphics]() [@(0.0.255) const]&]
+[s2;%- [%% Returns true if ][%%^https`:`/`/sw`.kovidgoyal`.net`/kitty`/graphics`-protocol`/^ K
+itty`'s inline images protocol][%%  ][@N is enabled.]&]
 [s3;%- &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:Hyperlinks`(bool`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T
