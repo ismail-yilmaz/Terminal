@@ -7,8 +7,7 @@ namespace Upp {
 
 using namespace TerminalCtrlKeys;
 
-Point TerminalCtrl::SnapWordCursor(Point cursor, Size psz, dword dir,
-								Point& anchor, Point& selpos)
+Point TerminalCtrl::SnapWordCursor(Point cursor, Size psz, dword dir, Point& anchor, Point& selpos)
 {
 	Point p = cursor;
 	Point out = cursor;
@@ -35,7 +34,8 @@ Point TerminalCtrl::SnapWordCursor(Point cursor, Size psz, dword dir,
 			break;
 		}
 	}
-	else if(dir == K_RIGHT) {
+	else
+	if(dir == K_RIGHT) {
 		if(GetWordSelection(p, anchor, selpos))
 			p = selpos;
 		else
@@ -57,7 +57,8 @@ Point TerminalCtrl::SnapWordCursor(Point cursor, Size psz, dword dir,
 			break;
 		}
 	}
-	else if(dir == K_UP || dir == K_DOWN) {
+	else
+	if(dir == K_UP || dir == K_DOWN) {
 		if(GetWordSelection(p, anchor, selpos))
 			return anchor;
 
