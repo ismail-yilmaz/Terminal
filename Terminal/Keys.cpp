@@ -489,7 +489,8 @@ bool TerminalCtrl::Key(dword key, int count)
 	}
 	else {
 		// Handle character.
-		if(!shiftkey && key >= ' ' && key < K_CHAR_LIM) {
+		// FIX: Don't process Alt+key combinations here. Let them fall through to the switch
+		if(!shiftkey && !altkey && key >= ' ' && key < K_CHAR_LIM) {
 			if(!ProcessKey(key, ctrlkey, altkey, count))
 				return false;
 		}
@@ -511,43 +512,64 @@ bool TerminalCtrl::Key(dword key, int count)
 				else
 					key = 0x09;
 				break;
-			case K_CTRL_BREAK:
-				key = 0x03;
+			case K_PLUS:
+			case K_ADD:
+				key = '+';
 				break;
-			case K_CTRL_LBRACKET:
-				key = '[';
-				break;
-			case K_CTRL_RBRACKET:
-				key = ']';
-				break;
+			case K_MINUS:
+			case K_SUBTRACT:
 			case K_CTRL_MINUS:
 				key = '-';
 				break;
-			case K_CTRL_GRAVE:
-				key = '`';
+			case K_MULTIPLY:
+				key = '*';
 				break;
+			case K_DIVIDE:
+			case K_SLASH:
 			case K_CTRL_SLASH:
 				key = '/';
 				break;
+			case K_BACKSLASH:
 			case K_CTRL_BACKSLASH:
 				key = '\\';
 				break;
+			case K_COMMA:
 			case K_CTRL_COMMA:
 				key = ',';
 				break;
+			case K_PERIOD:
 			case K_CTRL_PERIOD:
 				key = '.';
 				break;
 			#ifndef PLATFORM_WIN32 // U++ ctrl + period and ctrl + semicolon enumeratos have the same value on Windows (a bug?)
+			case K_SEMICOLON:
 			case K_CTRL_SEMICOLON:
 				key = ';';
 				break;
 			#endif
-			case K_CTRL_EQUAL:
-				key = '=';
+			case K_GRAVE:
+			case K_CTRL_GRAVE:
+				key = '`';
+				break;
+			case K_LBRACKET:
+			case K_CTRL_LBRACKET:
+				key = '[';
+				break;
+			case K_RBRACKET:
+			case K_CTRL_RBRACKET:
+				key = ']';
+				break;
+			case K_QUOTEDBL:
+				key = '\'';
+				break;
+			case K_CTRL_BREAK:
+				key = 0x03;
 				break;
 			case K_CTRL_APOSTROPHE:
 				key = '\'';
+				break;
+			case K_CTRL_EQUAL:
+				key = '=';
 				break;
 			default:
 				if(VTKey(key, count)) {
