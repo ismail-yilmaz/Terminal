@@ -530,7 +530,8 @@ private:
     void        GetWordPosL(const VTLine& line, Point& pl) const;
     void        GetWordPosH(const VTLine& line, Point& ph) const;
     bool        IsWord(VTCell& ch, bool iswrapped);
-    
+
+    Point       SnapWordCursor(Point cursor, Size psz, dword dir, Point& anchor, Point& selpos);
 
     bool        IsMouseTracking(dword keyflags) const;
     bool        IsMouseOverImage(Point pt) const                { return !IsSelected(pt) && page->FetchCell(pt).IsImage(); }

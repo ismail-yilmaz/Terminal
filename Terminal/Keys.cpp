@@ -7,21 +7,110 @@ namespace Upp {
 
 using namespace TerminalCtrlKeys;
 
+Point TerminalCtrl::SnapWordCursor(Point cursor, Size psz, dword dir,
+								Point& anchor, Point& selpos)
+{
+	Point p = cursor;
+	Point out = cursor;
+	int cy = GetPage().GetLineCount() - 1;
+
+	if(dir == K_LEFT) {
+		bool found = false;
+		while(!found) {
+			while(p.x > 0) {
+				p.x--;
+				if(GetWordSelection(p, anchor, selpos)) {
+					out = anchor;
+					found = true;
+					break;
+				}
+			}
+			if(found)
+				break;
+			if(p.x == 0 && p.y > 0) {
+				p.y--;
+				p.x = psz.cx;
+				continue;
+			}
+			break;
+		}
+	}
+	else if(dir == K_RIGHT) {
+		if(GetWordSelection(p, anchor, selpos))
+			p = selpos;
+		else
+			p.x = min(psz.cx, p.x + 1);
+
+		while(true) {
+			while(p.x < psz.cx) {
+				if(GetWordSelection(p, anchor, selpos)) {
+					out = anchor;
+					return out;
+				}
+				p.x++;
+			}
+			if(p.x >= psz.cx && p.y < cy) {
+				p.y++;
+				p.x = 0;
+				continue;
+			}
+			break;
+		}
+	}
+	else if(dir == K_UP || dir == K_DOWN) {
+		if(GetWordSelection(p, anchor, selpos))
+			return anchor;
+
+		Point l = p, r = p;
+		bool fl = false, fr = false;
+		Point la, ra, ls, rs;
+
+		while(l.x > 0) {
+			l.x--;
+			if(GetWordSelection(l, la, ls)) {
+				fl = true;
+				break;
+			}
+		}
+		while(r.x < psz.cx) {
+			if(GetWordSelection(r, ra, rs)) {
+				fr = true;
+				break;
+			}
+			r.x++;
+		}
+
+		if(fl && fr)
+			out = abs(cursor.x - la.x) <= abs(ra.x - cursor.x) ? la : ra;
+		else
+		if(fl)
+			out = la;
+		else
+		if(fr)
+			out = ra;
+	}
+	else {
+		if(GetWordSelection(p, anchor, selpos))
+			out = anchor;
+	}
+	return out;
+}
+
 void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 {
 	if(key & K_KEYUP)
 		return;
-	
+
 	Size psz = GetPageSize();
 	int cy = GetPage().GetLineCount() - 1;
-	
+
 	dword k = 0;
 
 	// Check for custom keyboard actions.
 	if(WhenSelectorScan(key))
 		return;
-	
-	if(Match(AK_SELECTOR_EXIT, key) || key  == K_ESCAPE) {
+
+	if(Match(AK_SELECTOR_EXIT, key) || key == K_ESCAPE) {
 		EndSelectorMode();
 		return;
 	}
@@ -58,21 +147,25 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 	}
 	else
 	if(Match(AK_SELECTOR_UP, key)) {
+		k = K_UP;
 		cursor.y = max(0, cursor.y - 1);
 	}
 	else
 	if(Match(AK_SELECTOR_DOWN, key)) {
+		k = K_DOWN;
 		cursor.y = min(cy, cursor.y + 1);
 	}
 	else
 	if(Match(AK_SELECTOR_LEFT, key)) {
-		cursor.x = max(0, cursor.x - 1);
 		k = K_LEFT;
+		if(seltype != SEL_WORD)
+			cursor.x = max(0, cursor.x - 1);
 	}
 	else
 	if(Match(AK_SELECTOR_RIGHT, key)) {
-		cursor.x = min(psz.cx, cursor.x + 1);
 		k = K_RIGHT;
+		if(seltype != SEL_WORD)
+			cursor.x = min(psz.cx, cursor.x + 1);
 	}
 	else
 	if(Match(AK_SELECTOR_LEFTMOST, key)) {
@@ -84,11 +177,11 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 	}
 	else
 	if(Match(AK_SELECTOR_HOME, key)) {
-		cursor = { 0, 0 };
+		cursor = {0, 0};
 	}
 	else
 	if(Match(AK_SELECTOR_END, key)) {
-		cursor = { psz.cx, cy };
+		cursor = {psz.cx, cy};
 	}
 	else
 	if(Match(AK_SELECTOR_PAGEUP, key)) {
@@ -101,59 +194,44 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 	else
 		return;
 
-	if(!selecting)
+	if(!selecting) {
 		anchor = selpos = cursor;
+	}
 	else
 	if(seltype == SEL_WORD) {
-		while(!GetWordSelection(cursor, anchor, selpos)) { // Skip text and space.
-			if(k == K_LEFT) {
-				cursor.x = max(cursor.x - 1, 0);
-			}
-			else
-			if(k == K_RIGHT) {
-				cursor.x = min(cursor.x + 1, psz.cx);
-			}
-			else
-				break;
-			if(cursor.x == 0 || cursor.x == psz.cx)
-				break;
-		}
-		if(k == K_LEFT)
-			cursor = anchor;
-		else
-		if(k == K_RIGHT)
-			cursor = selpos;
+		cursor = SnapWordCursor(cursor, psz, k, anchor, selpos);
+		GetWordSelection(cursor, anchor, selpos);
 	}
 	else
 	if(seltype == SEL_LINE) {
 		while(!GetLineSelection(cursor, anchor, selpos)) {
-			if(k == K_UP) {
+			if(k == K_UP)
 				cursor.y = max(cursor.y - 1, 0);
-			}
 			else
-			if(k == K_DOWN) {
-				cursor.y = min(cursor.y + 1, psz.cy);
-			}
+			if(k == K_DOWN)
+				cursor.y = min(cursor.y + 1, cy);
 			else
 				break;
-			if(cursor.y == 0 || cursor.y == psz.cy)
+
+			if(cursor.y == 0 || cursor.y == cy)
 				break;
 		}
+
 		if(k == K_UP)
 			cursor = anchor;
 		else
 		if(k == K_DOWN)
 			cursor = selpos;
-
 	}
-	else
+	else {
 		selpos = cursor;
+	}
 
 	Goto(cursor.y);
 
 	if(IsSelection())
 		SetSelection(anchor, selpos, seltype);
-	
+
 	PlaceCaret();
 	Refresh();
 }
@@ -277,52 +355,52 @@ bool TerminalCtrl::ProcessPCStyleFunctionKey(const FunctionKey& k, dword modkeys
 bool TerminalCtrl::VTKey(dword key, int count)
 {
 	const static VectorMap<dword, FunctionKey> sFunctionKeyMap = {
-        { { K_UP,       }, { FunctionKey::Cursor,       LEVEL_0, "A"  } },
-        { { K_DOWN,     }, { FunctionKey::Cursor,       LEVEL_0, "B"  } },
-        { { K_RIGHT,    }, { FunctionKey::Cursor,       LEVEL_0, "C"  } },
-        { { K_LEFT,     }, { FunctionKey::Cursor,       LEVEL_0, "D"  } },
-        { { K_INSERT,   }, { FunctionKey::EditPad,      LEVEL_2, "2"  } },
-        { { K_DELETE,   }, { FunctionKey::EditPad,      LEVEL_2, "3"  } },
-        { { K_HOME,     }, { FunctionKey::EditPad,      LEVEL_2, "1", "H"  } },
-        { { K_END,      }, { FunctionKey::EditPad,      LEVEL_2, "4", "F"  } },
-        { { K_PAGEUP,   }, { FunctionKey::EditPad,      LEVEL_2, "5"  } },
-        { { K_PAGEDOWN, }, { FunctionKey::EditPad,      LEVEL_2, "6"  } },
-        { { K_MULTIPLY, }, { FunctionKey::NumPad,       LEVEL_0, "j"  } },
-        { { K_ADD,      }, { FunctionKey::NumPad,       LEVEL_0, "k"  } },
-        { { K_SEPARATOR,}, { FunctionKey::NumPad,       LEVEL_0, "l"  } },
-        { { K_SUBTRACT, }, { FunctionKey::NumPad,       LEVEL_0, "m"  } },
-        { { K_DECIMAL,  }, { FunctionKey::NumPad,       LEVEL_0, "n"  } },
-        { { K_DIVIDE,   }, { FunctionKey::NumPad,       LEVEL_0, "o"  } },
-        { { K_NUMPAD0,  }, { FunctionKey::NumPad,       LEVEL_0, "p"  } },
-        { { K_NUMPAD1,  }, { FunctionKey::NumPad,       LEVEL_0, "q"  } },
-        { { K_NUMPAD2,  }, { FunctionKey::NumPad,       LEVEL_0, "r"  } },
-        { { K_NUMPAD3,  }, { FunctionKey::NumPad,       LEVEL_0, "s"  } },
-        { { K_NUMPAD4,  }, { FunctionKey::NumPad,       LEVEL_0, "t"  } },
-        { { K_NUMPAD5,  }, { FunctionKey::NumPad,       LEVEL_0, "u"  } },
-        { { K_NUMPAD6,  }, { FunctionKey::NumPad,       LEVEL_0, "v"  } },
-        { { K_NUMPAD7,  }, { FunctionKey::NumPad,       LEVEL_0, "w"  } },
-        { { K_NUMPAD8,  }, { FunctionKey::NumPad,       LEVEL_0, "x"  } },
-        { { K_NUMPAD9,  }, { FunctionKey::NumPad,       LEVEL_0, "y"  } },
-        { { K_F1,       }, { FunctionKey::Programmable, LEVEL_0, "P"  } },  // PF1
-        { { K_F2,       }, { FunctionKey::Programmable, LEVEL_0, "Q"  } },  // PF2
-        { { K_F3,       }, { FunctionKey::Programmable, LEVEL_0, "R"  } },  // PF3
-        { { K_F4,       }, { FunctionKey::Programmable, LEVEL_0, "S"  } },  // PF4
-        { { K_F5,       }, { FunctionKey::Function,     LEVEL_2, "15" } },
-        { { K_F6,       }, { FunctionKey::Function,     LEVEL_2, "17" } },
-        { { K_F7,       }, { FunctionKey::Function,     LEVEL_2, "18" } },
-        { { K_F8,       }, { FunctionKey::Function,     LEVEL_2, "19" } },
-        { { K_F9,       }, { FunctionKey::Function,     LEVEL_2, "20" } },
-        { { K_F10,      }, { FunctionKey::Function,     LEVEL_2, "21" } },
-        { { K_F11,      }, { FunctionKey::Function,     LEVEL_2, "23" } },
-        { { K_F12,      }, { FunctionKey::Function,     LEVEL_2, "24" } },
-        { { K_CTRL_F1,  }, { FunctionKey::Function,     LEVEL_2, "25" } },  // In VT-key mode: F13
-        { { K_CTRL_F2,  }, { FunctionKey::Function,     LEVEL_2, "26" } },  // In VT-key mode: F14
-        { { K_CTRL_F3,  }, { FunctionKey::Function,     LEVEL_2, "28" } },  // In VT-key mode: F15
-        { { K_CTRL_F4,  }, { FunctionKey::Function,     LEVEL_2, "29" } },  // In VT-key mode: F16
-        { { K_CTRL_F5,  }, { FunctionKey::Function,     LEVEL_2, "31" } },  // In VT-key mode: F17
-        { { K_CTRL_F6,  }, { FunctionKey::Function,     LEVEL_2, "32" } },  // In VT-key mode: F18
-        { { K_CTRL_F7,  }, { FunctionKey::Function,     LEVEL_2, "33" } },  // In VT-key mode: F19
-        { { K_CTRL_F8,  }, { FunctionKey::Function,     LEVEL_2, "34" } },  // In VT-key mode: F20
+		{ { K_UP,       }, { FunctionKey::Cursor,       LEVEL_0, "A"  } },
+		{ { K_DOWN,     }, { FunctionKey::Cursor,       LEVEL_0, "B"  } },
+		{ { K_RIGHT,    }, { FunctionKey::Cursor,       LEVEL_0, "C"  } },
+		{ { K_LEFT,     }, { FunctionKey::Cursor,       LEVEL_0, "D"  } },
+		{ { K_INSERT,   }, { FunctionKey::EditPad,      LEVEL_2, "2"  } },
+		{ { K_DELETE,   }, { FunctionKey::EditPad,      LEVEL_2, "3"  } },
+		{ { K_HOME,     }, { FunctionKey::EditPad,      LEVEL_2, "1", "H"  } },
+		{ { K_END,      }, { FunctionKey::EditPad,      LEVEL_2, "4", "F"  } },
+		{ { K_PAGEUP,   }, { FunctionKey::EditPad,      LEVEL_2, "5"  } },
+		{ { K_PAGEDOWN, }, { FunctionKey::EditPad,      LEVEL_2, "6"  } },
+		{ { K_MULTIPLY, }, { FunctionKey::NumPad,       LEVEL_0, "j"  } },
+		{ { K_ADD,      }, { FunctionKey::NumPad,       LEVEL_0, "k"  } },
+		{ { K_SEPARATOR,}, { FunctionKey::NumPad,       LEVEL_0, "l"  } },
+		{ { K_SUBTRACT, }, { FunctionKey::NumPad,       LEVEL_0, "m"  } },
+		{ { K_DECIMAL,  }, { FunctionKey::NumPad,       LEVEL_0, "n"  } },
+		{ { K_DIVIDE,   }, { FunctionKey::NumPad,       LEVEL_0, "o"  } },
+		{ { K_NUMPAD0,  }, { FunctionKey::NumPad,       LEVEL_0, "p"  } },
+		{ { K_NUMPAD1,  }, { FunctionKey::NumPad,       LEVEL_0, "q"  } },
+		{ { K_NUMPAD2,  }, { FunctionKey::NumPad,       LEVEL_0, "r"  } },
+		{ { K_NUMPAD3,  }, { FunctionKey::NumPad,       LEVEL_0, "s"  } },
+		{ { K_NUMPAD4,  }, { FunctionKey::NumPad,       LEVEL_0, "t"  } },
+		{ { K_NUMPAD5,  }, { FunctionKey::NumPad,       LEVEL_0, "u"  } },
+		{ { K_NUMPAD6,  }, { FunctionKey::NumPad,       LEVEL_0, "v"  } },
+		{ { K_NUMPAD7,  }, { FunctionKey::NumPad,       LEVEL_0, "w"  } },
+		{ { K_NUMPAD8,  }, { FunctionKey::NumPad,       LEVEL_0, "x"  } },
+		{ { K_NUMPAD9,  }, { FunctionKey::NumPad,       LEVEL_0, "y"  } },
+		{ { K_F1,       }, { FunctionKey::Programmable, LEVEL_0, "P"  } },  // PF1
+		{ { K_F2,       }, { FunctionKey::Programmable, LEVEL_0, "Q"  } },  // PF2
+		{ { K_F3,       }, { FunctionKey::Programmable, LEVEL_0, "R"  } },  // PF3
+		{ { K_F4,       }, { FunctionKey::Programmable, LEVEL_0, "S"  } },  // PF4
+		{ { K_F5,       }, { FunctionKey::Function,     LEVEL_2, "15" } },
+		{ { K_F6,       }, { FunctionKey::Function,     LEVEL_2, "17" } },
+		{ { K_F7,       }, { FunctionKey::Function,     LEVEL_2, "18" } },
+		{ { K_F8,       }, { FunctionKey::Function,     LEVEL_2, "19" } },
+		{ { K_F9,       }, { FunctionKey::Function,     LEVEL_2, "20" } },
+		{ { K_F10,      }, { FunctionKey::Function,     LEVEL_2, "21" } },
+		{ { K_F11,      }, { FunctionKey::Function,     LEVEL_2, "23" } },
+		{ { K_F12,      }, { FunctionKey::Function,     LEVEL_2, "24" } },
+		{ { K_CTRL_F1,  }, { FunctionKey::Function,     LEVEL_2, "25" } },  // In VT-key mode: F13
+		{ { K_CTRL_F2,  }, { FunctionKey::Function,     LEVEL_2, "26" } },  // In VT-key mode: F14
+		{ { K_CTRL_F3,  }, { FunctionKey::Function,     LEVEL_2, "28" } },  // In VT-key mode: F15
+		{ { K_CTRL_F4,  }, { FunctionKey::Function,     LEVEL_2, "29" } },  // In VT-key mode: F16
+		{ { K_CTRL_F5,  }, { FunctionKey::Function,     LEVEL_2, "31" } },  // In VT-key mode: F17
+		{ { K_CTRL_F6,  }, { FunctionKey::Function,     LEVEL_2, "32" } },  // In VT-key mode: F18
+		{ { K_CTRL_F7,  }, { FunctionKey::Function,     LEVEL_2, "33" } },  // In VT-key mode: F19
+		{ { K_CTRL_F8,  }, { FunctionKey::Function,     LEVEL_2, "34" } },  // In VT-key mode: F20
 	};
 
 	dword keymask = K_SHIFT|K_ALT|(pcstylefunctionkeys * K_CTRL);
@@ -365,17 +443,17 @@ bool TerminalCtrl::UDKey(dword key, int count)
 	// DEC user-defined keys (DECUDK) support
 	
 	const static Tuple<dword, dword> sUDKMap[] = {
-        { K_F1,      11 },  { K_F2,      12 },
-        { K_F3,      13 },  { K_F4,      14 },
-        { K_F5,      15 },  { K_F6,      17 },
-        { K_F7,      18 },  { K_F8,      19 },
-        { K_F9,      20 },  { K_F10,     21 },
-        { K_F11,     23 },  { K_F12,     24 },
-        { K_CTRL_F1, 25 },  { K_CTRL_F2, 26 },
-        { K_CTRL_F3, 28 },  { K_CTRL_F4, 29 },
-        { K_CTRL_F5, 31 },  { K_CTRL_F6, 32 },
-        { K_CTRL_F7, 33 },  { K_CTRL_F8, 34 },
-        { K_CTRL_F9, 35 },  { K_CTRL_F10,36 },
+		{ K_F1,      11 },  { K_F2,      12 },
+		{ K_F3,      13 },  { K_F4,      14 },
+		{ K_F5,      15 },  { K_F6,      17 },
+		{ K_F7,      18 },  { K_F8,      19 },
+		{ K_F9,      20 },  { K_F10,     21 },
+		{ K_F11,     23 },  { K_F12,     24 },
+		{ K_CTRL_F1, 25 },  { K_CTRL_F2, 26 },
+		{ K_CTRL_F3, 28 },  { K_CTRL_F4, 29 },
+		{ K_CTRL_F5, 31 },  { K_CTRL_F6, 32 },
+		{ K_CTRL_F7, 33 },  { K_CTRL_F8, 34 },
+		{ K_CTRL_F9, 35 },  { K_CTRL_F10,36 },
 	};
 
 	auto *k = FindTuple(sUDKMap, __countof(sUDKMap), key & ~(K_SHIFT|K_ALT));
