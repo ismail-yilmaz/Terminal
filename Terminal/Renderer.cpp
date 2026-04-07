@@ -280,8 +280,9 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 	else {
 		for(int i = range.a; i < range.b; i++) {
 			int y = i * csz.cy - (csz.cy * pos);
-			const VTLine& line = page->FetchLine(i);
-			if(!line.IsVoid() && w.IsPainting(0, y, wsz.cx, csz.cy))
+			if(!w.IsPainting(0, y, wsz.cx, csz.cy))
+				continue;
+			if(const VTLine& line = page->FetchLine(i); !line.IsVoid())
 				PaintLine(line, i);
 		}
 
