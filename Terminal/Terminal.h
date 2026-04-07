@@ -458,8 +458,6 @@ public:
     
     void            FlashDisplay(int ms = 100);
 
-    void            State(int reason) override;
-
     void            Serialize(Stream& s) override;
     void            Jsonize(JsonIO& jio) override;
     void            Xmlize(XmlIO& xio) override;

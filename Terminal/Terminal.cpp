@@ -1415,12 +1415,6 @@ Image TerminalCtrl::CursorImage(Point p, dword keyflags)
 		return Image::IBeam();
 }
 
-void TerminalCtrl::State(int reason)
-{
-	if(reason == Ctrl::OPEN)
-		WhenResize();
-}
-
 void TerminalCtrl::FlashDisplay(int ms)
 {
 	flashing = true;
