@@ -45,7 +45,6 @@ void TerminalCtrl::ReportMode(const VTInStream::Sequence& seq)
 		case TSM:
 		case EBM:
 		case XTGRAPHEME: // U++ has no grapheme cluster support (yet).
-		case XTSYNCOUT:  // No synchronized output mode (yet).
 			reply = 4;
 			break;
 		default:
@@ -338,5 +337,11 @@ void TerminalCtrl::XTscrlbar(bool b)
 	LDUMP(XTSCRLBAR);
 }
 
+void TerminalCtrl::XTsyncout(bool b)
+{
+	modes.Set(XTSYNCOUT, b);
+	SyncedRefresh(b);
+	LDUMP(XTSYNCOUT);
+}
 
 }

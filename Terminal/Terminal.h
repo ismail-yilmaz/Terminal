@@ -79,6 +79,7 @@ public:
     enum TimerIds
     {
         TIMEID_REFRESH = Ctrl::TIMEID_COUNT,
+        TIMEID_SYNCREFRESH,
         TIMEID_SIZEHINT,
         TIMEID_BLINK,
         TIMEID_FLASH,
@@ -504,6 +505,8 @@ protected:
 private:
     void        InitParser(VTInStream& vts);
     
+    void        SyncedRefresh(bool enable = false);
+    
     void        SyncPage(bool notify = true);
     void        SwapPage();
 
@@ -925,6 +928,7 @@ private:
     void        XTx11mm(bool b);
     void        XTresizerep(bool b);
     void        XTscrlbar(bool b);
+    void        XTsyncout(bool b);
 
     void        SetMode(const VTInStream::Sequence& seq, bool enable);
 

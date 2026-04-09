@@ -276,6 +276,9 @@ void TerminalCtrl::SyncSize(bool notify)
 
 void TerminalCtrl::ScheduleRefresh()
 {
+	if(modes[XTSYNCOUT])
+		return;
+	
 	if(!delayedrefresh) {
 		SyncSb();
 		RefreshDisplay();
@@ -283,7 +286,27 @@ void TerminalCtrl::ScheduleRefresh()
 	else
 	if((!lazyresize || !resizing)
 	&& !ExistsTimeCallback(TIMEID_REFRESH))  // Don't cancel a pending refresh.
-		SetTimeCallback(16, [=] { SyncSb(); RefreshDisplay(); }, TIMEID_REFRESH);
+		SetTimeCallback(16, [=] {
+			SyncSb();
+			RefreshDisplay();
+		}, TIMEID_REFRESH);
+}
+
+void TerminalCtrl::SyncedRefresh(bool enabled)
+{
+	if(enabled) {
+		KillTimeCallback(TIMEID_REFRESH);
+		SetTimeCallback(1000, [=] {
+			XTsyncout(false);
+			SyncSb();
+			RefreshDisplay();
+		}, TIMEID_SYNCREFRESH);
+	}
+	else {
+		KillTimeCallback(TIMEID_SYNCREFRESH);
+		SyncSb();
+		RefreshDisplay();
+	}
 }
 
 Tuple<String, Size> TerminalCtrl::GetSizeHint()
@@ -350,6 +373,9 @@ void TerminalCtrl::SwapPage()
 
 void TerminalCtrl::RefreshDisplay()
 {
+	if(modes[XTSYNCOUT])
+		return;
+	
 	const Size wsz = GetSize();
 	const Size psz = GetPageSize();
 	const Size csz = GetCellSize();
