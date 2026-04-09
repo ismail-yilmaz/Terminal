@@ -250,7 +250,7 @@ void TerminalCtrl::SyncSize(bool notify)
 		resizing = false;
 		ReportResize();
 		WhenResize();
-		ScheduleRefresh();
+		XTsyncout(false);
 	};
 
 	if(resizing && newsize.cx > 1 && 1 < newsize.cy) {
