@@ -163,7 +163,7 @@
 
 #### Notes
 
-- GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, SATM, TSM, EBM, XTSYNCOUT and XTGRAPHEME modes are set as "permanently reset".
+- GATM, VEM, HEM, PUM, FEAM, FETM, MATM, TTM, SATM, TSM, EBM, and XTGRAPHEME modes are set as "permanently reset".
 
 
 ## [Supported Escape Sequences](#esc-sequences)
