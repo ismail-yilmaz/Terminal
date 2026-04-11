@@ -239,22 +239,38 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 
 bool TerminalCtrl::ProcessKey(dword key, bool ctrlkey, bool altkey, int count)
 {
-	if((key = EncodeCodepoint(key, gsets.Get(key, IsLevel2()))) == DEFAULTCHAR)
+	key = EncodeCodepoint(key, gsets.Get(key, IsLevel2()));
+	if(key == DEFAULTCHAR)
 		return false;
 
-	if(ctrlkey)
-		key = ToAscii(key) & 0x1F;
+	// Apply Ctrl transformation only to ASCII characters.
+	// Never reinterpret already-resolved Unicode input.
+	if(ctrlkey && key < 0x80) {
+		byte ch = (byte)key;
 
+		if(ch >= '@' && ch <= '_')
+			key = ch & 0x1F;
+		else
+		if(ch >= 'a' && ch <= 'z')
+			key = ch & 0x1F;
+		else
+		if(ch >= 'A' && ch <= 'Z')
+			key = ch & 0x1F;
+	}
+
+	// Meta / Alt handling
 	if(key < 0x80 && altkey && metakeyflags != MKEY_NONE) {
 		if(metakeyflags & MKEY_SHIFT)
 			key |= 0x80;
+
 		if((metakeyflags & MKEY_ESCAPE) || modes[XTALTESCM])
 			PutESC(key, count);
 		else
 			Put(key, count);
 	}
-	else
+	else {
 		Put(key, count);
+	}
 
 	return true;
 }
@@ -464,7 +480,7 @@ bool TerminalCtrl::UDKey(dword key, int count)
 	dword userkey  = 0;
 	
 	if(pcstylefunctionkeys) {
-		if(key & (K_SHIFT|K_ALT)) {
+		if((key & K_SHIFT) && (key & K_ALT)) {
 			userkey = k->b < 25 ? (K_SHIFT|K_ALT|k->b) : 0;
 		}
 		else
@@ -528,7 +544,7 @@ bool TerminalCtrl::NavKey(dword key, int count)
 
 bool TerminalCtrl::Key(dword key, int count)
 {
-	if(IsReadOnly()	|| (!modes[DECARM] && count > 1))
+	if(IsReadOnly() || (!modes[DECARM] && count > 1))
 		return MenuBar::Scan(WhenBar, key);
 
 	if(IsSelectorMode()) {
@@ -539,147 +555,182 @@ bool TerminalCtrl::Key(dword key, int count)
 	bool ctrlkey  = key & K_CTRL;
 	bool altkey   = key & K_ALT;
 	bool shiftkey = key & K_SHIFT;
-	
+
+#ifdef PLATFORM_WIN32
+	// Windows reports AltGr as Ctrl+Alt.
+	bool altgr = ctrlkey && altkey;
+#else
+	bool altgr = false;
+#endif
+
 	if(UDKey(key, count)) {
 		SyncSb(true);
 		goto End;
 	}
-	else
+
 	if(NavKey(key, count))
 		goto End;
-	else
+
 	if(MenuBar::Scan(WhenBar, key))
 		return true;
 
-	if(key & K_KEYUP)	// We don't really need to handle key-ups...
+	if(key & K_KEYUP)
 		return false;
 
 #ifdef PLATFORM_COCOA
-	if(findarg(key & ~(K_CTRL|K_ALT|K_SHIFT|K_OPTION), K_CTRL_KEY, K_ALT_KEY, K_SHIFT_KEY, K_OPTION_KEY) >= 0)
+	if(findarg(key & ~(K_CTRL|K_ALT|K_SHIFT|K_OPTION),
+	           K_CTRL_KEY, K_ALT_KEY, K_SHIFT_KEY, K_OPTION_KEY) >= 0)
 		return false;
 	key &= ~K_OPTION;
 #else
-	if(findarg(key & ~(K_CTRL|K_ALT|K_SHIFT), K_CTRL_KEY, K_ALT_KEY, K_SHIFT_KEY) >= 0)
+	if(findarg(key & ~(K_CTRL|K_ALT|K_SHIFT),
+	           K_CTRL_KEY, K_ALT_KEY, K_SHIFT_KEY) >= 0)
 		return false;
 #endif
 
+	// Accept AltGr-generated printable chars on Windows.
 	if(key == K_RETURN) {
 		PutEol();
 	}
+	else
+	if(key >= ' ' && key < K_CHAR_LIM) {
+		if(!ProcessKey(key, ctrlkey && !altgr, altkey && !altgr, count))
+			return false;
+	}
 	else {
-		// Handle character.
-		// FIX: Don't process Alt+key combinations here. Let them fall through to the switch
-		if(!shiftkey && !altkey && key >= ' ' && key < K_CHAR_LIM) {
-			if(!ProcessKey(key, ctrlkey, altkey, count))
-				return false;
-		}
-		else {
-			// Handle control key (including information separators).
-			switch(key & ~(K_ALT|K_SHIFT)) {
-			case K_BACKSPACE:
-				key = modes[DECBKM] ? 0x08 : 0x7F;
-				break;
-			case K_ESCAPE:
-				key = 0x1B;
-				break;
-			case K_TAB:
-				if(shiftkey) {// De facto standard...
-					PutCSI("Z");
-					SyncSb(true);
-					goto End;
-				}
-				else
-					key = 0x09;
-				break;
-			case K_PLUS:
-			case K_ADD:
-				key = '+';
-				break;
-			case K_MINUS:
-			case K_SUBTRACT:
-			case K_CTRL_MINUS:
-				key = '-';
-				break;
-			case K_MULTIPLY:
-				key = '*';
-				break;
-			case K_DIVIDE:
-			case K_SLASH:
-			case K_CTRL_SLASH:
-				key = '/';
-				break;
-			case K_BACKSLASH:
-			case K_CTRL_BACKSLASH:
-				key = '\\';
-				break;
-			case K_COMMA:
-			case K_CTRL_COMMA:
-				key = ',';
-				break;
-			case K_PERIOD:
-			case K_CTRL_PERIOD:
-				key = '.';
-				break;
-			#ifndef PLATFORM_WIN32 // U++ ctrl + period and ctrl + semicolon enumeratos have the same value on Windows (a bug?)
-			case K_SEMICOLON:
-			case K_CTRL_SEMICOLON:
-				key = ';';
-				break;
-			#endif
-			case K_GRAVE:
-			case K_CTRL_GRAVE:
-				key = '`';
-				break;
-			case K_LBRACKET:
-			case K_CTRL_LBRACKET:
-				key = '[';
-				break;
-			case K_RBRACKET:
-			case K_CTRL_RBRACKET:
-				key = ']';
-				break;
-			case K_QUOTEDBL:
-				key = '\'';
-				break;
-			case K_CTRL_BREAK:
-				key = 0x03;
-				break;
-			case K_CTRL_APOSTROPHE:
-				key = '\'';
-				break;
-			case K_CTRL_EQUAL:
-				key = '=';
-				break;
-			default:
-				if(VTKey(key, count)) {
-					SyncSb(true);
-					goto End;
-				}
-				if(ctrlkey || altkey) {
-					key &= ~(K_CTRL|K_ALT|K_SHIFT);
-					if(key >= K_A && key <= K_Z) {
-						key = 'a' + (key - K_A);
-					}
-					else
-					if(key == K_2) {
-						key = '@';
-					}
-					else
-					if(key >= K_3 && key <= K_8) {
-						key = '[' + (key - K_3);
-					}
+		switch(key & ~K_SHIFT) {
+		case K_BACKSPACE:
+			key = modes[DECBKM] ? 0x08 : 0x7F;
+			break;
+
+		case K_ESCAPE:
+			key = 0x1B;
+			break;
+
+		case K_TAB:
+			if(shiftkey) {
+				PutCSI("Z");
+				SyncSb(true);
+				goto End;
+			}
+			key = 0x09;
+			break;
+
+		case K_ALT|K_PLUS:
+		case K_ALT|K_ADD:
+			key = '+';
+			break;
+
+		case K_ALT|K_MINUS:
+		case K_ALT|K_SUBTRACT:
+		case K_CTRL_MINUS:
+			key = '-';
+			break;
+
+		case K_MULTIPLY:
+			key = '*';
+			break;
+
+		case K_ALT|K_DIVIDE:
+		case K_ALT|K_SLASH:
+		case K_CTRL_SLASH:
+			key = '/';
+			break;
+
+		case K_ALT|K_BACKSLASH:
+		case K_CTRL_BACKSLASH:
+			key = '\\';
+			break;
+
+		case K_ALT|K_COMMA:
+		case K_CTRL_COMMA:
+			key = ',';
+			break;
+
+		case K_ALT|K_PERIOD:
+		case K_CTRL_PERIOD:
+			key = '.';
+			break;
+
+#ifndef PLATFORM_WIN32
+		// Win32 U++ historically collides here.
+		case K_ALT|K_SEMICOLON:
+		case K_CTRL_SEMICOLON:
+			key = ';';
+			break;
+#endif
+
+		case K_ALT|K_GRAVE:
+		case K_CTRL_GRAVE:
+			key = '`';
+			break;
+
+		case K_ALT|K_LBRACKET:
+		case K_CTRL_LBRACKET:
+			key = '[';
+			break;
+
+		case K_ALT|K_RBRACKET:
+		case K_CTRL_RBRACKET:
+			key = ']';
+			break;
+
+		case K_ALT|K_QUOTEDBL:
+		case K_CTRL_APOSTROPHE:
+			key = '\'';
+			break;
+
+		case K_CTRL_BREAK:
+			key = 0x03;
+			break;
+
+		case K_CTRL_EQUAL:
+			key = '=';
+			break;
+
+		default:
+			if(VTKey(key, count)) {
+				SyncSb(true);
+				goto End;
+			}
+		
+			dword base = key & ~(K_CTRL|K_ALT|K_SHIFT);
+		
+			// Alt/meta printable fallback for symbolic key enums
+			// Needed because U++ may report Alt+letter as K_ALT|K_A instead of ASCII.
+			if(altkey && !altgr) {
+				if(base >= K_A && base <= K_Z) {
+					key = 'a' + (base - K_A);
+					break;
 				}
 			}
-			if(key > K_DELTA || !ProcessKey(key, ctrlkey, altkey, count))
+		
+			if(ctrlkey && !altgr) {
+				if(base >= K_A && base <= K_Z)
+					key = 'a' + (base - K_A);
+				else
+				if(base == K_2)
+					key = '@';
+				else
+				if(base >= K_3 && base <= K_8)
+					key = '[' + (base - K_3);
+				else
+					return false;
+			}
+			else
 				return false;
 		}
+
+		if(key > K_DELTA || !ProcessKey(key, ctrlkey && !altgr, altkey && !altgr, count))
+			return false;
 	}
-	
+
 	SyncSb(true);
 
 End:
 	if(hidemousecursor)
 		mousehidden = true;
+
 	return true;
 }
 }
