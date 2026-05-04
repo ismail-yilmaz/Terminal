@@ -28,7 +28,8 @@ public:
     bool         Start(const char *cmdline, const VectorMap<String, String>& env, const char *cd = nullptr);
 
     virtual Size GetSize() = 0;
-    virtual bool SetSize(Size sz) = 0;
+	virtual bool SetSize(Size csz, Size psz) = 0;
+    bool         SetSize(Size sz)                   { return SetSize(sz, Null); }
     bool         SetSize(int col, int row)          { return SetSize(Size(col, row)); }
 
     template<class T> bool Is() const               { return dynamic_cast<T*>(this); }
@@ -55,7 +56,7 @@ public:
     virtual ~PosixPtyProcess()                                                                                           { Kill(); }
 
     Size        GetSize() final;
-    bool        SetSize(Size sz) final;
+    bool        SetSize(Size csz, Size psz) final;
 
     bool        SetAttrs(const termios& t);
     bool        GetAttrs(termios& t);
@@ -131,7 +132,7 @@ public:
     virtual ~WinPtyProcess()                                                                                           { Kill(); }
 
     Size         GetSize() final;
-    bool         SetSize(Size sz) final;
+    bool         SetSize(Size sz, Size) final;
 
 private:
     void        Init() final;
@@ -179,7 +180,7 @@ public:
     virtual ~ConPtyProcess()                                                                                           { Kill(); }
 
     Size         GetSize() final;
-    bool         SetSize(Size sz) final;
+    bool         SetSize(Size sz, Size) final;
 
 private:
     void        Init() final;

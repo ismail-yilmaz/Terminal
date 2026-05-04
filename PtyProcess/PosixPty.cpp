@@ -450,13 +450,17 @@ Size PosixPtyProcess::GetSize()
 	return Null;
 }
 
-bool PosixPtyProcess::SetSize(Size sz)
+bool PosixPtyProcess::SetSize(Size csz, Size psz)
 {
 	if(master >= 0) {
 		winsize wsz;
 		Zero(wsz);
-		wsz.ws_col = max(2, sz.cx);
-		wsz.ws_row = max(2, sz.cy);
+		wsz.ws_col = max(2, csz.cx);
+		wsz.ws_row = max(2, csz.cy);
+		if(!IsNull(psz)) {
+			wsz.ws_xpixel = max(0, psz.cx);
+			wsz.ws_ypixel = max(0, psz.cy);
+		}
 		if(ioctl(master, TIOCSWINSZ, &wsz) >= 0) {
 			LLOG("Pty size is set to: " << sz);
 			return true;
