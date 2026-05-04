@@ -556,6 +556,15 @@ bool TerminalCtrl::Key(dword key, int count)
 	bool altkey   = key & K_ALT;
 	bool shiftkey = key & K_SHIFT;
 
+	// Accepts already-resolved ASCII control chars (Cocoa/macOS)
+	auto IsRawCtrlChar = [](dword key) {
+		#ifdef PLATFORM_COCOA
+		return key >= 0x01 && key <= 0x1F && findarg(key, '\b', '\t', '\r', '\n', 0x1B) < 0;
+		#else
+		return false;
+		#endif
+	};
+	
 #ifdef PLATFORM_WIN32
 	// Windows reports AltGr as Ctrl+Alt.
 	bool altgr = ctrlkey && altkey;
@@ -563,6 +572,9 @@ bool TerminalCtrl::Key(dword key, int count)
 	bool altgr = false;
 #endif
 
+	if(key & K_KEYUP)
+		return false;
+	
 	if(UDKey(key, count)) {
 		SyncSb(true);
 		goto End;
@@ -573,9 +585,6 @@ bool TerminalCtrl::Key(dword key, int count)
 
 	if(MenuBar::Scan(WhenBar, key))
 		return true;
-
-	if(key & K_KEYUP)
-		return false;
 
 #ifdef PLATFORM_COCOA
 	if(findarg(key & ~(K_CTRL|K_ALT|K_SHIFT|K_OPTION),
@@ -588,12 +597,13 @@ bool TerminalCtrl::Key(dword key, int count)
 		return false;
 #endif
 
+
 	// Accept AltGr-generated printable chars on Windows.
 	if(key == K_RETURN) {
 		PutEol();
 	}
 	else
-	if(key >= ' ' && key < K_CHAR_LIM) {
+	if((key >= ' ' && key < K_CHAR_LIM) || IsRawCtrlChar(key)) {
 		if(!ProcessKey(key, ctrlkey && !altgr, altkey && !altgr, count))
 			return false;
 	}
@@ -693,7 +703,7 @@ bool TerminalCtrl::Key(dword key, int count)
 				SyncSb(true);
 				goto End;
 			}
-		
+
 			dword base = key & ~(K_CTRL|K_ALT|K_SHIFT);
 		
 			// Alt/meta printable fallback for symbolic key enums
@@ -704,7 +714,6 @@ bool TerminalCtrl::Key(dword key, int count)
 					break;
 				}
 			}
-		
 			if(ctrlkey && !altgr) {
 				if(base >= K_A && base <= K_Z)
 					key = 'a' + (base - K_A);
