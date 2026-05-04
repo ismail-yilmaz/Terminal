@@ -316,7 +316,7 @@ void TerminalCtrl::HandleWindowOpsRequests(const VTInStream::Sequence& seq)
         REPORT_CELL_SIZE                = 160,
         REPORT_PAGE_SIZE_IN_CELLS       = 180,
         REPORT_SCREEN_SIZE_IN_CELLS     = 190,
-        REPORT_WINDOW_ICOON_LABEL       = 120,
+        REPORT_WINDOW_ICON_LABEL        = 120,
         REPORT_WINDOW_TITLE             = 210
 	};
 
@@ -418,7 +418,7 @@ void TerminalCtrl::HandleWindowOpsRequests(const VTInStream::Sequence& seq)
 		case REPORT_WINDOW_STATE:
 			PutCSI(Format("%d`t", w->IsMinimized() ? 2 : 1));
 			break;
-		case REPORT_WINDOW_ICOON_LABEL:
+		case REPORT_WINDOW_ICON_LABEL:
 			break;
 		case REPORT_WINDOW_TITLE:
 			PutOSC(Format("l%s", EncodeDataString(w->GetTitle())));
@@ -561,6 +561,7 @@ void TerminalCtrl::SetLinesPerPage(const VTInStream::Sequence& seq)
 	if(seq.GetInt(1) < 24)
 		HandleWindowOpsRequests(seq);
 	else
+	if(IsLevel3())
 		SetRows(seq.GetInt(1));
 }
 

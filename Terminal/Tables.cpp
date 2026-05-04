@@ -222,7 +222,7 @@ const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const VTInStream::
 		VT_CSI('r', 0x00, 0x00, 0x00, LEVEL_1, LEVEL_4,  { t.SetVerticalMargins(q);                                     }),   // DECSTBM,     Set vertical margins
 		VT_CSI('r', 0x00, '$',  0x00, LEVEL_4, LEVEL_4,  { t.ChangeRectAreaAttrs(q, false);                             }),   // DECCARA,     Change attributes in rectangular area
 		VT_CSI('s', 0x00, 0x00, 0x00, LEVEL_3, LEVEL_4,  { t.SetHorizontalMargins(q);                                   }),   // DECSLRM,     Set horizontal margins / SCO save cursor
-		VT_CSI('t', 0x00, 0x00, 0x00, LEVEL_3, LEVEL_4,  { t.SetLinesPerPage(q);                                        }),   // DECSLPP,     Set lines per page
+		VT_CSI('t', 0x00, 0x00, 0x00, LEVEL_1, LEVEL_4,  { t.SetLinesPerPage(q);                                        }),   // DECSLPP,     Set lines per page / Xterm window actions & reports
 		VT_CSI('t', 0x00, '$',  0x00, LEVEL_4, LEVEL_4,  { t.ChangeRectAreaAttrs(q, true);                              }),   // DECRARA,     Reverse attributes in rectangular area
 		VT_CSI('u', 0x00, 0x00, 0x00, LEVEL_3, LEVEL_4,  { t.Restore();                                                 }),   // SCORC,       SCO restore cursor
 		VT_CSI('v', 0x00, '$',  0x00, LEVEL_4, LEVEL_4,  { t.CopyRectArea(q);                                           }),   // DECCRA,      Copy rectangular area.
