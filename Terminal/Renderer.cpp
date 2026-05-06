@@ -356,7 +356,7 @@ void TerminalCtrl::CollectImage(ImageParts& ip, int x, int y, const VTCell& cell
 
 void TerminalCtrl::RenderImage(const ImageString& imgs, bool scroll)
 {
-	bool encoded = imgs.encoded; // Sixel images are not base64 encoded.
+	bool encoded = !imgs.sixel; // Sixel images are not base64 encoded.
 
 	if(WhenImage) {
 		WhenImage(encoded ? Base64Decode(imgs.data) : imgs.data);
@@ -423,11 +423,13 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 
 	Image img;
 
-	if(!imgs.encoded) {
+	if(imgs.sixel) {
 		img = (Image) SixelStream(imgs.data, imgs.palette).Background(!imgs.transparent);
 	}
 	else {
-		img = StreamRaster::LoadStringAny(Base64Decode(imgs.data));
+		// All else must be base64 encoded
+		String q = Base64Decode(imgs.data);
+		img = StreamRaster::LoadStringAny(imgs.compressed ? ZDecompress(q) : q);
 	}
 
 	if(IsNull(img))

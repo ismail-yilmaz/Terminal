@@ -251,8 +251,8 @@ void TerminalCtrl::ParseSixelGraphics(const VTInStream::Sequence& seq)
 	cellattrs.Hyperlink(false);
 
 	ImageString imgs;
+	imgs.sixel = true;
 	imgs.data = seq.payload;
-	imgs.encoded = false;
 	imgs.transparent = seq.GetInt(2, 0) != 2;
 
 	if(!modes[XTSPREG])

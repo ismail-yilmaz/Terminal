@@ -552,6 +552,8 @@
 	- `s=WIDTH`: image width in pixels (optional; null if missing).  
 	- `v=HEIGHT`: image height in pixels (optional; null if missing).  
 	- `m=0|1`: more chunks follow (`1`) or final chunk (`0`).  
+	- `o=z`: indicates the image is Z compressed.
+	- `a=q`: protocol query. Will return width, size, format information.
 - `data`: Base64-encoded image payload.  
 - TerminalCtrl *accumulates multi-chunk images* until `m=0`.  
 - Any image type supported by  U++'s image decoding factory are supported via PNG mode.  

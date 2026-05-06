@@ -1441,6 +1441,9 @@ null if missing).]&]
 (optional; null if missing).]&]
 [s0;l400;i200;b20;O1; [C@5$(245) m`=0`|1][G : more chunks follow (][C@5$(245) 1][G ) 
 or final chunk (][C@5$(245) 0][G ).]&]
+[s0;l400;i200;b20;O1; [C@5$(245) o`=z][G : indicates the image is Z compressed.]&]
+[s0;l400;i200;b20;O1; [C@5$(245) a`=q][G : protocol query. Will return 
+width, size, format information]&]
 [s0;l200;i200;b20;O1; [C@5$(245) data][G : Base64`-encoded image payload.]&]
 [s0;l200;i200;b20;O1; [G TerminalCtrl ][/G accumulates multi`-chunk images][G  
 until ][C@5$(245) m`=0][G .]&]

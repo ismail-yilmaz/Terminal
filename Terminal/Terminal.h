@@ -562,13 +562,14 @@ private:
     struct ImageString : Moveable<ImageString> {
         String  data;
         Size    size;
-        bool    encoded:1;
+        bool    sixel:1;
+        bool    compressed:1;
         bool    keepratio:1;
         bool    transparent:1;
         SixelStream::Palette *palette = nullptr;
-        dword   Pack() const                                    { return (keepratio << 0) | (encoded << 1) | (transparent << 2); }
+        dword   Pack() const                                    { return (keepratio << 0) | (compressed << 2) | (transparent << 3) | (sixel << 4); }
         dword   GetHashValue() const                            { return FoldHash(CombineHash(data, size, palette, Pack())); }
-        void    SetNull()                                       { data = Null; size = Null; encoded = keepratio = true; palette = nullptr; }
+        void    SetNull()                                       { data = Null; size = Null; keepratio = true; compressed = sixel = transparent = false; palette = nullptr; }
         bool    IsNullInstance() const                          { return Upp::IsNull(data); }
         ImageString()                                           { SetNull(); }
         ImageString(const Nuller&)                              { SetNull(); }
@@ -861,6 +862,8 @@ protected:
     TerminalCtrl&   PutOSC(int c, int cnt = 1);
     TerminalCtrl&   PutDCS(const String& s, int cnt = 1);
     TerminalCtrl&   PutDCS(int c, int cnt = 1);
+    TerminalCtrl&   PutAPC(const String& s, int cnt = 1);
+    TerminalCtrl&   PutAPC(int c, int cnt = 1);
     TerminalCtrl&   PutSS2(const String& s, int cnt = 1);
     TerminalCtrl&   PutSS2(int c, int cnt = 1);
     TerminalCtrl&   PutSS3(const String& s, int cnt = 1);

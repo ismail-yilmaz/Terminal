@@ -164,7 +164,7 @@ bool TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
 	};
 
 	ImageString simg(pick(enc));
-	
+
 	simg.size.Clear();
 	bool show = false;
 	

@@ -273,6 +273,22 @@ TerminalCtrl& TerminalCtrl::PutDCS(int c, int cnt)
 	return *this;
 }
 
+TerminalCtrl& TerminalCtrl::PutAPC(const String& s, int cnt)
+{
+	LLOG("PutAPC() -> " << s);
+
+	while(cnt-- > 0) { Put0(0x9F).PutRaw(s).Put0(0x9C); }
+	Flush();
+	return *this;
+}
+
+TerminalCtrl& TerminalCtrl::PutAPC(int c, int cnt)
+{
+	while(cnt-- > 0) { Put0(0x9F).Put0(c).Put0(0x9C); }
+	Flush();
+	return *this;
+}
+
 TerminalCtrl& TerminalCtrl::PutSS2(const String& s, int cnt)
 {
 	LLOG("PutSS2() -> " << s);
