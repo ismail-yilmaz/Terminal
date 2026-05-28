@@ -25,12 +25,8 @@ bool TerminalCtrl::ParseKittyGraphics(const VTInStream::Sequence& seq)
 		return false;
 
 	int id = 0;
-	int width = 0;
-	int height = 0;
-	bool png = false;
 	bool more = false;
 	bool query = false;
-	bool compressed = false;
 	
 	CParser p(~params + 1);
 	p.SkipSpaces();
@@ -44,19 +40,29 @@ bool TerminalCtrl::ParseKittyGraphics(const VTInStream::Sequence& seq)
 				more = p.ReadInt() == 1;
 			}
 			if(p.Char2('s', '=')) {
-				width = p.ReadInt();
+				chunkedimage.size.cx = p.ReadInt(0, 4096);
 			}
 			if(p.Char2('v', '=')) {
-				height = p.ReadInt();
+				chunkedimage.size.cy = p.ReadInt(0, 4096);
 			}
 			if(p.Char2('f', '=')) {
-				png = p.ReadInt() == 100;
+				switch(p.ReadInt()) {
+				case 100:
+					chunkedimage.FmtRaster();
+					break;
+				case 32:
+					chunkedimage.FmtRGBA();
+					break;
+				default:
+					chunkedimage.FmtRGB();
+					break;
+				}
 			}
 			if(p.Char3('a', '=', 'q')) {
 				query = true;
 			}
 			if(p.Char3('o', '=', 'z')) {
-				compressed = true;
+				chunkedimage.Compressed();
 			}
 			if(p.Char2('t', '=')) {
 				if(p.GetChar() != 'd')
@@ -70,41 +76,34 @@ bool TerminalCtrl::ParseKittyGraphics(const VTInStream::Sequence& seq)
 			PutAPC(String()
 				<< "Gi=" << id
 				<< ",t=d"
-				<< ",f=100"
+				<< ",f=100" // If possible, prefer PNG
 				<< ",s=" << sz.cx
 				<< ",v=" << sz.cy
 				<< ";OK");
 			return true;
 		}
 
-		datachunks << enc;
+		chunkedimage.data << enc; // Accumulate successive chunks
 
-		if(datachunks.GetLength() >= 256 * 1024 * 1024) {
-			datachunks.Clear();
+		if(chunkedimage.data.GetLength() >= 256 * 1024 * 1024)
 			p.ThrowError();
-		}
 
 		if(more)
 			return true;
 	
-		ImageString simg(pick(datachunks));
-		datachunks.Clear();
-		
-		simg.compressed = compressed;
-	
-		if(width > 0 && height > 0)
-			simg.size = Size(width, height);
-		else
-			simg.size.SetNull();
-		
-		RenderImage(simg, !modes[DECSDM]); // rely on sixel scrolling mode
-
+		chunkedimage.Encoded();
+		RenderImage(chunkedimage, !modes[DECSDM]); // rely on sixel scrolling mode
 	}
 	catch(CParser::Error)
 	{
 		LLOG("Failed to parse kitty graphics protocol");
 	}
+	catch(...)
+	{
+		LLOG("Unknown exception");
+	}
 	
+	chunkedimage.Clear();
 	return true;
 
 }

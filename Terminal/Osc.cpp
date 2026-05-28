@@ -73,6 +73,8 @@ void TerminalCtrl::ParseJexerGraphics(const VTInStream::Sequence& seq)
 		return;
 
 	ImageString simg;
+	simg.FmtRaster().Encoded();
+	
 	bool scroll = false;
 
 	if(type == 0) {	// Bitmap
@@ -164,6 +166,7 @@ bool TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
 	};
 
 	ImageString simg(pick(enc));
+	simg.FmtRaster().Encoded();
 
 	simg.size.Clear();
 	bool show = false;
@@ -181,7 +184,7 @@ bool TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
 				simg.size.cy = GetVal(val, GetPageSize().cy, GetCellSize().cy);
 			else
 			if(key.IsEqual("preserveaspectratio"))
-				simg.keepratio = val == "1";
+				simg.KeepRatio(val == "1");
 		}
 	}
 	

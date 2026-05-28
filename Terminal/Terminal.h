@@ -558,24 +558,58 @@ private:
     using       ImagePart  = Tuple<dword, Point, Rect>;
     using       ImageParts = Vector<ImagePart>;
 
-    // TODO: Needs a rewrite to be more flexible.
     struct ImageString : Moveable<ImageString> {
-        String  data;
-        Size    size;
-        bool    sixel:1;
-        bool    compressed:1;
-        bool    keepratio:1;
-        bool    transparent:1;
-        SixelStream::Palette *palette = nullptr;
-        dword   Pack() const                                    { return (keepratio << 0) | (compressed << 2) | (transparent << 3) | (sixel << 4); }
-        dword   GetHashValue() const                            { return FoldHash(CombineHash(data, size, palette, Pack())); }
-        void    SetNull()                                       { data = Null; size = Null; keepratio = true; compressed = sixel = transparent = false; palette = nullptr; }
-        bool    IsNullInstance() const                          { return Upp::IsNull(data); }
-        ImageString()                                           { SetNull(); }
-        ImageString(const Nuller&)                              { SetNull(); }
-        ImageString(String&& s)                                 { SetNull(); data = s;  }
-    };
+        enum Protocol : byte {
+            SIXEL  = 0,
+            RASTER = 1,
+            RGB    = 2,
+            RGBA   = 3,
+        };
+    
+        enum Flags : dword {
+            NONE        = 0,
+            KEEPRATIO   = 1 << 0,
+            COMPRESSED  = 1 << 1,
+            TRANSPARENT = 1 << 2,
+            ENCODED     = 1 << 3,
+        };
+    
+        String                data;
+        Size                  size     = Null;
+        Protocol              format   = SIXEL;
+        dword                 flags    = KEEPRATIO;
+        SixelStream::Palette *palette  = nullptr;
 
+        ImageString&          FmtSixel()                  { format = SIXEL; return *this; }
+        ImageString&          FmtRaster()                 { format = RASTER; return *this; }
+        ImageString&          FmtRGB()                    { format = RGB; return *this; }
+        ImageString&          FmtRGBA()                   { format = RGBA; return *this; }
+        
+        ImageString&          KeepRatio(bool b = true)    { flags = (flags & ~KEEPRATIO) | (-dword(b) & KEEPRATIO); return *this; }
+        ImageString&          Compressed(bool b = true)   { flags = (flags & ~COMPRESSED) | (-dword(b) & COMPRESSED); return *this; }
+        ImageString&          Transparent(bool b = true)  { flags = (flags & ~TRANSPARENT) | (-dword(b) & TRANSPARENT); return *this; }
+        ImageString&          Encoded(bool b = true)      { flags = (flags & ~ENCODED) | (-dword(b) & ENCODED); return *this; }
+
+        bool IsSixel() const                              { return format == SIXEL; }
+        bool IsRaster() const                             { return format == RASTER; }
+        bool IsRGB() const                                { return format == RGB;  }
+        bool IsRGBA() const                               { return format == RGBA; }
+        bool IsRaw() const                                { return format == RGB || format == RGBA; }
+        bool IsKeepRatio() const                          { return flags & KEEPRATIO; }
+        bool IsCompressed() const                         { return flags & COMPRESSED; }
+        bool IsTransparent() const                        { return flags & TRANSPARENT; }
+        bool IsEncoded() const                            { return flags & ENCODED; }
+    
+        dword GetHashValue() const                        { return FoldHash(CombineHash(data, size, ((dword) format << 8) | (flags & 0xFF))); }
+    
+        void  Clear()                                     { data = Null; size = Null; format = SIXEL; flags = KEEPRATIO; palette = nullptr; }
+        bool  IsNullInstance() const                      { return Upp::IsNull(data); }
+    
+        ImageString()                                     { Clear(); }
+        ImageString(const Nuller&)                        { Clear(); }
+        ImageString(String&& s)                           { Clear(); data = pick(s); }
+    }   chunkedimage;                                     // For generic chunked-images (currently used only by Kitty)
+    
     struct InlineImageMaker : LRUCache<InlineImage>::Maker {
         dword   id;
         const   Size& fontsize;
@@ -658,7 +692,6 @@ private:
     dword       prevhtext         = 0;
     int         overridetracking = K_SHIFT_CTRL;
     Size        padding          = { 0, 0 };
-    String      datachunks;      // for chunked data
     
     bool        eightbit;
     bool        reversewrap;

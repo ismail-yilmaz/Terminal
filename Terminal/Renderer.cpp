@@ -356,7 +356,7 @@ void TerminalCtrl::CollectImage(ImageParts& ip, int x, int y, const VTCell& cell
 
 void TerminalCtrl::RenderImage(const ImageString& imgs, bool scroll)
 {
-	bool encoded = !imgs.sixel; // Sixel images are not base64 encoded.
+	bool encoded = !imgs.IsSixel(); // Sixel images are not base64 encoded.
 
 	if(WhenImage) {
 		WhenImage(encoded ? Base64Decode(imgs.data) : imgs.data);
@@ -390,7 +390,7 @@ String TerminalCtrl::InlineImageMaker::Key() const
 
 int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 {
-	LTIMING("TerminalCtrl::ImageDataMaker::Make");
+    LTIMING("TerminalCtrl::ImageDataMaker::Make");
 
 	auto ToCellSize = [this](Size sz) -> Size
 	{
@@ -404,7 +404,7 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 
 	auto AdjustSize = [this](Size sr, Size sz) -> Size
 	{
-		if(imgs.keepratio) {
+		if(imgs.IsKeepRatio()) {
 			if(sr.cx == 0 && sr.cy > 0)
 				sr.cx = max(1, sr.cy * sz.cx / sz.cy);
 			else
@@ -421,32 +421,63 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 		return sr != sz ? sr : Null;
 	};
 
-	Image img;
+    auto RawToImage = [](const String& raw, Size sz, bool rgba) -> Image
+    {
+        int stride = sz.cx * (rgba ? 4 : 3);
+        if(raw.GetLength() < stride * sz.cy)
+            return Null;
+ 
+        ImageBuffer ib(sz);
+        const byte *src = (const byte*) raw.Begin();
+        RGBA *dst = ~ib;
+        int n   = sz.cx * sz.cy;
 
-	if(imgs.sixel) {
-		img = (Image) SixelStream(imgs.data, imgs.palette).Background(!imgs.transparent);
-	}
-	else {
-		// All else must be base64 encoded
-		String q = Base64Decode(imgs.data);
-		img = StreamRaster::LoadStringAny(imgs.compressed ? ZDecompress(q) : q);
-	}
+        if(rgba) {
+            for(int i = 0; i < n; i++, src += 4, dst++) {
+                dst->r = src[0]; dst->g = src[1];
+                dst->b = src[2]; dst->a = src[3];
+            }
+        }
+        else {
+            for(int i = 0; i < n; i++, src += 3, dst++) {
+                dst->r = src[0]; dst->g = src[1];
+                dst->b = src[2]; dst->a = 255;
+            }
+        }
+        ib.SetHotSpot(Null);
+        return ib;
+    };
 
-	if(IsNull(img))
-		return 0;
+    Image img;
 
-	if(IsNull(imgs.size)) {
-		imagedata.image = img;
-	}
-	else {
-		Size sz = AdjustSize(imgs.size, img.GetSize());
-		imagedata.image = IsNull(sz) ? img : Rescale(img, sz);
-	}
+    if(imgs.IsSixel()) { // Never base64 encooded
+        img = (Image) SixelStream(imgs.data, imgs.palette).Background(!imgs.IsTransparent());
+    }
+    else
+    if(imgs.IsRaster()) { // Always base64 encoded (PNG, JPG, TIFF, etc.)
+        String q = Base64Decode(imgs.data);
+        img = StreamRaster::LoadStringAny(imgs.IsCompressed() ? ZDecompress(q) : q);
+    }
+    else
+    if(imgs.IsRaw()) { // Always base64 encoded (RGB or RGBA raw data)
+        String q = Base64Decode(imgs.data);
+        img = RawToImage(imgs.IsCompressed() ? ZDecompress(q) : q, imgs.size, imgs.IsRGBA());
+    }
 
-	imagedata.fontsize = fontsize;
-	imagedata.cellsize = ToCellSize(imagedata.image.GetSize());
+    if(IsNull(img))
+        return 0;
 
-	return imagedata.image.GetLength() * 4;
+    if(IsNull(imgs.size)) {
+        imagedata.image = img;
+    }
+    else {
+        Size sz = AdjustSize(imgs.size, img.GetSize());
+        imagedata.image = IsNull(sz) ? img : Rescale(img, sz);
+    }
+
+    imagedata.fontsize = fontsize;
+    imagedata.cellsize = ToCellSize(imagedata.image.GetSize());
+    return imagedata.image.GetLength() * 4;
 }
 
 const TerminalCtrl::InlineImage& TerminalCtrl::GetCachedImageData(dword id, const ImageString& imgs, const Size& csz)
