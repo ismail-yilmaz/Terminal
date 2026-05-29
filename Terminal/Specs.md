@@ -548,7 +548,7 @@
 - TerminalCtrl implements only a base subset of Kitty's graphics protocol.
 - `G`: graphics payload indicator (mandatory).  
 - `params`: comma-separated key=value pairs:  
-	- `f=100`: PNG format (mandatory).  
+	- `f=FORMAT`: can be `24` (raw RGB), `32` (raw RGBA), or `100` (raster formats such as PNG/JPG/TIFF).  
 	- `s=WIDTH`: image width in pixels (optional; null if missing).  
 	- `v=HEIGHT`: image height in pixels (optional; null if missing).  
 	- `m=0|1`: more chunks follow (`1`) or final chunk (`0`).  

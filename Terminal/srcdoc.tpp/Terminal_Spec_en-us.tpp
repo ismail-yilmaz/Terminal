@@ -1434,7 +1434,9 @@ of Kitty`'s graphics protocol.]&]
 [s0;l200;i200;b20;O1; [C@5$(245) G][G : graphics payload indicator (mandatory).]&]
 [s0;l200;i200;b20;O1; [C@5$(245) params][G : comma`-separated key`=value 
 pairs:]&]
-[s0;l400;i200;b20;O1; [C@5$(245) f`=100][G : PNG format (mandatory).]&]
+[s0;l400;i200;b20;O1; [C@5$(245) f`=FORMAT][G : can be ][C@5$(245) 24 ][G (raw 
+RGB), ][C@5$(245) 32][G  (raw RGBA), or ][C@5$(245) 100][G  (raster formats 
+such as PNG/JPG/TIFF).]&]
 [s0;l400;i200;b20;O1; [C@5$(245) s`=WIDTH][G : image width in pixels (optional; 
 null if missing).]&]
 [s0;l400;i200;b20;O1; [C@5$(245) v`=HEIGHT][G : image height in pixels 
@@ -1443,7 +1445,7 @@ null if missing).]&]
 or final chunk (][C@5$(245) 0][G ).]&]
 [s0;l400;i200;b20;O1; [C@5$(245) o`=z][G : indicates the image is Z compressed.]&]
 [s0;l400;i200;b20;O1; [C@5$(245) a`=q][G : protocol query. Will return 
-width, size, format information]&]
+width, size, format information.]&]
 [s0;l200;i200;b20;O1; [C@5$(245) data][G : Base64`-encoded image payload.]&]
 [s0;l200;i200;b20;O1; [G TerminalCtrl ][/G accumulates multi`-chunk images][G  
 until ][C@5$(245) m`=0][G .]&]
