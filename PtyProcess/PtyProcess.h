@@ -56,7 +56,7 @@ public:
     virtual ~PosixPtyProcess()                                                                                           { Kill(); }
 
     Size        GetSize() final;
-    bool        SetSize(Size csz, Size psz) final;
+    bool        SetSize(Size csz, Size psz = Null) final;
 
     bool        SetAttrs(const termios& t);
     bool        GetAttrs(termios& t);
@@ -132,7 +132,7 @@ public:
     virtual ~WinPtyProcess()                                                                                           { Kill(); }
 
     Size         GetSize() final;
-    bool         SetSize(Size sz, Size) final;
+    bool         SetSize(Size csz, Size psz = Null) final;
 
 private:
     void        Init() final;
@@ -180,7 +180,7 @@ public:
     virtual ~ConPtyProcess()                                                                                           { Kill(); }
 
     Size         GetSize() final;
-    bool         SetSize(Size sz, Size) final;
+    bool         SetSize(Size csz, Size psz = Null) final;
 
 private:
     void        Init() final;

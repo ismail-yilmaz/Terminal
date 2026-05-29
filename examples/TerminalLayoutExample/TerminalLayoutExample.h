@@ -7,12 +7,6 @@
 // This example demonstrates a simple, cross-platform (POSIX/Windows)
 // terminal example.
 
-// On Windows platform PtyProcess class uses statically linked *winpty*
-// library and the supplementary PtyAgent pacakges as its *default* pty
-// backend. However, it also supports the Windows 10 (tm) pseudoconsole
-// API via the WIN10 compiler flag. This flag can be enabled or disable
-// easily via TheIDE's main package configuration dialog. (E.g: "GUI WIN10")
-
 using namespace Upp;
 
 #define LAYOUTFILE <examples/TerminalLayoutExample/TerminalLayoutExample.lay>

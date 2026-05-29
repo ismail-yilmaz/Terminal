@@ -337,7 +337,7 @@ Size WinPtyProcess::GetSize()
 	return Null;
 }
 
-bool WinPtyProcess::SetSize(Size sz, Size)
+bool WinPtyProcess::SetSize(Size sz, Size dummy)
 {
 	if(hConsole) {
 		if(winpty_set_size(hConsole, max(2, sz.cx), max(2, sz.cy), nullptr)) {
@@ -558,7 +558,7 @@ Size ConPtyProcess::GetSize()
 	return Null;
 }
 
-bool ConPtyProcess::SetSize(Size sz, Size)
+bool ConPtyProcess::SetSize(Size sz, Size dummy)
 {
 	if(hConsole) {
 		COORD size;
