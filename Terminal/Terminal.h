@@ -568,11 +568,11 @@ private:
         };
     
         enum Flags : dword {
-            NONE        = 0,
-            KEEPRATIO   = 1 << 0,
-            COMPRESSED  = 1 << 1,
-            TRANSPARENT = 1 << 2,
-            ENCODED     = 1 << 3,
+            NONE         = 0,
+            KEEPRATIO    = 1 << 0,
+            COMPRESSED   = 1 << 1,
+            NOBACKGROUND = 1 << 2,
+            ENCODED      = 1 << 3,
         };
     
         String                data;
@@ -588,7 +588,7 @@ private:
         
         ImageString&          KeepRatio(bool b = true)    { flags = (flags & ~KEEPRATIO) | (-dword(b) & KEEPRATIO); return *this; }
         ImageString&          Compressed(bool b = true)   { flags = (flags & ~COMPRESSED) | (-dword(b) & COMPRESSED); return *this; }
-        ImageString&          Transparent(bool b = true)  { flags = (flags & ~TRANSPARENT) | (-dword(b) & TRANSPARENT); return *this; }
+        ImageString&          Transparent(bool b = true)  { flags = (flags & ~NOBACKGROUND) | (-dword(b) & NOBACKGROUND); return *this; }
         ImageString&          Encoded(bool b = true)      { flags = (flags & ~ENCODED) | (-dword(b) & ENCODED); return *this; }
 
         bool IsSixel() const                              { return format == SIXEL; }
@@ -598,7 +598,7 @@ private:
         bool IsRaw() const                                { return format == RGB || format == RGBA; }
         bool IsKeepRatio() const                          { return flags & KEEPRATIO; }
         bool IsCompressed() const                         { return flags & COMPRESSED; }
-        bool IsTransparent() const                        { return flags & TRANSPARENT; }
+        bool IsTransparent() const                        { return flags & NOBACKGROUND; }
         bool IsEncoded() const                            { return flags & ENCODED; }
     
         dword GetHashValue() const                        { return FoldHash(CombineHash(data, size, ((dword) format << 8) | (flags & 0xFF))); }
