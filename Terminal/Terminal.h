@@ -104,6 +104,7 @@ public:
     Event<Bar&>          WhenBar;
     Event<String>        WhenTitle;
     Event<String>        WhenOutput;
+    Event<>              WhenRefresh;
     Event<>              WhenScroll;
     Event<int, bool>     WhenLED;
     Event<int, int>      WhenProgress;

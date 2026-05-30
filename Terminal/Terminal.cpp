@@ -384,7 +384,7 @@ void TerminalCtrl::RefreshDisplay()
 	LTIMING("TerminalCtrl::RefreshDisplay");
 	
 	const int cnt = min(pos + psz.cy, page->GetLineCount());
-	int blinking_cells = 0;
+	int blinkingcells = 0;
 
 	const bool hypertext = hyperlinks || annotations;
 	const bool plaintext = !hypertext && !blinkingtext;
@@ -409,7 +409,7 @@ void TerminalCtrl::RefreshDisplay()
 				}
 				else
 				if(blinkingtext && cell.IsBlinking()) {
-					blinking_cells++;
+					blinkingcells++;
 					if(!invalid)
 						rblink.Union(RectC(x, y, csz.cx, csz.cy));
 				}
@@ -422,20 +422,31 @@ void TerminalCtrl::RefreshDisplay()
 		}
 
 	}
+
+	bool isdirty = false;
 	
-	if(!rdirty.IsEmpty())
+	if(!rdirty.IsEmpty()) {
 		Refresh(rdirty.Inflated(4));
+		isdirty = true;
+	}
 	
 	if(!plaintext) {
-		if(!rblink.IsEmpty())
+		if(!rblink.IsEmpty()) {
 			Refresh(rblink.Inflated(4));
+			isdirty = true;
+		}
 		
-		if(!rhtext.IsEmpty())
+		if(!rhtext.IsEmpty()) {
 			Refresh(rhtext.Inflated(4));
+			isdirty = true;
+		}
 	}
 	
 	PlaceCaret();
-	Blink(blinking_cells > 0);
+	Blink(blinkingcells > 0);
+
+	if(isdirty)
+		WhenRefresh();
 }
 
 void TerminalCtrl::Blink(bool b)

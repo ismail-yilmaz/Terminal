@@ -162,6 +162,15 @@ input (or terminal output) is passed onto a pty or any other
 process, using this event.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenRefresh:%- Event<> [* WhenRefresh]&]
+[s0;l288; This event is dispatched when [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:RefreshDisplay`(`)^ R
+efreshDisplay()] method is called by TerminalCtrl internally, 
+or by client`-code, and [/ only if] there is any dirty (invalid) 
+line. Its purpose is to give client`-code an opportunity to perform 
+additional tasks that depend on the terminal’s current content, 
+such as refreshing a search or highlight engine.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenScroll:%- Event<> [* WhenScroll]&]
 [s2; This event is dispatched when the content of TerminalCtrl is 
 scrolled. .&]
@@ -1723,7 +1732,8 @@ Returns `*this for method chaining.&]
 [s5;:Upp`:`:TerminalCtrl`:`:RefreshDisplay`(`):%- [@(0.0.255) void]_[* RefreshDisplay]()&]
 [s2; Refreshes the terminal display. This is the prefered refresh 
 method. It refreshes only the damaged lines, and does some extra 
-stuff.&]
+stuff. This method may also dispatch [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:WhenRefresh^ W
+henRefresh ]event.&]
 [s3; &]
 [s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:BeginSelectorMode`(`):%- [@(0.0.255) void] 
