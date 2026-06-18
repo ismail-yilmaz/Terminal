@@ -389,11 +389,21 @@ bool sCheckRange(int c, int lo, int hi)
 force_inline
 int sCheckSplit(const char *s, int len)
 {
-	for(int i = len - 1, n = 1; i >= 0; --i, ++n) {
-		if(n >= 1 && ((s[i] & 0x80) == 0x00)) return len - (i + 1);
-		if(n >= 2 && ((s[i] & 0xE0) == 0xC0)) return len - (i + 2);
-		if(n >= 3 && ((s[i] & 0xF0) == 0xE0)) return len - (i + 3);
-		if(n >= 4 && ((s[i] & 0xF8) == 0xF0)) return len - (i + 4);
+	// Scan backwards up to 4 bytes (maximum valid UTF-8 sequence length)
+	const int maxscan = len < 4 ? len : 4;
+	for(int n = 1; n <= maxscan; ++n) {
+		const byte c = s[len - n];
+		if((c & 0x80) == 0x00)
+			return 0;
+		if((c & 0xC0) == 0xC0) {
+			if((c & 0xE0) == 0xC0) // 2-byte sequence
+				return n < 2 ? n : 0;
+			if((c & 0xF0) == 0xE0) // 3-byte sequence
+				return n < 3 ? n : 0;
+			if((c & 0xF8) == 0xF0) // 4-byte sequence
+				return n < 4 ? n : 0;
+			return n; // Malformed leading byte; slice it out safely anyway
+		}
 	}
 	return 0;
 }
@@ -558,6 +568,9 @@ force_inline
 int VTInStream::GetChr()
 {
 	LTIMING("VtInStream::GetChr()");
+	
+	if(ptr >= rdlim)
+		return -1;
 	
 	if(*ptr < 0x80 || !utf8mode)
 		return *ptr++;
