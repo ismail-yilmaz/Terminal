@@ -43,7 +43,7 @@ void sRectRenderer::DrawRect(const VTCell& cell, const CellPaintData& data)
 {
 	if(!data.show)
 		return;
-	
+
 	Rect r(data.pos, data.size);
 	if(cr.top == r.top && cr.bottom == r.bottom && cr.right == r.left && data.paper == color) {
 		cr.right = r.right;
@@ -69,7 +69,7 @@ class sTextRenderer {
 
 	// Fast-path cache for last style run
 	Tuple<dword, Color> lastkey;
-	Chrs*                last = nullptr;
+	Chrs* last = nullptr;
 
 public:
 	int  GetImageCount() const                     { return icount; }
@@ -99,38 +99,30 @@ void sTextRenderer::Flush()
 		if(c.x.GetCount()) {
 			const Tuple<dword, Color>& fc = cache.GetKey(i);
 			const int x = c.x[0], cx = c.x.Top() + fcx;
-
 			font.Bold(fc.a & VTCell::SGR_BOLD)
-			    .Italic(fc.a & VTCell::SGR_ITALIC)
+				.Italic(fc.a & VTCell::SGR_ITALIC)
 				.Strikeout(fc.a & VTCell::SGR_STRIKEOUT)
 				.Underline(fc.a & VTCell::SGR_UNDERLINE);
-
 			for(int i = 0; i < c.x.GetCount() - 1; i++)
 				c.x[i] = c.x[i + 1] - c.x[i];
-
 			c.x.Top() = c.width.Top();
-
 			if(fc.a & VTCell::SGR_OVERLINE) {
 				int h = font.GetDescent() - 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_SOLID, fc.b);
 			}
-
 			if(canhyperlink && fc.a & VTCell::SGR_HYPERLINK) {
 				int h = font.GetAscent() + 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_DOT, fc.b);
 				font.NoUnderline();
 			}
-
 			if(canannotate && fc.a & VTCell::SGR_ANNOTATION) {
 				int h = font.GetAscent() + 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_SOLID, annotationcolor);
 				font.NoUnderline();
 			}
-
 			w.DrawText(x, y, c.text, font, fc.b, c.x);
 		}
 	}
-
 	cache.Clear();
 
 	// reset fast-path cache
@@ -146,23 +138,25 @@ void sTextRenderer::DrawChar(const VTCell& cell, const CellPaintData& data)
 		y = p.y;
 	}
 
-	Tuple<dword, Color> key = MakeTuple(cell.sgr, data.ink);
-
 	Chrs *c;
-	if(last && key == lastkey)
+	// Optimization: Bypassed standard Tuple instantiation on hot path by checking raw components directly.
+	if(last && cell.sgr == lastkey.a && data.ink == lastkey.b) {
 		c = last;
+	}
 	else {
-		c = &cache.GetAdd(key);
+		lastkey.a = cell.sgr;
+		lastkey.b = data.ink;
+		c = &cache.GetAdd(lastkey);
 		last = c;
-		lastkey = key;
 	}
 
 	// Order is important for optimization
 	if((cell.IsUnderlined() || cell.IsHypertext()) && cache.GetCount() > 1) {
 		Flush();
-		c = &cache.GetAdd(key);
+		lastkey.a = cell.sgr;
+		lastkey.b = data.ink;
+		c = &cache.GetAdd(lastkey);
 		last = c;
-		lastkey = key;
 	}
 
 	icount += (int) cell.sgr & VTCell::SGR_IMAGE;
@@ -262,10 +256,10 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 			}
 		}
 	};
-	
+
 	if(!nobackground)
 		w.DrawRect(wsz, bkg);
-	
+
 	auto range = GetPageRange();
 
 	if(highlight) {
@@ -312,8 +306,8 @@ void TerminalCtrl::PaintSizeHint(Draw& w)
 	ip.Begin();
 	ip.Clear(RGBAZero());
 	ip.RoundedRectangle(0, 0, rr.Width(), rr.Height(), 10.0)
-	  .Stroke(1, LtGray())
-	  .Fill(SColorText());
+	.Stroke(1, LtGray())
+	.Fill(SColorText());
 	ip.DrawText(rx.left, rx.top, hint.a, StdFont(), SColorPaper);
 	ip.End();
 	w.DrawImage(rr.left, rr.top, ip.GetResult());
@@ -323,15 +317,21 @@ void TerminalCtrl::PaintImages(Draw& w, ImageParts& parts, const Size& csz)
 {
 	LTIMING("TerminalCtrl::PaintImages");
 
+	InlineImage im;
+	dword lastid = -1;
+
 	for(const ImagePart& part : parts) {
 		const dword& id = part.a;
 		const Point& pt = part.b;
 		const Rect&  rr = part.c;
 		Rect r(pt, rr.GetSize());
-		InlineImage im = GetCachedImageData(id, Null, csz);
+		if(id != lastid) { // Optimization: cached inline-image to reduce mutex locking.
+			im = GetCachedImageData(id, Null, csz);
+			lastid = id;
+		}
 		if(!IsNull(im.image)) {
-			im.paintrect = rr;	// Keep it updated.
-			im.fontsize  = csz;	// Keep it updated.
+			im.paintrect = rr;    // Keep it updated.
+			im.fontsize  = csz;    // Keep it updated.
 			imgdisplay->Paint(w, r, im, colortable[COLOR_INK], colortable[COLOR_PAPER], 0);
 		}
 	}
@@ -340,7 +340,7 @@ void TerminalCtrl::PaintImages(Draw& w, ImageParts& parts, const Size& csz)
 void TerminalCtrl::CollectImage(ImageParts& ip, int x, int y, const VTCell& cell, const Size& sz)
 {
 	LTIMING("TerminalCtrl::CollectImage");
-	
+
 	dword id = cell.chr;
 	Point coords = Point(x, y);
 	Rect  ir = RectC(cell.object.col * sz.cx, cell.object.row * sz.cy, sz.cx, sz.cy);
@@ -390,7 +390,7 @@ String TerminalCtrl::InlineImageMaker::Key() const
 
 int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 {
-    LTIMING("TerminalCtrl::ImageDataMaker::Make");
+	LTIMING("TerminalCtrl::ImageDataMaker::Make");
 
 	auto ToCellSize = [this](Size sz) -> Size
 	{
@@ -421,63 +421,62 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 		return sr != sz ? sr : Null;
 	};
 
-    auto RawToImage = [](const String& raw, Size sz, bool rgba) -> Image
-    {
-        int stride = sz.cx * (rgba ? 4 : 3);
-        if(raw.GetLength() < stride * sz.cy)
-            return Null;
- 
-        ImageBuffer ib(sz);
-        const byte *src = (const byte*) raw.Begin();
-        RGBA *dst = ~ib;
-        int n   = sz.cx * sz.cy;
+	auto RawToImage = [](const String& raw, Size sz, bool rgba) -> Image
+	{
+		int stride = sz.cx * (rgba ? 4 : 3);
+		if(raw.GetLength() < stride * sz.cy)
+			return Null;
 
-        if(rgba) {
-            for(int i = 0; i < n; i++, src += 4, dst++) {
-                dst->r = src[0]; dst->g = src[1];
-                dst->b = src[2]; dst->a = src[3];
-            }
-        }
-        else {
-            for(int i = 0; i < n; i++, src += 3, dst++) {
-                dst->r = src[0]; dst->g = src[1];
-                dst->b = src[2]; dst->a = 255;
-            }
-        }
-        ib.SetHotSpot(Null);
-        return ib;
-    };
+		ImageBuffer ib(sz);
+		const byte *src = (const byte*) raw.Begin();
+		RGBA *dst = ~ib;
+		int n   = sz.cx * sz.cy;
 
-    Image img;
+		if(rgba) {
+			for(int i = 0; i < n; i++, dst++) {
+				dst->r = *src++; dst->g = *src++;
+				dst->b = *src++; dst->a = *src++;
+			}
+		}
+		else {
+			for(int i = 0; i < n; i++, dst++) {
+				dst->r = *src++; dst->g = *src++;
+				dst->b = *src++; dst->a = 255;
+			}
+		}
 
-    if(imgs.IsSixel()) { // Never base64 encooded
-        img = (Image) SixelStream(imgs.data, imgs.palette).Background(!imgs.IsTransparent());
-    }
-    else
-    if(imgs.IsRaster()) { // Always base64 encoded (PNG, JPG, TIFF, etc.)
-        String q = Base64Decode(imgs.data);
-        img = StreamRaster::LoadStringAny(imgs.IsCompressed() ? ZDecompress(q) : q);
-    }
-    else
-    if(imgs.IsRaw()) { // Always base64 encoded (RGB or RGBA raw data)
-        String q = Base64Decode(imgs.data);
-        img = RawToImage(imgs.IsCompressed() ? ZDecompress(q) : q, imgs.size, imgs.IsRGBA());
-    }
+		ib.SetHotSpot(Null);
+		return ib;
+	};
 
-    if(IsNull(img))
-        return 0;
+	Image img;
 
-    if(IsNull(imgs.size)) {
-        imagedata.image = img;
-    }
-    else {
-        Size sz = AdjustSize(imgs.size, img.GetSize());
-        imagedata.image = IsNull(sz) ? img : Rescale(img, sz);
-    }
+	if(imgs.IsSixel()) { // Never base64 encoded
+		img = (Image) SixelStream(imgs.data, imgs.palette).Background(!imgs.IsTransparent());
+	}
+	else
+	if(imgs.IsRaster()) { // Always base64 encoded (PNG, JPG, TIFF, etc.)
+		img = StreamRaster::LoadStringAny(imgs.IsCompressed() ? ZDecompress(Base64Decode(imgs.data)) : Base64Decode(imgs.data));
+	}
+	else
+	if(imgs.IsRaw()) { // Always base64 encoded (RGB or RGBA raw data)
+		img = RawToImage(imgs.IsCompressed() ? ZDecompress(Base64Decode(imgs.data)) : Base64Decode(imgs.data), imgs.size, imgs.IsRGBA());
+	}
 
-    imagedata.fontsize = fontsize;
-    imagedata.cellsize = ToCellSize(imagedata.image.GetSize());
-    return imagedata.image.GetLength() * 4;
+	if(IsNull(img))
+		return 0;
+
+	if(IsNull(imgs.size)) {
+		imagedata.image = img;
+	}
+	else {
+		Size sz = AdjustSize(imgs.size, img.GetSize());
+		imagedata.image = IsNull(sz) ? img : Rescale(img, sz);
+	}
+
+	imagedata.fontsize = fontsize;
+	imagedata.cellsize = ToCellSize(imagedata.image.GetSize());
+	return imagedata.image.GetLength() * 4;
 }
 
 const TerminalCtrl::InlineImage& TerminalCtrl::GetCachedImageData(dword id, const ImageString& imgs, const Size& csz)
