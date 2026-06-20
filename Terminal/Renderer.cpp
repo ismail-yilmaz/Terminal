@@ -192,10 +192,9 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 
 	LTIMING("TerminalCtrl::Paint");
 
-	bool hasfocus = HasFocus();
-	bool dim = dimunfocused && !hasfocus && !print;
-	int  dimalpha = (dimlevel * 255) / 100;
-	
+	bool dim = (brightness < 100) && !print;
+	int dimalpha = ((100 - brightness) * 255) / 100;
+
 	Color bkg = colortable[COLOR_PAPER];
 
 	CellPaintData cpd;
@@ -292,7 +291,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 	}
 
 	// Paint a steady (non-blinking) caret, if enabled.
-	if(IsSelectorMode() || (modes[DECTCEM] && hasfocus && (print || !caret.IsBlinking())))
+	if(IsSelectorMode() || (modes[DECTCEM] && HasFocus() && (print || !caret.IsBlinking())))
 		w.DrawRect(caretrect, InvertColor);
 
 	// Flash the screen.

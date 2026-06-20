@@ -164,7 +164,7 @@ public:
 
     TerminalCtrl&   SetPadding(Size sz);
     Size            GetPadding() const                              { return padding; }
-
+    
     void            SetCharset(byte cs)                             { charset = ResolveCharset(cs); }
     byte            GetCharset() const                              { return charset;    }
 
@@ -325,10 +325,8 @@ public:
     TerminalCtrl&   DisableHighlight()                              { return EnableHighlight(false); }
     bool            IsHighlightEnabled() const                      { return highlight; }
 
-    TerminalCtrl&   DimWhenUnfocused(bool b = true)                 { dimunfocused = b; Refresh(); return *this; }
-    TerminalCtrl&   NoDimWhenUnfocused()                            { return DimWhenUnfocused(false); }
-    bool            IsDimmingWhenUnfocused() const                  { return dimunfocused; }
-    TerminalCtrl&   DimLevel(int percentage)                        { dimlevel = clamp(percentage, 0, 100); Refresh(); return *this; }
+    TerminalCtrl&   SetBrightness(int level)                        { if(level != brightness) { brightness = clamp(level, 0, 100); Refresh(); } return *this; }
+    int             GetBrightness() const                           { return brightness; }
 
     TerminalCtrl&   SetImageDisplay(const Display& d)               { imgdisplay = &d; return *this; }
     const Display&  GetImageDisplay() const                         { return *imgdisplay; }
@@ -698,6 +696,7 @@ private:
     dword       prevhtext        = 0;
     int         overridetracking = K_SHIFT_CTRL;
     Size        padding          = { 0, 0 };
+    int         brightness       = 100;
 
     bool        eightbit;
     bool        reversewrap;
@@ -730,8 +729,6 @@ private:
     bool        notifyprogress;
     bool        ambiguouschartowide;
     bool        semanticinformation;
-    bool        dimunfocused;
-    int         dimlevel         = 60;
 
 // Down below is the emulator stuff, formerley known as "Console"...
 
