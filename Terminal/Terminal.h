@@ -18,7 +18,7 @@ namespace Upp {
 #define KEYNAMESPACE TerminalCtrlKeys
 #define KEYFILE <Terminal/Terminal.key>
 #include <CtrlLib/key_header.h>
- 
+
 class TerminalCtrl : public Ctrl {
 public:
     const int ANSI_COLOR_COUNT = 16;    // Actually, ANSI + aixterm colors.
@@ -75,7 +75,7 @@ public:
         PROGRESS_WARNING,
         PROGRESS_BUSY
     };
-    
+
     enum TimerIds
     {
         TIMEID_REFRESH = Ctrl::TIMEID_COUNT,
@@ -116,9 +116,9 @@ public:
     Event<const String&> WhenBackgroundChange;
     Gate<Point, String&> WhenAnnotation;
     Gate<dword>          WhenSelectorScan;
-  
+
     Event<VectorMap<int, VTLine>&> WhenHighlight;
-    
+
     // Window Ops support.
     Event<bool>          WhenWindowMinimize;
     Event<bool>          WhenWindowMaximize;
@@ -133,7 +133,7 @@ public:
     void            WriteUtf8(const String& s)                      { Write(s, true);         }
 
     TerminalCtrl&   Echo(const String& s);
-    
+
     TerminalCtrl&   SetLevel(int level)                             { SetEmulation(level); return *this; }
     bool            IsLevel0() const                                { return !modes[DECANM]; }
     bool            IsLevel1() const                                { return modes[DECANM] && clevel >= LEVEL_1; }
@@ -220,7 +220,7 @@ public:
     TerminalCtrl&   ShowSizeHint(bool b = true)                     { sizehint = b; return *this; }
     TerminalCtrl&   HideSizeHint()                                  { return ShowSizeHint(false); }
     bool            HasSizeHint() const                             { return sizehint; }
-    
+
     TerminalCtrl&   ShowScrollBar(bool b = true);
     TerminalCtrl&   HideScrollBar()                                 { return ShowScrollBar(false);  }
     bool            HasScrollBar() const                            { return sb.IsChild();          }
@@ -276,7 +276,7 @@ public:
     TerminalCtrl&   SemanticInformation(bool b = true)              { semanticinformation = b; return *this; }
     TerminalCtrl&   NoSemanticInformation()                         { return SemanticInformation(false); }
     bool            HasSemanticInformation() const                  { return semanticinformation; }
-    
+
     TerminalCtrl&   ReverseWrap(bool b = true)                      { XTrewrapm((reversewrap = b)); return *this; }
     TerminalCtrl&   NoReverseWrap()                                 { return ReverseWrap(false); }
     bool            HasReverseWrap() const                          { return reversewrap; }
@@ -316,21 +316,26 @@ public:
     TerminalCtrl&   NotifyProgress(bool b = true)                   { notifyprogress = b; return *this; }
     TerminalCtrl&   NoNotifyProgress()                              { return NotifyProgress(false); }
     bool            IsNotifyingProgress() const                     { return notifyprogress; }
-    
+
     TerminalCtrl&   PCStyleFunctionKeys(bool b = true)              { pcstylefunctionkeys = b; return *this; }
     TerminalCtrl&   NoPCStyleFunctionKeys()                         { return PCStyleFunctionKeys(false); }
     bool            HasPCStyleFunctionKeys() const                  { return pcstylefunctionkeys; }
-    
+
     TerminalCtrl&   EnableHighlight(bool b = true)                  { highlight = b; return *this; }
     TerminalCtrl&   DisableHighlight()                              { return EnableHighlight(false); }
     bool            IsHighlightEnabled() const                      { return highlight; }
-    
+
+    TerminalCtrl&   DimWhenUnfocused(bool b = true)                 { dimunfocused = b; Refresh(); return *this; }
+    TerminalCtrl&   NoDimWhenUnfocused()                            { return DimWhenUnfocused(false); }
+    bool            IsDimmingWhenUnfocused() const                  { return dimunfocused; }
+    TerminalCtrl&   DimLevel(int percentage)                        { dimlevel = clamp(percentage, 0, 100); Refresh(); return *this; }
+
     TerminalCtrl&   SetImageDisplay(const Display& d)               { imgdisplay = &d; return *this; }
     const Display&  GetImageDisplay() const                         { return *imgdisplay; }
 
     TerminalCtrl&   TreatAmbiguousCharsAsWideChars(bool b = true)   { dpage.SetAmbiguousCellWidth(b ? 2 : 1); apage.SetAmbiguousCellWidth(b ? 2 : 1); return *this; }
     bool            IsAmbiguousCharsWide() const                    { return GetPage().GetAmbiguousCellWidth() == 2; }
-  
+
     TerminalCtrl&   UDK(bool b = true)                              { userdefinedkeys = b; return *this;  }
     TerminalCtrl&   NoUDK()                                         { return UDK(false);     }
     bool            HasUDK() const                                  { return userdefinedkeys; }
@@ -342,13 +347,13 @@ public:
     Size            GetCellSize() const                             { return GetFontSize() + padding * 2; }
     Size            GetPageSize() const                             { Size csz = GetCellSize(); return clamp(GetSize() / csz, Size(1, 1), GetScreenSize() / csz); }
     Tuple<int, int> GetPageRange() const                            { int pos = GetSbPos(); return MakeTuple<int, int>(pos, min(pos + GetPageSize().cy, page->GetLineCount())); }
-    
+
     Size            PageSizeToClient(Size sz) const                 { return AddFrameSize(sz * GetCellSize()); }
     Size            PageSizeToClient(int col, int row) const        { return PageSizeToClient(Size(col, row)); }
-    
+
     int             PagePosToIndex(Point pt) const                  { return pt.y * GetPageSize().cx + pt.x;  }
     int             PagePosToIndex(int col, int row) const          { return PagePosToIndex(Point(col, row)); }
-   
+
     Size            GetMinSize() const override                     { return PageSizeToClient(Size(2, 2)); }
     Size            GetStdSize() const override                     { return PageSizeToClient(Size(80, 24)); }
     Size            GetMaxSize() const override                     { return PageSizeToClient(Size(132, 24)); }
@@ -362,9 +367,9 @@ public:
 
     TerminalCtrl&   SetWordSelectionFilter(Gate<const VTCell&> filter);
     Gate<const VTCell&> GetWordSelectionFilter() const;
-    
+
     String          GetSelectionData(const String& fmt) const override;
-    
+
     void            StdBar(Bar& menu);
     void            EditBar(Bar& menu);
     void            LinksBar(Bar& menu);
@@ -384,9 +389,9 @@ public:
     void            CoFind(const WString& s, int begin, int end, bool visibleonly,
                                     Gate<const VectorMap<int, WString>&, const WString&> fn);
 
-    
+
     bool            IsSearching() const                             { return searching; }
-    
+
     void            Layout() override                               { SyncSize(true); SyncSb(); }
 
     void            Paint(Draw& w)  override                        { Paint0(w); }
@@ -437,7 +442,7 @@ public:
     void            AddAnnotation();
     void            EditAnnotation();
     void            DeleteAnnotation();
-    
+
     void            DragAndDrop(Point pt, PasteClip& d) override;
 
     void            GotFocus() override                             { if(modes[XTFOCUSM]) PutCSI('I'); Refresh(); }
@@ -446,18 +451,18 @@ public:
     void            RefreshDisplay();
 
     Rect            GetCaret() const override                       { return caret.IsBlinking() ? caretrect : Null; }
-    
+
     void            BeginSelectorMode();
     void            EndSelectorMode();
     bool            IsSelectorMode() const                          { return selectormode; }
-    
+
     virtual void    ProcessSelectorKey(dword key, int count);
 
     Image           CursorImage(Point p, dword keyflags) override;
 
     void            SetDeviceId(const String& s)                    { deviceid = s;   }
     void            AnswerBackMessage(const String& s)              { answerback = s; }
-    
+
     void            FlashDisplay(int ms = 100);
 
     void            Serialize(Stream& s) override;
@@ -479,7 +484,7 @@ protected:
     int             GetSbPos() const                                { return IsAlternatePage() ? 0 : sb; }
     Point           GetCursorPos() const                            { return --page->GetPos(); /* VT cursor position is 1-based */ }
     Rect            MakeCaretRect(Point pt, const VTCell& cell) const;
-    
+
     // Selector stuff...
     enum TextSelectionTypes : dword {
         SEL_NONE    = 0,
@@ -491,7 +496,7 @@ protected:
 
     Rect        GetSelectionRect() const;
     WString     GetSelectedText() const;
-      
+
     void         SetSelection(Point  pl, Point ph, dword selflag, bool multiclick = false);
     bool         GetSelection(Point& pl, Point& ph) const;
     bool         GetLineSelection(const Point& pt, Point& pl, Point& ph) const;
@@ -502,12 +507,12 @@ protected:
 
     Point       ClientToPagePos(Point pt, bool ignoresb = false) const;
     Point       SelectionToPagePos(Point pt) const;
-    
+
 private:
     void        InitParser(VTInStream& vts);
-    
+
     void        SyncedRefresh(bool enable = false);
-    
+
     void        SyncPage(bool notify = true);
     void        SwapPage();
 
@@ -521,7 +526,7 @@ private:
     void        SyncSize(bool notify = true);
 
     Rect        GetViewRect() const                             { return Rect(GetView().GetSize()); }
-    
+
     Tuple<String, Size> GetSizeHint();
     void        RefreshSizeHint();
 
@@ -551,7 +556,7 @@ private:
 
     void        ShowAnnotation(Point pt, const String& s);
     void        HideAnnotation();
-    
+
     void        Search(const WString& s, int begin, int end, bool visibleonly, bool co,
                                   Gate<const VectorMap<int, WString>&, const WString&> fn);
 
@@ -566,7 +571,7 @@ private:
             RGB    = 2,
             RGBA   = 3,
         };
-    
+
         enum Flags : dword {
             NONE         = 0,
             KEEPRATIO    = 1 << 0,
@@ -574,7 +579,7 @@ private:
             NOBACKGROUND = 1 << 2,
             ENCODED      = 1 << 3,
         };
-    
+
         String                data;
         Size                  size     = Null;
         Protocol              format   = SIXEL;
@@ -585,7 +590,7 @@ private:
         ImageString&          FmtRaster()                 { format = RASTER; return *this; }
         ImageString&          FmtRGB()                    { format = RGB; return *this; }
         ImageString&          FmtRGBA()                   { format = RGBA; return *this; }
-        
+
         ImageString&          KeepRatio(bool b = true)    { flags = (flags & ~KEEPRATIO) | (-dword(b) & KEEPRATIO); return *this; }
         ImageString&          Compressed(bool b = true)   { flags = (flags & ~COMPRESSED) | (-dword(b) & COMPRESSED); return *this; }
         ImageString&          Transparent(bool b = true)  { flags = (flags & ~NOBACKGROUND) | (-dword(b) & NOBACKGROUND); return *this; }
@@ -600,17 +605,17 @@ private:
         bool IsCompressed() const                         { return flags & COMPRESSED; }
         bool IsTransparent() const                        { return flags & NOBACKGROUND; }
         bool IsEncoded() const                            { return flags & ENCODED; }
-    
+
         dword GetHashValue() const                        { return FoldHash(CombineHash(data, size, ((dword) format << 8) | (flags & 0xFF))); }
-    
+
         void  Clear()                                     { data = Null; size = Null; format = SIXEL; flags = KEEPRATIO; palette = nullptr; }
         bool  IsNullInstance() const                      { return Upp::IsNull(data); }
-    
+
         ImageString()                                     { Clear(); }
         ImageString(const Nuller&)                        { Clear(); }
         ImageString(String&& s)                           { Clear(); data = pick(s); }
     }   chunkedimage;                                     // For generic chunked-images (currently used only by Kitty)
-    
+
     struct InlineImageMaker : LRUCache<InlineImage>::Maker {
         dword   id;
         const   Size& fontsize;
@@ -636,13 +641,13 @@ private:
         {
         }
     };
-    
+
     void        Paint0(Draw& w, bool print = false);
     void        PaintSizeHint(Draw& w);
 
     void        PaintImages(Draw& w, ImageParts& parts, const Size& csz);
     void        CollectImage(ImageParts& ip, int x, int y, const VTCell& cell, const Size& sz);
-    
+
     void        RenderImage(const ImageString& simg, bool scroll);
     const InlineImage& GetCachedImageData(dword id, const ImageString& simg, const Size& csz);
 
@@ -689,11 +694,11 @@ private:
     int         wheelstep        = GUI_WheelScrollLines();
     int         metakeyflags     = MKEY_ESCAPE;
     int         clipaccess       = CLIP_NONE;
-    dword       activehtext       = 0;
-    dword       prevhtext         = 0;
+    dword       activehtext      = 0;
+    dword       prevhtext        = 0;
     int         overridetracking = K_SHIFT_CTRL;
     Size        padding          = { 0, 0 };
-    
+
     bool        eightbit;
     bool        reversewrap;
     bool        keynavigation;
@@ -725,6 +730,8 @@ private:
     bool        notifyprogress;
     bool        ambiguouschartowide;
     bool        semanticinformation;
+    bool        dimunfocused;
+    int         dimlevel         = 60;
 
 // Down below is the emulator stuff, formerley known as "Console"...
 
@@ -789,11 +796,11 @@ private:
     void        ParseiTerm2Protocols(const VTInStream::Sequence& seq);
 
     void        ParseTerminalCtrlProtocols(const VTInStream::Sequence& seq);
-    
+
     void        ParseConEmuProtocols(const VTInStream::Sequence& seq);
-    
+
 //    void        ParseKittyProcotocls(const VTInStream::Sequence& seq);
-    
+
     void        ParseSixelGraphics(const VTInStream::Sequence& seq);
     void        ParseJexerGraphics(const VTInStream::Sequence& seq);
     bool        ParseiTerm2Graphics(const VTInStream::Sequence& seq);
@@ -801,21 +808,21 @@ private:
 
     bool        ParseItem2FeatureReport(const VTInStream::Sequence& seq);
     bool        ParseiTerm2BackgroundChange(const VTInStream::Sequence& seq);
-    
+
     void        ParseHyperlinks(const VTInStream::Sequence& seq);
 
     bool        ParseiTerm2Annotations(const VTInStream::Sequence& seq);
     void        ParseTerminalCtrlAnnotations(const VTInStream::Sequence& seq);
-    
+
     void        ParseConEmuProgressEvent(const VTInStream::Sequence& seq);
-    
+
     void        ParseClipboardRequests(const VTInStream::Sequence& seq);
-    
+
     void        ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
     void        ParseSemanticInformation(const VTInStream::Sequence& seq);
     void        ParseConEmuWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
     void        ParseConEmuMessageBoxMessage(const VTInStream::Sequence& seq);
-    
+
     void        SetCaretStyle(const VTInStream::Sequence& seq);
 
     void        SetProgrammableLEDs(const VTInStream::Sequence& seq);
@@ -848,7 +855,7 @@ private:
     dword       GetDECStyleFillerFlags() const;
     void        SetISOStyleCellProtection(bool b)                   { page->Attributes(cellattrs.ProtectISO(b)); }
     dword       GetISOStyleFillerFlags() const;
-    
+
     void        Backup(bool tpage = true, bool csets = true, bool attrs = true);
     void        Restore(bool tpage = true, bool csets = true, bool attrs = true);
 
@@ -857,7 +864,7 @@ private:
     void        Reset(bool full);
 
     void        AlternateScreenBuffer(bool b);
-    
+
     void        VT52MoveCursor();   // VT52 direct cursor addressing.
 
 private:
@@ -879,7 +886,7 @@ private:
 
     TerminalCtrl&   Put0(const String& s, int cnt = 1);
     TerminalCtrl&   Put0(int c, int cnt = 1);
-    
+
 protected:
     bool        IsDefaultPage() const                           { return page == &dpage; }
     bool        IsAlternatePage() const                         { return page == &apage; }
@@ -976,7 +983,7 @@ private:
     const CbFunction* FindFunctionPtr(const VTInStream::Sequence& seq);
     const CbMode*     FindModePtr(word modenum, byte modetype);
     void              DispatchCtl(byte ctl);
-    
+
 private:
     // Key manipulation and VT and PC-style function keys support.
     struct FunctionKey : Moveable<FunctionKey> {
@@ -1056,7 +1063,7 @@ public:
         GSets&     G3(byte c)                                   { g[3] = c; return *this; }
         GSets&     SS(byte c)                                   { ss   = c; return *this; }
         GSets&     Broadcast(byte c)                            { g[0] = g[1] = g[2] = g[3] = c; return *this; }
-        
+
         byte        Get(int c, bool allowgr = true) const       { return c < 0x80 || !allowgr ? g[l] : g[r]; }
 
         int         GetGLNum()                                  { return l; }

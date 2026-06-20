@@ -1303,6 +1303,35 @@ StyleFunctionKeys]()_[@(0.0.255) const]&]
 [s2; Returns true if the PC`-style function keys feature is enabled.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:DimWhenUnfocused`(bool`):%- TerminalCtrl[@(0.0.255) `&] 
+[* DimWhenUnfocused]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2; Enables or disables the visual dimming of the terminal background 
+and text when the control loses keyboard focus. Returns `*this 
+for method chaining.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:NoDimWhenUnfocused`(`):%- TerminalCtrl[@(0.0.255) `&] 
+[* NoDimWhenUnfocused]()&]
+[s2; Disables the visual dimming of the terminal background and text 
+when the control loses keyboard focus. Returns `*this for method 
+chaining.&]
+[s2; See [^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:DimLevel`(int`)^ D
+imLevel()].&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:IsDimmingWhenUnfocused`(`)const:%- [@(0.0.255) bool] 
+[* IsDimmingWhenUnfocused]() [@(0.0.255) const]&]
+[s2; Returns true if the terminal is currently configured to visually 
+dim its background and text when it loses keyboard focus.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:DimLevel`(int`):%- TerminalCtrl[@(0.0.255) `&] 
+[* DimLevel]([@(0.0.255) int] [*@3 percentage])&]
+[s2; Sets the intensity of the unfocused dimming effect to pct percent, 
+determining exactly how dark the terminal display becomes when 
+it loses focus. Returns `*this for method chaining.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:UDK`(bool`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T
 erminalCtrl][@(0.0.255) `&]_[* UDK]([@(0.0.255) bool]_[*@3 b]_`=_[@(0.0.255) true])&]
 [s6;%- Requires at least a level 2 device emulation.&]
