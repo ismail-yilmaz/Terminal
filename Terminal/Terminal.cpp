@@ -54,6 +54,7 @@ TerminalCtrl::TerminalCtrl()
 , notifyprogress(false)
 , ambiguouschartowide(false)
 , semanticinformation(false)
+, dimunfocused(false)
 , page(&dpage)
 , streamfill(false)
 {

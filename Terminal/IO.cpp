@@ -408,6 +408,9 @@ void TerminalCtrl::Serialize(Stream& s)
 		s % highlight;
 		s % annotations;
 		s % ambiguouschartowide;
+		s % notifyprogress;
+		s % dimunfocused;
+		s % dimlevel;
 	}
 
 	if(s.IsLoading()) {
@@ -466,6 +469,8 @@ void TerminalCtrl::Jsonize(JsonIO& jio)
 		("TransparentBackground", nobackground)
 		("Highlight",           highlight)
 		("NotifyProgress",      notifyprogress)
+		("DimUnfocused",        dimunfocused)
+		("DimLevel",            dimlevel)
 		("ColorTable",          cts);
 		
 	if(jio.IsLoading()) {
