@@ -258,4 +258,24 @@ void TerminalCtrl::ParseSixelGraphics(const VTInStream::Sequence& seq)
 
 	RenderImage(imgs, !modes[DECSDM]);
 }
+
+void TerminalCtrl::ReportXTermCapabilities(const VTInStream::Sequence& seq)
+{
+	// XTGETTCAP: Values are subject to change...
+		
+	static const VectorMap<String, String> capa = {
+		{ "TN",  "xterm-256color" },
+		{ "RGB", "8"   },
+		{ "Co",  "256" }
+	};
+	
+	for(const String& query : Split(seq.payload, ';')) {
+		if(int i = capa.Find(HexDecode(query));i >= 0) {
+			PutDCS("1+r" + query + "=" + HexEncode(capa[i]));
+		}
+		else
+			PutDCS("0+r" + query);
+	}
+}
+
 }

@@ -239,10 +239,11 @@ const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const VTInStream::
 		VT_CSI('}', 0x00, '\'', 0x00, LEVEL_4, LEVEL_4,  { t.page->PanRight(q.GetInt(1));                               }),   // DECIC,       Insert column
 		VT_CSI('~', 0x00, '\'', 0x00, LEVEL_4, LEVEL_4,  { t.page->PanLeft(q.GetInt(1));                                }),   // DECDC,       Delete column
 		// Device control strings
-		VT_DCS('q', 0x00, 0x00, 0x00, LEVEL_3, LEVEL_4,  { t.ParseSixelGraphics(q);                                     }),   // DECSIXEL: Parse sixel graphics
-		VT_DCS('q', 0x00, '$',  0x00, LEVEL_2, LEVEL_4,  { t.ReportControlFunctionSettings(q);                          }),   // DECRQSS:  Request control function strings
-		VT_DCS('t', 0x00, '$',  0x00, LEVEL_3, LEVEL_4,  { t.RestorePresentationState(q);                               }),   // DECRSPS:  Restore presentation state
-		VT_DCS('|', 0x00, 0x00, 0x00, LEVEL_2, LEVEL_4,  { t.SetUserDefinedKeys(q);                                     })    // DECUDK:   Set user-defined keys
+		VT_DCS('q', 0x00, 0x00, 0x00, LEVEL_3, LEVEL_4,  { t.ParseSixelGraphics(q);                                     }),   // DECSIXEL:    Parse sixel graphics
+		VT_DCS('q', 0x00, '$',  0x00, LEVEL_2, LEVEL_4,  { t.ReportControlFunctionSettings(q);                          }),   // DECRQSS:     Request control function strings
+		VT_DCS('q', 0x00, '+',  0x00, LEVEL_1, LEVEL_4,  { t.ReportXTermCapabilities(q);                                }),   // XTGETTCAP:   Query terminal capabilities (xterm)
+		VT_DCS('t', 0x00, '$',  0x00, LEVEL_3, LEVEL_4,  { t.RestorePresentationState(q);                               }),   // DECRSPS:     Restore presentation state
+		VT_DCS('|', 0x00, 0x00, 0x00, LEVEL_2, LEVEL_4,  { t.SetUserDefinedKeys(q);                                     })    // DECUDK:      Set user-defined keys
 	};
 	}
 

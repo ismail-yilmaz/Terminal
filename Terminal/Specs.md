@@ -306,6 +306,7 @@
 | DECRSPS | Restore presentation state. | Level 3 | `DCS Pn $ w Pt ST` |
 | DECSIXEL | Parse sixel graphics format. | Level 3 | `DCS P1 ; P2 ; P3 q Pt ST`|
 | DECUDK | Set user-defined keys. | Level 2 | `DCS Pc ; Pl \| Pt ST` |
+| XTGETTCAP | Query terminal capabilities. | Level 1 | `DCS + q Pt ST` |
 
 #### Notes
 

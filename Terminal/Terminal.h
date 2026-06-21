@@ -827,6 +827,8 @@ private:
     void        SetDeviceConformanceLevel(const VTInStream::Sequence& seq);
 
     void        SetUserDefinedKeys(const VTInStream::Sequence& seq);
+    
+    void        ReportXTermCapabilities(const VTInStream::Sequence& seq);
 
     void        CopyRectArea(const VTInStream::Sequence& seq);
     void        FillRectArea(const VTInStream::Sequence& seq);
