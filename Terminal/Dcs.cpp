@@ -262,20 +262,42 @@ void TerminalCtrl::ParseSixelGraphics(const VTInStream::Sequence& seq)
 void TerminalCtrl::ReportXTermCapabilities(const VTInStream::Sequence& seq)
 {
 	// XTGETTCAP: Values are subject to change...
-		
-	static const VectorMap<String, String> capa = {
-		{ "TN",  "xterm-256color" },
-		{ "RGB", "8"   },
-		{ "Co",  "256" }
+
+	LTIMING("ReportXTermCapabilities");
+
+	VectorMap<String, String> capa = {
+		{ "TN",    "xterm-256color" },
+		{ "RGB",   "8"   },
+		{ "Co",    "256" },
+		{ "Tc",    Null  },
+		{ "Sync",  Null  },
 	};
+	
+	if(IsClipboardAccessPermitted())
+		capa.FindAdd("Ms");
+	if(HasHyperlinks())
+		capa.FindAdd("Hls");
+	
+	Vector<String> out, err;
 	
 	for(const String& query : Split(seq.payload, ';')) {
 		if(int i = capa.Find(HexDecode(query));i >= 0) {
-			PutDCS("1+r" + query + "=" + HexEncode(capa[i]));
+			String val = capa[i];
+			String& q = out.Add(query);
+			if(!IsNull(val)) {
+				q << "=" << HexEncode(val);
+			}
 		}
-		else
-			PutDCS("0+r" + query);
+		else {
+			err.Add(query);
+		}
 	}
+	
+	if(out.GetCount())
+		PutDCS("1+r" + Join(out, ";"));
+	
+	if(err.GetCount())
+		PutDCS("0+r" + Join(err, ";"));
 }
 
 }
