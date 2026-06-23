@@ -143,7 +143,7 @@ public:
     const VTCell&   GetCell(int x, int y) const;
     const VTCell&   GetCell(Point pt) const                 { return GetCell(pt.x, pt.y);   }
     const VTCell&   GetCell() const                         { return GetCell(cursor);       }
-    int             AddCell(const VTCell& cell)             { TryShrinkCurrentLine(); return CellAdd(cell, cell.GetWidth(ambiguouscellwidth)); }
+    int             AddCell(const VTCell& cell)             { return CellAdd(cell, cell.GetWidth(ambiguouscellwidth)); }
     VTPage&         InsertCell(const VTCell& cell);
     VTPage&         RepeatCell(int n);
 
@@ -266,7 +266,6 @@ private:
     VTPage&         RewrapCursor(int n);
     int             LineInsert(int pos, int n, const VTCell& attrs);
     int             LineRemove(int pos, int n, const VTCell& attrs);
-    void            TryShrinkCurrentLine()                                          { lines[cursor.y - 1].Shrink(size.cx); }
     int             CellAdd(const VTCell& cell, int width = 1);
     int             CellInsert(int pos, int n, const VTCell& attrs, bool pan);
     int             CellRemove(int pos, int n, const VTCell& attrs, bool pan);

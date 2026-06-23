@@ -18,6 +18,7 @@ VTLine::VTLine(const VTLine& src, int)
 	wrapped = src.wrapped;
 }
 
+force_inline
 void VTLine::Adjust(int cx, const VTCell& filler)
 {
 	if(cx < GetCount())
@@ -26,6 +27,7 @@ void VTLine::Adjust(int cx, const VTCell& filler)
 	invalid = true;
 }
 
+force_inline
 void VTLine::Grow(int cx, const VTCell& filler)
 {
 	if(cx > GetCount()) {
@@ -35,6 +37,7 @@ void VTLine::Grow(int cx, const VTCell& filler)
 	}
 }
 
+force_inline
 void VTLine::Shrink(int cx)
 {
 	if(cx < GetCount()) {
@@ -415,12 +418,17 @@ int VTPage::CellAdd(const VTCell& cell, int width)
 	if(width <= 0)
 		return cursor.x;
 	
+	VTLine& line = lines[cursor.y - 1];
+	
 	if(autowrap && cursor.eol)
 	{
-		lines[cursor.y - 1].Wrap();
+		line.Wrap();
 		NewLine();
 	}
 
+	// Self-normalize
+	line.Shrink(size.cx);
+	
 	SetCell(cell);
 	int next = cursor.x + 1;
 
@@ -454,7 +462,6 @@ VTPage& VTPage::RepeatCell(int n)
 {
 	LLOG("RepeatCell(" << n << ")");
 
-	TryShrinkCurrentLine();
 	const VTCell& cell = GetCell(cursor.x - 1, cursor.y);
 	for(int i = 0, w = cell.GetWidth(ambiguouscellwidth); i < n; i++)
 		CellAdd(cell, w);
