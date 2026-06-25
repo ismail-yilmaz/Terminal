@@ -31,7 +31,7 @@ bool TerminalCtrl::ParseKittyGraphics(const VTInStream::Sequence& seq)
 	p.SkipSpaces();
 	
 	auto SendAck = [this](const char *err) {
-		PutAPC(Format("Gi=%d;%d", chunkedimage.id, err));
+		PutAPC(Format("Gi=%d;%s", chunkedimage.id, err));
 	};
 	
 	try {
