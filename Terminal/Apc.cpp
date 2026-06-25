@@ -24,17 +24,20 @@ bool TerminalCtrl::ParseKittyGraphics(const VTInStream::Sequence& seq)
 	if(!SplitTo(seq.payload, ';', false, params, enc) || IsNull(enc))
 		return false;
 
-	int id = 0;
 	bool more = false;
 	bool query = false;
 	
 	CParser p(~params + 1);
 	p.SkipSpaces();
 	
+	auto SendAck = [this](const char *err) {
+		PutAPC(Format("Gi=%d;%d", chunkedimage.id, err));
+	};
+	
 	try {
 		while(!p.IsEof()) {
 			if(p.Char2('i', '=')) {
-				id = p.ReadInt();
+				chunkedimage.id = p.ReadInt();
 			}
 			if(p.Char2('m', '=')) {
 				more = p.ReadInt() == 1;
@@ -72,14 +75,7 @@ bool TerminalCtrl::ParseKittyGraphics(const VTInStream::Sequence& seq)
 				p.Skip();
 		}
 		if(query) {
-			Size sz = GetSize();
-			PutAPC(String()
-				<< "Gi=" << id
-				<< ",t=d"
-				<< ",f=100" // If possible, prefer PNG
-				<< ",s=" << sz.cx
-				<< ",v=" << sz.cy
-				<< ";OK");
+			SendAck("OK");
 			return true;
 		}
 
@@ -97,10 +93,12 @@ bool TerminalCtrl::ParseKittyGraphics(const VTInStream::Sequence& seq)
 	catch(CParser::Error)
 	{
 		LLOG("Failed to parse kitty graphics protocol");
+		SendAck("EINVAL");
 	}
 	catch(...)
 	{
 		LLOG("Unknown exception");
+		SendAck("EINVAL");
 	}
 	
 	chunkedimage.Clear();

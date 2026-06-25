@@ -563,7 +563,7 @@ private:
     using       ImageParts = Vector<ImagePart>;
 
     struct ImageString : Moveable<ImageString> {
-        enum Protocol : byte {
+        enum Protocol : dword {
             SIXEL  = 0,
             RASTER = 1,
             RGB    = 2,
@@ -578,7 +578,8 @@ private:
             ENCODED      = 1 << 3,
         };
 
-        String                data;
+		int                   id       = 0;
+        String                data     = Null;
         Size                  size     = Null;
         Protocol              format   = SIXEL;
         dword                 flags    = KEEPRATIO;
@@ -604,9 +605,9 @@ private:
         bool IsTransparent() const                        { return flags & NOBACKGROUND; }
         bool IsEncoded() const                            { return flags & ENCODED; }
 
-        dword GetHashValue() const                        { return FoldHash(CombineHash(data, size, ((dword) format << 8) | (flags & 0xFF))); }
+        dword GetHashValue() const                        { return FoldHash(CombineHash(id, data, size, (format << 8) | (flags & 0xFF))); }
 
-        void  Clear()                                     { data = Null; size = Null; format = SIXEL; flags = KEEPRATIO; palette = nullptr; }
+        void  Clear()                                     { id = 0; data = Null; size = Null; format = SIXEL; flags = KEEPRATIO; palette = nullptr; }
         bool  IsNullInstance() const                      { return Upp::IsNull(data); }
 
         ImageString()                                     { Clear(); }
