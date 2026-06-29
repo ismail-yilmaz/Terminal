@@ -74,7 +74,7 @@ void TerminalCtrl::ReportControlFunctionSettings(const VTInStream::Sequence& seq
 	}
 	else
 	if(seq.payload.IsEqual("m")) {					// SGR
-		reply = Format("%d`$r0;%s", 1, GetGraphicsRenditionOpcodes(cellattrs));
+		reply = Format("%d`$r%s", 1, GetGraphicsRenditionOpcodes(cellattrs));
 	}
 	else
 	if(seq.payload.IsEqual("\"p")) {				// DECSCL

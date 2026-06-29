@@ -150,7 +150,9 @@ void TerminalCtrl::InvertGraphicsRendition(VTCell& attrs, const Vector<String>& 
 String TerminalCtrl::GetGraphicsRenditionOpcodes(const VTCell& attrs)
 {
 	Vector<String> v;
-	
+
+	v.Add("0");
+
 	if(attrs.IsBold())
 		v.Add("1");
 	if(attrs.IsItalic())
@@ -167,6 +169,18 @@ String TerminalCtrl::GetGraphicsRenditionOpcodes(const VTCell& attrs)
 		v.Add("9");
 	if(attrs.IsOverlined())
 		v.Add("53");
+	
+	if(attrs.ink.GetSpecial() == -1)    // Direct color (24 bit)
+		v.Add(Format("38:2::%ld:%ld:%ld",
+				attrs.ink.GetR(),
+				attrs.ink.GetG(),
+				attrs.ink.GetB()));
+
+	if(attrs.paper.GetSpecial() == -1)  // Direct color (24 bit)
+		v.Add(Format("48:2::%ld:%ld:%ld",
+				attrs.paper.GetR(),
+				attrs.paper.GetG(),
+				attrs.paper.GetB()));
 	
 	return Join(v, ";", true);
 
