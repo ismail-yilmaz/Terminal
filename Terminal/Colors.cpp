@@ -128,7 +128,7 @@ void TerminalCtrl::ReportDynamicColor(int opcode, const Color& c)
 	PutOSC(reply);
 }
 
-void TerminalCtrl::SetProgrammableColors(const VTInStream::Sequence& seq, int opcode)
+void TerminalCtrl::SetProgrammableColors(const AnsiParser::Sequence& seq, int opcode)
 {
 	if(!dynamiccolors || seq.parameters.GetCount() < decode(opcode, 4, 3, 2))
 		return;
@@ -182,7 +182,7 @@ void TerminalCtrl::SetProgrammableColors(const VTInStream::Sequence& seq, int op
 		Ctrl::Refresh();
 }
 
-void TerminalCtrl::ResetProgrammableColors(const VTInStream::Sequence& seq, int opcode)
+void TerminalCtrl::ResetProgrammableColors(const AnsiParser::Sequence& seq, int opcode)
 {
 	if(!dynamiccolors || seq.parameters.GetCount() < decode(opcode, 104, 2, 1))
 		return;

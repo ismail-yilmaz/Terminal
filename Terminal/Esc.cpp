@@ -5,7 +5,7 @@
 
 namespace Upp {
 
-void TerminalCtrl::ParseEscapeSequences(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseEscapeSequences(const AnsiParser::Sequence& seq)
 {
 	LLOG(seq);
 
@@ -16,7 +16,7 @@ void TerminalCtrl::ParseEscapeSequences(const VTInStream::Sequence& seq)
 	if(p) p->c(*this, seq);
 }
 
-bool TerminalCtrl::Convert7BitC1To8BitC1(const VTInStream::Sequence& seq)
+bool TerminalCtrl::Convert7BitC1To8BitC1(const AnsiParser::Sequence& seq)
 {
 	bool b = IsLevel1() && seq.intermediate[0] == 0;
 	if(b) {

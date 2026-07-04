@@ -1,9 +1,9 @@
-#ifndef _VTInStream_h_
-#define _VTInStream_h_
+#ifndef _AnsiParser_h_
+#define _AnsiParser_h_
 
 #include <Core/Core.h>
 
-// VTInStream: A VT500 series "lexical" parser for DEC & ANSI escape sequences.
+// AnsiParser: A VT500 series "lexical" parser for DEC & ANSI escape sequences.
 // This parser is based on the UML state diagram provided by Paul-Flo Williams.
 // See: https://vt100.net/emu/dec_ansi_parser
 
@@ -13,7 +13,7 @@
 
 namespace Upp {
 
-class VTInStream : public MemReadStream {
+class AnsiParser {
 public:
     struct Sequence {
         enum Type : byte { NUL = 0, ESC, CSI, DCS, OSC, APC, PM, SOS };
@@ -87,42 +87,51 @@ public:
 public:
     void    Parse(const void *data, int size, bool utf8);
     void    Parse(const String& data, bool utf8)            { Parse(~data, data.GetLength(), utf8); }
+    int     Peek() const                                    { return IsEof() ? -1 : *ptr; }
+    int     Get()                                           { return IsEof() ? -1 : *ptr++; }
+    bool    IsEof() const                                   { return ptr >= end; }
     void    Reset();
     bool    WasChr() const                                  { return waschr; }
     
-    Event<int>  WhenChr;
     Event<byte> WhenCtl;
-    Event<const VTInStream::Sequence&>  WhenEsc;
-    Event<const VTInStream::Sequence&>  WhenCsi;
-    Event<const VTInStream::Sequence&>  WhenDcs;
-    Event<const VTInStream::Sequence&>  WhenOsc;
-    Event<const VTInStream::Sequence&>  WhenApc;
+    Event<const int*, const byte*, int> WhenChr;
+    Event<const AnsiParser::Sequence&>  WhenEsc;
+    Event<const AnsiParser::Sequence&>  WhenCsi;
+    Event<const AnsiParser::Sequence&>  WhenDcs;
+    Event<const AnsiParser::Sequence&>  WhenOsc;
+    Event<const AnsiParser::Sequence&>  WhenApc;
 
-    VTInStream();
-    virtual ~VTInStream() {}
+    AnsiParser();
+    virtual ~AnsiParser() {}
     
 private:
     int             GetChr();
     void            CheckLoadData(const char *data, int size, String& err);
     void            NextState(State::Id sid);
-    const State*    GetState(const int& c) const;
-    void            Dispatch(byte type, const Event<const VTInStream::Sequence&>& fn);
-    void            Reset0(const Vector<VTInStream::State>* st);
+    const State*    GetState(int c) const;
+    void            Dispatch(byte type, const Event<const AnsiParser::Sequence&>& fn);
+    void            Reset0(const Vector<AnsiParser::State>* st);
     
     // Collectors.
     void            CollectChr(int c);
     void            CollectIntermediate(int c);
-    void            CollectParameter(int c);
-    void            CollectPayload(int c);
-    void            CollectString(int c);
+    void            CollectParameter(byte *start, int c);
+    void            CollectPayload(byte *start, int c);
+    void            CollectString(byte *start, int c);
     
+    void            FlushRunes();
+
 private:
+    byte *ptr, *begin, *end;
     Sequence    sequence;
-    bool        waschr;
-    bool        utf8mode;
-    String      collected;
-    String      buffer;
-    const Vector<VTInStream::State>*  state;
+    bool        waschr:1;
+    bool        utf8mode:1;
+    String      collected, buffer;
+    const Vector<AnsiParser::State>*  state;
 };
+
+// Backward compatibility
+using VTInStream = AnsiParser;
+
 }
 #endif

@@ -5,7 +5,7 @@
 
 namespace Upp {
 
-void TerminalCtrl::ParseDeviceControlStrings(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseDeviceControlStrings(const AnsiParser::Sequence& seq)
 {
 	LLOG(seq);
 
@@ -13,7 +13,7 @@ void TerminalCtrl::ParseDeviceControlStrings(const VTInStream::Sequence& seq)
 	if(p) p->c(*this, seq);
 }
 
-void TerminalCtrl::SetUserDefinedKeys(const VTInStream::Sequence& seq)
+void TerminalCtrl::SetUserDefinedKeys(const AnsiParser::Sequence& seq)
 {
 	if(!userdefinedkeys || userdefinedkeyslocked)
 		return;
@@ -58,7 +58,7 @@ bool TerminalCtrl::GetUDKString(dword key, String& val)
 	return i >= 0 && val.GetCount();
 }
 
-void TerminalCtrl::ReportControlFunctionSettings(const VTInStream::Sequence& seq)
+void TerminalCtrl::ReportControlFunctionSettings(const AnsiParser::Sequence& seq)
 {
 	// TODO
 	String reply;// = "0$r";	// Invalid request (unhandled sequence)
@@ -118,7 +118,7 @@ void TerminalCtrl::ReportControlFunctionSettings(const VTInStream::Sequence& seq
 	PutDCS(reply);
 }
 
-void TerminalCtrl::RestorePresentationState(const VTInStream::Sequence& seq)
+void TerminalCtrl::RestorePresentationState(const AnsiParser::Sequence& seq)
 {
 	int which = seq.GetInt(1, 0);
 
@@ -240,7 +240,7 @@ void TerminalCtrl::RestorePresentationState(const VTInStream::Sequence& seq)
 	}
 }
 
-void TerminalCtrl::ParseSixelGraphics(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseSixelGraphics(const AnsiParser::Sequence& seq)
 {
 	if(!sixelimages)
 		return;
@@ -259,7 +259,7 @@ void TerminalCtrl::ParseSixelGraphics(const VTInStream::Sequence& seq)
 	RenderImage(imgs, !modes[DECSDM]);
 }
 
-void TerminalCtrl::ReportXTermCapabilities(const VTInStream::Sequence& seq)
+void TerminalCtrl::ReportXTermCapabilities(const AnsiParser::Sequence& seq)
 {
 	// XTGETTCAP: Values are subject to change...
 

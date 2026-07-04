@@ -5,16 +5,16 @@
 
 namespace Upp {
 
-void TerminalCtrl::InitParser(VTInStream& vts)
+void TerminalCtrl::InitParser(AnsiParser& vts)
 {
 	vts.Reset();
-	vts.WhenChr = [this](int c) { PutChar(c); };
 	vts.WhenCtl = [this](byte c) { ParseControlChars(c); };
-	vts.WhenEsc = [this](const VTInStream::Sequence& seq) { ParseEscapeSequences(seq); };
-	vts.WhenCsi = [this](const VTInStream::Sequence& seq) { ParseCommandSequences(seq); };
-	vts.WhenDcs = [this](const VTInStream::Sequence& seq) { ParseDeviceControlStrings(seq); };
-	vts.WhenOsc = [this](const VTInStream::Sequence& seq) { ParseOperatingSystemCommands(seq); };
-	vts.WhenApc = [this](const VTInStream::Sequence& seq) { ParseApplicationProgrammingCommands(seq); };
+	vts.WhenEsc = [this](const AnsiParser::Sequence& seq) { ParseEscapeSequences(seq); };
+	vts.WhenCsi = [this](const AnsiParser::Sequence& seq) { ParseCommandSequences(seq); };
+	vts.WhenDcs = [this](const AnsiParser::Sequence& seq) { ParseDeviceControlStrings(seq); };
+	vts.WhenOsc = [this](const AnsiParser::Sequence& seq) { ParseOperatingSystemCommands(seq); };
+	vts.WhenApc = [this](const AnsiParser::Sequence& seq) { ParseApplicationProgrammingCommands(seq); };
+	vts.WhenChr = [this](const int* unicode, const byte* ascii, int length) { PutChars(unicode, ascii, length); };
 }
 
 Upp::TerminalCtrl& TerminalCtrl::Set8BitMode(bool b)
@@ -113,14 +113,47 @@ void TerminalCtrl::Restore(bool tpage, bool csets, bool attrs)
 	}
 }
 
-void TerminalCtrl::PutChar(int c)
+void TerminalCtrl::PutChar(int chr)
 {
 	VTCell cell = cellattrs;
-	cell.chr = LookupChar(c);
-	if(modes[IRM])
+	if(modes[IRM]) {
+		cell.chr = LookupChar(chr);
 		page->InsertCell(cell);
-	else
+	}
+	else {
+		cell.chr = LookupChar(chr);
 		page->AddCell(cell);
+	}
+}
+
+template <class T>
+void TerminalCtrl::PutCharsPick(const T *chars, int length)
+{
+	VTCell cell = cellattrs;
+	if(modes[IRM]) {
+		for(int i = 0; i < length; i++) {
+			cell.chr = LookupChar(chars[i]);
+			page->InsertCell(cell);
+		}
+	}
+	else {
+		for(int i = 0; i < length; i++) {
+			cell.chr = LookupChar(chars[i]);
+			page->AddCell(cell);
+		}
+	}
+}
+
+void TerminalCtrl::PutChars(const int *unicode, const byte *ascii, int length)
+{
+	if(!length)
+		return;
+	
+	if(ascii)
+		PutCharsPick(ascii, length);
+	else
+	if(unicode)
+		PutCharsPick(unicode, length);
 }
 
 void TerminalCtrl::Write(const void *data, int size, bool utf8)
@@ -348,7 +381,7 @@ TerminalCtrl& TerminalCtrl::PutEol()
 TerminalCtrl& TerminalCtrl::Echo(const String& s)
 {
 	if(s.GetLength()) {
-		VTInStream echoparser;
+		AnsiParser echoparser;
 		InitParser(echoparser);
 		PreParse();
 		echoparser.Parse(s, IsUtf8Mode());

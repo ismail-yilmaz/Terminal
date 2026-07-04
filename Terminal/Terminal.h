@@ -507,7 +507,7 @@ protected:
     Point       SelectionToPagePos(Point pt) const;
 
 private:
-    void        InitParser(VTInStream& vts);
+    void        InitParser(AnsiParser& vts);
 
     void        SyncedRefresh(bool enable = false);
 
@@ -741,8 +741,8 @@ private:
     void        SetInkAndPaperColor(const VTCell& cell, Color& ink, Color& paper);
     void        ReportANSIColor(int opcode, int index, const Color& c);
     void        ReportDynamicColor(int opcode, const Color& c);
-    void        SetProgrammableColors(const VTInStream::Sequence& seq, int opcode);
-    void        ResetProgrammableColors(const VTInStream::Sequence& seq, int opcode);
+    void        SetProgrammableColors(const AnsiParser::Sequence& seq, int opcode);
+    void        ResetProgrammableColors(const AnsiParser::Sequence& seq, int opcode);
     bool        SetSaveColor(int index, const Color& c);
     bool        ResetLoadColor(int index);
     void        ParseExtendedColors(VTCell& attrs, const Vector<String>& opcodes, int& index);
@@ -759,94 +759,99 @@ private:
     };
 
 private:
-    void        PutChar(int c);
+	template <class T>
+	void PutCharsPick(const T *chars, int length);
+
+	void        PutChar(int chr);
+    void        PutChars(const int *unicode, const byte *ascii, int length);
+    
     int         LookupChar(int c);
 
     void        ParseControlChars(byte c)                                               { DispatchCtl(c); }
-    void        ParseEscapeSequences(const VTInStream::Sequence& seq);
-    void        ParseCommandSequences(const VTInStream::Sequence& seq);
-    void        ParseDeviceControlStrings(const VTInStream::Sequence& seq);
-    void        ParseOperatingSystemCommands(const VTInStream::Sequence& seq);
-    void        ParseApplicationProgrammingCommands(const VTInStream::Sequence& seq);
+    void        ParseEscapeSequences(const AnsiParser::Sequence& seq);
+    void        ParseCommandSequences(const AnsiParser::Sequence& seq);
+    void        ParseDeviceControlStrings(const AnsiParser::Sequence& seq);
+    void        ParseOperatingSystemCommands(const AnsiParser::Sequence& seq);
+    void        ParseApplicationProgrammingCommands(const AnsiParser::Sequence& seq);
 
-    bool        Convert7BitC1To8BitC1(const VTInStream::Sequence& seq);
+    bool        Convert7BitC1To8BitC1(const AnsiParser::Sequence& seq);
 
-    void        ClearPage(const VTInStream::Sequence& seq, dword flags);
-    void        ClearLine(const VTInStream::Sequence& seq, dword flags);
-    void        ClearTabs(const VTInStream::Sequence& seq);
+    void        ClearPage(const AnsiParser::Sequence& seq, dword flags);
+    void        ClearLine(const AnsiParser::Sequence& seq, dword flags);
+    void        ClearTabs(const AnsiParser::Sequence& seq);
 
-    void        ReportMode(const VTInStream::Sequence& seq);
-    void        ReportDeviceStatus(const VTInStream::Sequence& seq);
-    void        ReportDeviceParameters(const VTInStream::Sequence& seq);
-    void        ReportDeviceAttributes(const VTInStream::Sequence& seq);
-    void        ReportExtendedDeviceAttributes(const VTInStream::Sequence& seq);
-    void        ReportControlFunctionSettings(const VTInStream::Sequence& seq);
-    void        ReportRectAreaChecksum(const VTInStream::Sequence &seq);
-    void        ReportPresentationState(const VTInStream::Sequence& seq);
+    void        ReportMode(const AnsiParser::Sequence& seq);
+    void        ReportDeviceStatus(const AnsiParser::Sequence& seq);
+    void        ReportDeviceParameters(const AnsiParser::Sequence& seq);
+    void        ReportDeviceAttributes(const AnsiParser::Sequence& seq);
+    void        ReportExtendedDeviceAttributes(const AnsiParser::Sequence& seq);
+    void        ReportControlFunctionSettings(const AnsiParser::Sequence& seq);
+    void        ReportRectAreaChecksum(const AnsiParser::Sequence &seq);
+    void        ReportPresentationState(const AnsiParser::Sequence& seq);
 
-    void        RestorePresentationState(const VTInStream::Sequence& seq);
+    void        RestorePresentationState(const AnsiParser::Sequence& seq);
 
-    void        SelectGraphicsRendition(const VTInStream::Sequence& seq);
+    void        SelectGraphicsRendition(const AnsiParser::Sequence& seq);
     void        SetGraphicsRendition(VTCell& attrs, const Vector<String>& opcodes);
     void        InvertGraphicsRendition(VTCell& attrs, const Vector<String>& opcodes);
     String      GetGraphicsRenditionOpcodes(const VTCell& attrs);
 
-    void        ParseiTerm2Protocols(const VTInStream::Sequence& seq);
+    void        ParseiTerm2Protocols(const AnsiParser::Sequence& seq);
 
-    void        ParseTerminalCtrlProtocols(const VTInStream::Sequence& seq);
+    void        ParseTerminalCtrlProtocols(const AnsiParser::Sequence& seq);
 
-    void        ParseConEmuProtocols(const VTInStream::Sequence& seq);
+    void        ParseConEmuProtocols(const AnsiParser::Sequence& seq);
 
-//    void        ParseKittyProcotocls(const VTInStream::Sequence& seq);
+//    void        ParseKittyProcotocls(const AnsiParser::Sequence& seq);
 
-    void        ParseSixelGraphics(const VTInStream::Sequence& seq);
-    void        ParseJexerGraphics(const VTInStream::Sequence& seq);
-    bool        ParseiTerm2Graphics(const VTInStream::Sequence& seq);
-    bool        ParseKittyGraphics(const VTInStream::Sequence& seq);
+    void        ParseSixelGraphics(const AnsiParser::Sequence& seq);
+    void        ParseJexerGraphics(const AnsiParser::Sequence& seq);
+    bool        ParseiTerm2Graphics(const AnsiParser::Sequence& seq);
+    bool        ParseKittyGraphics(const AnsiParser::Sequence& seq);
 
-    bool        ParseItem2FeatureReport(const VTInStream::Sequence& seq);
-    bool        ParseiTerm2BackgroundChange(const VTInStream::Sequence& seq);
+    bool        ParseItem2FeatureReport(const AnsiParser::Sequence& seq);
+    bool        ParseiTerm2BackgroundChange(const AnsiParser::Sequence& seq);
 
-    void        ParseHyperlinks(const VTInStream::Sequence& seq);
+    void        ParseHyperlinks(const AnsiParser::Sequence& seq);
 
-    bool        ParseiTerm2Annotations(const VTInStream::Sequence& seq);
-    void        ParseTerminalCtrlAnnotations(const VTInStream::Sequence& seq);
+    bool        ParseiTerm2Annotations(const AnsiParser::Sequence& seq);
+    void        ParseTerminalCtrlAnnotations(const AnsiParser::Sequence& seq);
 
-    void        ParseConEmuProgressEvent(const VTInStream::Sequence& seq);
+    void        ParseConEmuProgressEvent(const AnsiParser::Sequence& seq);
 
-    void        ParseClipboardRequests(const VTInStream::Sequence& seq);
+    void        ParseClipboardRequests(const AnsiParser::Sequence& seq);
 
-    void        ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
-    void        ParseSemanticInformation(const VTInStream::Sequence& seq);
-    void        ParseConEmuWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq);
-    void        ParseConEmuMessageBoxMessage(const VTInStream::Sequence& seq);
+    void        ParseWorkingDirectoryChangeRequest(const AnsiParser::Sequence& seq);
+    void        ParseSemanticInformation(const AnsiParser::Sequence& seq);
+    void        ParseConEmuWorkingDirectoryChangeRequest(const AnsiParser::Sequence& seq);
+    void        ParseConEmuMessageBoxMessage(const AnsiParser::Sequence& seq);
 
-    void        SetCaretStyle(const VTInStream::Sequence& seq);
+    void        SetCaretStyle(const AnsiParser::Sequence& seq);
 
-    void        SetProgrammableLEDs(const VTInStream::Sequence& seq);
+    void        SetProgrammableLEDs(const AnsiParser::Sequence& seq);
 
-    void        SetDeviceConformanceLevel(const VTInStream::Sequence& seq);
+    void        SetDeviceConformanceLevel(const AnsiParser::Sequence& seq);
 
-    void        SetUserDefinedKeys(const VTInStream::Sequence& seq);
+    void        SetUserDefinedKeys(const AnsiParser::Sequence& seq);
     
-    void        ReportXTermCapabilities(const VTInStream::Sequence& seq);
+    void        ReportXTermCapabilities(const AnsiParser::Sequence& seq);
 
-    void        CopyRectArea(const VTInStream::Sequence& seq);
-    void        FillRectArea(const VTInStream::Sequence& seq);
-    void        ClearRectArea(const VTInStream::Sequence& seq, bool selective = false);
-    void        SelectRectAreaAttrsChangeExtent(const VTInStream::Sequence& seq);
-    void        ChangeRectAreaAttrs(const VTInStream::Sequence& seq, bool invert);
+    void        CopyRectArea(const AnsiParser::Sequence& seq);
+    void        FillRectArea(const AnsiParser::Sequence& seq);
+    void        ClearRectArea(const AnsiParser::Sequence& seq, bool selective = false);
+    void        SelectRectAreaAttrsChangeExtent(const AnsiParser::Sequence& seq);
+    void        ChangeRectAreaAttrs(const AnsiParser::Sequence& seq, bool invert);
 
-    void        HandleWindowOpsRequests(const VTInStream::Sequence& seq);
+    void        HandleWindowOpsRequests(const AnsiParser::Sequence& seq);
     void        WindowMoveRequest(TopWindow *w, int x, int y);
     void        WindowResizeRequest(TopWindow *w, int cx, int cy);
     void        WindowPageResizeRequest(TopWindow *w, int cx, int cy);
     void        WindowMaximizeHorzRequest(TopWindow *w);
     void        WindowMaximizeVertRequest(TopWindow *w);
 
-    void        SetHorizontalMargins(const VTInStream::Sequence& seq);
-    void        SetVerticalMargins(const VTInStream::Sequence& seq);
-    void        SetLinesPerPage(const VTInStream::Sequence& seq);
+    void        SetHorizontalMargins(const AnsiParser::Sequence& seq);
+    void        SetVerticalMargins(const AnsiParser::Sequence& seq);
+    void        SetLinesPerPage(const AnsiParser::Sequence& seq);
 
     void        SetColumns(int cols)                                { WhenSetSize(PageSizeToClient(Size(cols, page->GetSize().cy))); }
     void        SetRows(int rows)                                   { WhenSetSize(PageSizeToClient(Size(page->GetSize().cx, rows))); }
@@ -868,7 +873,7 @@ private:
     void        VT52MoveCursor();   // VT52 direct cursor addressing.
 
 private:
-    VTInStream  parser;
+    AnsiParser  parser;
     VTPage      dpage;
     VTPage      apage;
     VTCell      cellattrs;
@@ -974,13 +979,13 @@ private:
     void        XTscrlbar(bool b);
     void        XTsyncout(bool b);
 
-    void        SetMode(const VTInStream::Sequence& seq, bool enable);
+    void        SetMode(const AnsiParser::Sequence& seq, bool enable);
 
     using CbControl  = Tuple<byte, byte, Event<TerminalCtrl&, byte> >;
-    using CbFunction = Tuple<byte, byte, Event<TerminalCtrl&, const VTInStream::Sequence&> >;
+    using CbFunction = Tuple<byte, byte, Event<TerminalCtrl&, const AnsiParser::Sequence&> >;
     using CbMode     = Tuple<word, byte, byte, Event<TerminalCtrl&, int, bool> >;
 
-    const CbFunction* FindFunctionPtr(const VTInStream::Sequence& seq);
+    const CbFunction* FindFunctionPtr(const AnsiParser::Sequence& seq);
     const CbMode*     FindModePtr(word modenum, byte modetype);
     void              DispatchCtl(byte ctl);
 

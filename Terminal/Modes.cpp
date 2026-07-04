@@ -6,7 +6,7 @@
 
 namespace Upp {
 
-void TerminalCtrl::SetMode(const VTInStream::Sequence& seq, bool enable)
+void TerminalCtrl::SetMode(const AnsiParser::Sequence& seq, bool enable)
 {
 	for(const String& s : seq.parameters) {		// Multiple terminal modes can be set/reset at once.
 		int modenum = StrInt(s);
@@ -15,7 +15,7 @@ void TerminalCtrl::SetMode(const VTInStream::Sequence& seq, bool enable)
 	}
 }
 
-void TerminalCtrl::ReportMode(const VTInStream::Sequence& seq)
+void TerminalCtrl::ReportMode(const AnsiParser::Sequence& seq)
 {
 	int modenum = seq.GetInt(1, 0);
 	const CbMode *p = FindModePtr(modenum, seq.mode);

@@ -5,7 +5,7 @@
 
 namespace Upp {
 
-void TerminalCtrl::SelectGraphicsRendition(const VTInStream::Sequence& seq)
+void TerminalCtrl::SelectGraphicsRendition(const AnsiParser::Sequence& seq)
 {
 	SetGraphicsRendition(cellattrs, seq.parameters);
 	page->Attributes(cellattrs);	// This update is required for BCE (background color erase).

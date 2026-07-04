@@ -5,13 +5,13 @@
 
 namespace Upp {
 
-void TerminalCtrl::ParseApplicationProgrammingCommands(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseApplicationProgrammingCommands(const AnsiParser::Sequence& seq)
 {
 	if(!kittyimages || !ParseKittyGraphics(seq))
 		WhenApplicationCommand(seq.payload);
 }
 
-bool TerminalCtrl::ParseKittyGraphics(const VTInStream::Sequence& seq)
+bool TerminalCtrl::ParseKittyGraphics(const AnsiParser::Sequence& seq)
 {
 	// See: https://sw.kovidgoyal.net/kitty/graphics-protocol/
 	

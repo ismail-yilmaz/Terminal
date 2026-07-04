@@ -82,19 +82,19 @@ void TerminalCtrl::DispatchCtl(byte ctl)
 		vtcbytes[0x8F] = { LEVEL_1, LEVEL_4, [](TerminalCtrl& t, byte c) { t.gsets.SS(c);                                         } };   // SS3:   Temporarily invoke G3 to GL
 		vtcbytes[0x96] = { LEVEL_2, LEVEL_4, [](TerminalCtrl& t, byte c) { t.SetISOStyleCellProtection(true);                     } };   // SPA:   Start of protected area
 		vtcbytes[0x97] = { LEVEL_2, LEVEL_4, [](TerminalCtrl& t, byte c) { t.SetISOStyleCellProtection(false);                    } };   // EPA:   End of protected area
-		vtcbytes[0x9A] = { LEVEL_1, LEVEL_4, [](TerminalCtrl& t, byte c) { t.ReportDeviceAttributes(VTInStream::Sequence());      } };   // DECID: Report terminal ID
+		vtcbytes[0x9A] = { LEVEL_1, LEVEL_4, [](TerminalCtrl& t, byte c) { t.ReportDeviceAttributes(AnsiParser::Sequence());      } };   // DECID: Report terminal ID
 		vtcbytes[0x9C] = { LEVEL_1, LEVEL_4, [](TerminalCtrl& t, byte c) { /* NOP */                                              } };   // ST:    String terminator
 	}
 	if(const CbControl& cb = vtcbytes[ctl]; clevel >= cb.a && clevel <= cb.b)
 		cb.c(*this, ctl);
 }
 
-const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const VTInStream::Sequence& seq)
+const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const AnsiParser::Sequence& seq)
 {
 	#define VT_SEQUENCE(seq, opcode, mode, interm1, interm2, minlevel, maxlevel, fn)       \
 	{                                                                                      \
-		{ Hash32(VTInStream::Sequence::seq, opcode, mode, interm1, interm2) },  \
-		{ TerminalCtrl::minlevel, TerminalCtrl::maxlevel, [](TerminalCtrl& t, const VTInStream::Sequence& q) fn }   \
+		{ Hash32(AnsiParser::Sequence::seq, opcode, mode, interm1, interm2) },  \
+		{ TerminalCtrl::minlevel, TerminalCtrl::maxlevel, [](TerminalCtrl& t, const AnsiParser::Sequence& q) fn }   \
 	}
 	
 	#define VT_ESC(opcode, mode, interm1, interm2, minlevel, maxlevel, fn)  VT_SEQUENCE(ESC, opcode, mode, interm1, interm2, minlevel, maxlevel, fn)
@@ -262,9 +262,9 @@ const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const VTInStream::
 	}
 	
 	LLOG(decode(seq.type,
-		VTInStream::Sequence::ESC, "Unhandled ESC sequence",
-		VTInStream::Sequence::CSI, "Unhandled CSI sequence",
-		VTInStream::Sequence::DCS, "UnHandled DCS sequence", "Unknown sequence type"));
+		AnsiParser::Sequence::ESC, "Unhandled ESC sequence",
+		AnsiParser::Sequence::CSI, "Unhandled CSI sequence",
+		AnsiParser::Sequence::DCS, "UnHandled DCS sequence", "Unknown sequence type"));
 
 	return nullptr;
 }

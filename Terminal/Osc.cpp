@@ -5,7 +5,7 @@
 
 namespace Upp {
 
-void TerminalCtrl::ParseOperatingSystemCommands(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseOperatingSystemCommands(const AnsiParser::Sequence& seq)
 {
 	LLOG(seq);
 
@@ -60,7 +60,7 @@ void TerminalCtrl::ParseOperatingSystemCommands(const VTInStream::Sequence& seq)
 	}
 }
 
-void TerminalCtrl::ParseJexerGraphics(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseJexerGraphics(const AnsiParser::Sequence& seq)
 {
 	// For more information on Jexer image protocol, see:
 	// https://gitlab.com/klamonte/jexer/-/wikis/jexer-images
@@ -93,7 +93,7 @@ void TerminalCtrl::ParseJexerGraphics(const VTInStream::Sequence& seq)
 	RenderImage(simg, scroll);
 }
 
-void TerminalCtrl::ParseiTerm2Protocols(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseiTerm2Protocols(const AnsiParser::Sequence& seq)
 {
 	if(ParseItem2FeatureReport(seq))
 		return;
@@ -110,7 +110,7 @@ void TerminalCtrl::ParseiTerm2Protocols(const VTInStream::Sequence& seq)
 	
 }
 
-bool TerminalCtrl::ParseItem2FeatureReport(const VTInStream::Sequence& seq)
+bool TerminalCtrl::ParseItem2FeatureReport(const AnsiParser::Sequence& seq)
 {
 	// https://iterm2.com/feature-reporting/
 	
@@ -139,7 +139,7 @@ bool TerminalCtrl::ParseItem2FeatureReport(const VTInStream::Sequence& seq)
 	return i >= 0;
 }
 
-bool TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
+bool TerminalCtrl::ParseiTerm2Graphics(const AnsiParser::Sequence& seq)
 {
 	// iTerm2's file and image download and display protocol,
 	// Currently, we only support its inline images  portion.
@@ -197,7 +197,7 @@ bool TerminalCtrl::ParseiTerm2Graphics(const VTInStream::Sequence& seq)
 	return true;
 }
 
-bool TerminalCtrl::ParseiTerm2BackgroundChange(const VTInStream::Sequence& seq)
+bool TerminalCtrl::ParseiTerm2BackgroundChange(const AnsiParser::Sequence& seq)
 {
 	String path = seq.GetStr(2);
 	int pos = path.FindAfter("SetBackgroundImageFile=");
@@ -206,13 +206,13 @@ bool TerminalCtrl::ParseiTerm2BackgroundChange(const VTInStream::Sequence& seq)
 	return pos >= 0;
 }
 
-bool TerminalCtrl::ParseiTerm2Annotations(const VTInStream::Sequence& seq)
+bool TerminalCtrl::ParseiTerm2Annotations(const AnsiParser::Sequence& seq)
 {
 	// TODO
 	return false;
 }
 
-void TerminalCtrl::ParseHyperlinks(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseHyperlinks(const AnsiParser::Sequence& seq)
 {
 	// For more information on explicit hyperlinks, see:
 	// https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
@@ -236,7 +236,7 @@ void TerminalCtrl::ParseHyperlinks(const VTInStream::Sequence& seq)
 	}
 }
 
-void TerminalCtrl::ParseClipboardRequests(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseClipboardRequests(const AnsiParser::Sequence& seq)
 {
 	// For more information on application clipboard access, see:
 	// https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
@@ -270,12 +270,12 @@ void TerminalCtrl::ParseClipboardRequests(const VTInStream::Sequence& seq)
 	}
 }
 
-void TerminalCtrl::ParseWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseWorkingDirectoryChangeRequest(const AnsiParser::Sequence& seq)
 {
 	WhenDirectoryChange(seq.GetStr(2));
 }
 
-void TerminalCtrl::ParseSemanticInformation(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseSemanticInformation(const AnsiParser::Sequence& seq)
 {
 	// For more information on semantic prompts, see:
 	// https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md
@@ -295,13 +295,13 @@ void TerminalCtrl::ParseSemanticInformation(const VTInStream::Sequence& seq)
 	}
 }
 
-void TerminalCtrl::ParseTerminalCtrlProtocols(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseTerminalCtrlProtocols(const AnsiParser::Sequence& seq)
 {
 	if(seq.GetInt(2, 0) == 1)
 		ParseTerminalCtrlAnnotations(seq);
 }
 
-void TerminalCtrl::ParseTerminalCtrlAnnotations(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseTerminalCtrlAnnotations(const AnsiParser::Sequence& seq)
 {
 	if(!annotations || seq.parameters.GetCount() != 4)
 		return;
@@ -324,7 +324,7 @@ void TerminalCtrl::ParseTerminalCtrlAnnotations(const VTInStream::Sequence& seq)
 	}
 }
 
-void TerminalCtrl::ParseConEmuProtocols(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseConEmuProtocols(const AnsiParser::Sequence& seq)
 {
 	// For more information on ConEMU specific commands, see:
 	// https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC
@@ -339,7 +339,7 @@ void TerminalCtrl::ParseConEmuProtocols(const VTInStream::Sequence& seq)
 	}
 }
 
-void TerminalCtrl::ParseConEmuProgressEvent(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseConEmuProgressEvent(const AnsiParser::Sequence& seq)
 {
 	// https://learn.microsoft.com/en-us/windows/terminal/tutorials/progress-bar-sequences
 
@@ -357,14 +357,14 @@ void TerminalCtrl::ParseConEmuProgressEvent(const VTInStream::Sequence& seq)
 	}
 }
 
-void TerminalCtrl::ParseConEmuWorkingDirectoryChangeRequest(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseConEmuWorkingDirectoryChangeRequest(const AnsiParser::Sequence& seq)
 {
 	// https://learn.microsoft.com/en-us/windows/terminal/tutorials/new-tab-same-directory
 	
 	WhenDirectoryChange(seq.GetStr(3));
 }
 
-void TerminalCtrl::ParseConEmuMessageBoxMessage(const VTInStream::Sequence& seq)
+void TerminalCtrl::ParseConEmuMessageBoxMessage(const AnsiParser::Sequence& seq)
 {
 	// https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC
 	
