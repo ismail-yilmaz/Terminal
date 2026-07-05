@@ -118,8 +118,6 @@ private:
     void            CollectParameter(byte *start, int c);
     void            CollectPayload(byte *start, int c);
     void            CollectString(byte *start, int c);
-    
-    void            FlushRunes();
 
 private:
     byte *ptr, *begin, *end;

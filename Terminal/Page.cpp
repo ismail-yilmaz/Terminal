@@ -369,7 +369,7 @@ Point VTPage::GetRelPos() const
 inline Point VTPage::Bind(const Rect& r, const Point& pt) const
 {
 	return Point(pt.x < r.left ? r.left : pt.x > r.right ? r.right : pt.x,
-                 pt.y < r.top ? r.top : pt.y > r.bottom ? r.bottom : pt.y);
+				pt.y < r.top ? r.top : pt.y > r.bottom ? r.bottom : pt.y);
 }
 
 inline bool VTPage::ViewContains(const Point& pt) const
@@ -417,26 +417,28 @@ int VTPage::CellAdd(const VTCell& cell, int width)
 {
 	if(width <= 0)
 		return cursor.x;
-	
-	VTLine& line = lines[cursor.y - 1];
-	
-	if(autowrap && cursor.eol)
-	{
-		line.Wrap();
+
+	bool wrapping = autowrap && cursor.eol;
+
+	if(wrapping) {
+		VTLine& prev = lines[cursor.y - 1];
+		prev.Shrink(size.cx);
+		prev.Wrap();
 		NewLine();
 	}
 
-	// Self-normalize
-	line.Shrink(size.cx);
-	
-	SetCell(cell);
+	VTLine& line = lines[cursor.y - 1];
+	if(!wrapping)
+		line.Shrink(size.cx);
+
+	line[cursor.x - 1] = cell;
+	line.Invalidate();
+
 	int next = cursor.x + 1;
 
-	if(next <= margins.right)
-	{
+	if(next <= margins.right) {
 		MoveRight();
-		if(width == 2)
-		{
+		if(width == 2) {
 			VTCell ext = cell;
 			ext.chr = 1;
 			next = CellAdd(ext);
@@ -446,6 +448,54 @@ int VTPage::CellAdd(const VTCell& cell, int width)
 		SetEol();
 
 	return next;
+}
+
+VTPage& VTPage::AddCells(const VTCell* cells, int n, int width)
+{
+	LLOG("AddCells(" << n << ")");
+
+	if(n <= 0)
+		return *this;
+
+	int i = 0;
+	while(i < n) {
+		if(autowrap && cursor.eol) {
+			VTLine& prev = lines[cursor.y - 1];
+			prev.Shrink(size.cx);
+			prev.Wrap();
+			NewLine();
+		}
+
+		VTLine& line = lines[cursor.y - 1];
+
+		int col   = cursor.x;
+		int right = margins.right;
+		int j     = i;
+
+		if(width == 1)
+			while(j < n && col <= right)
+				line[col++ - 1] = cells[j++];
+		else
+			while(j < n && col <= right && cells[j].GetWidth(ambiguouscellwidth) == 1)
+				line[col++ - 1] = cells[j++];
+
+		if(j > i) {
+			line.Invalidate();
+			if(col > right) {
+				cursor.x = right;
+				SetEol();
+			}
+			else
+				cursor.x = col;
+			i = j;
+		}
+		else {
+			CellAdd(cells[i], width == 1 ? 1 : cells[i].GetWidth(ambiguouscellwidth));
+			i++;
+		}
+	}
+	lines[cursor.y - 1].Shrink(size.cx);
+	return *this;
 }
 
 VTPage& VTPage::InsertCell(const VTCell& cell)
@@ -462,7 +512,7 @@ VTPage& VTPage::RepeatCell(int n)
 {
 	LLOG("RepeatCell(" << n << ")");
 
-	const VTCell& cell = GetCell(cursor.x - 1, cursor.y);
+	VTCell cell = GetCell(cursor.x - 1, cursor.y);
 	for(int i = 0, w = cell.GetWidth(ambiguouscellwidth); i < n; i++)
 		CellAdd(cell, w);
 	return *this;
@@ -503,7 +553,7 @@ VTPage& VTPage::MoveHorz(int pos, dword flags)
 			if(cursor.x < margins.left) {
 				offset = left = view.left;
 				right  = margins.right;
-				
+
 			}
 			else
 			if(cursor.x > margins.right) {
@@ -521,11 +571,11 @@ VTPage& VTPage::MoveHorz(int pos, dword flags)
 	}
 
 	pos = GetNextColPos(pos, offset, flags & Cursor::Relative);
-	
+
 	if(reversewrap && (flags & Cursor::ReWrapper) && pos < left) {
 		return RewrapCursor(left - pos);
 	}
-	
+
 	cursor.x = clamp(pos, left, right);
 
 	if(scrollable) {
@@ -604,7 +654,7 @@ VTPage& VTPage::MoveTo(int x, int y)
 	LLOG("MoveTo(" << x << ", " << y << ")");
 
 	return MoveVert(y, Cursor::Displaceable)
-          .MoveHorz(x, Cursor::Displaceable);
+		.MoveHorz(x, Cursor::Displaceable);
 }
 
 VTPage& VTPage::MoveToLine(int n, bool relative)
@@ -689,10 +739,10 @@ VTPage& VTPage::MoveTopLeft()
 	LLOG("MoveTopLeft()");
 
 	dword flags = Cursor::Marginal
-                | Cursor::Displaceable;
+				| Cursor::Displaceable;
 
 	return MoveHorz(1, flags)
-		  .MoveVert(1, flags);
+		.MoveVert(1, flags);
 }
 
 VTPage& VTPage::MoveBottomRight()
@@ -700,10 +750,10 @@ VTPage& VTPage::MoveBottomRight()
 	LLOG("MoveBottomRight()");
 
 	dword flags = Cursor::Marginal
-                | Cursor::Displaceable;
+				| Cursor::Displaceable;
 
 	return MoveHorz(size.cx, flags)
-		  .MoveVert(size.cy, flags);
+		.MoveVert(size.cy, flags);
 }
 
 VTPage& VTPage::NextLine(int n)
@@ -983,7 +1033,7 @@ VTPage& VTPage::EraseCells(int n, dword flags)
 VTPage& VTPage::EraseLine(dword flags)
 {
 	LLOG("EraseLine(" << flags << ")");
-	
+
 	VTLine& l = lines[cursor.y - 1];
 	l.FillLine(cellattrs, flags);
 	l.Unwrap();
@@ -994,7 +1044,7 @@ VTPage& VTPage::EraseLine(dword flags)
 VTPage& VTPage::EraseLeft(dword flags)
 {
 	LLOG("EraseLeft(" << flags << ")");
-	
+
 	VTLine& l =	lines[cursor.y - 1];
 	l.FillLeft(cursor.x, cellattrs, flags);
 	l.Unwrap();
@@ -1005,7 +1055,7 @@ VTPage& VTPage::EraseLeft(dword flags)
 VTPage& VTPage::EraseRight(dword flags)
 {
 	LLOG("EraseRight(" << flags << ")");
-	
+
 	VTLine& l =	lines[cursor.y - 1];
 	l.FillRight(cursor.x, cellattrs, flags);
 	l.Unwrap();
@@ -1016,7 +1066,7 @@ VTPage& VTPage::EraseRight(dword flags)
 VTPage& VTPage::ErasePage(dword flags)
 {
 	LLOG("ErasePage(" << flags << ")");
-	
+
 	Rect r = GetView();
 	for(int i = r.top; i <= r.bottom; i++) {
 		VTLine& l = lines[i - 1];
@@ -1031,7 +1081,7 @@ VTPage& VTPage::ErasePage(dword flags)
 VTPage& VTPage::EraseBefore(dword flags)
 {
 	LLOG("EraseBefore(" << flags << ")");
-	
+
 	for(int i = 1; i < cursor.y; i++) {
 		VTLine& l =	lines[i - 1];
 		l.FillLine(cellattrs, flags);
@@ -1043,7 +1093,7 @@ VTPage& VTPage::EraseBefore(dword flags)
 VTPage& VTPage::EraseAfter(dword flags)
 {
 	LLOG("EraseAfter(" << flags << ")");
-	
+
 	for(int i = cursor.y + 1; i <= size.cy; i++) {
 		VTLine& l =  lines[i - 1];
 		l.FillLine(cellattrs, flags);
@@ -1134,7 +1184,7 @@ VTPage& VTPage::SetHorzMargins(int l, int r)
 	{
 		margins.left  = l;
 		margins.right = r;
-		
+
 		LLOG("Horizontal margins: " << Point(l, r));
 	}
 	else
@@ -1158,7 +1208,7 @@ VTPage& VTPage::SetVertMargins(int t, int b)
 	{
 		margins.top    = t;
 		margins.bottom = b;
-		
+
 		LLOG("Vertical margins: " << Point(t, b));
 	}
 	else
@@ -1202,7 +1252,7 @@ void VTPage::FetchCellsMutable(Point pl, Point ph, Event<VTCell&> consumer)
 {
 	Point ptl = min(pl, ph);
 	Point pth = max(pl, ph);
-	
+
 	if(ptl.y == pth.y) {
 		const VTLine& line = FetchLine(ptl.y);
 		if(!line.IsVoid())
@@ -1236,19 +1286,19 @@ const VTLine& VTPage::FetchLine(int i) const
 {
 	const int slen = saved.GetCount();
 	const int llen = lines.GetCount();
-	
+
 	if(i >= 0 && i < slen)
 		return saved[i];
 	if(i >= slen && i < slen + llen)
 		return lines[i - slen];
-	
+
 	return VTLine::Void();
 }
 
 int VTPage::FetchLine(int i, Gate<int, const VTLine&> consumer, int spanlimit) const
 {
 	LLOG("FetchLine(" << i <<")");
-	
+
 	Tuple<int, int> span = GetLineSpan(i, spanlimit);
 	for(int n = span.a; n <= span.b; n++) {
 		const VTLine& l = FetchLine(n);
@@ -1269,7 +1319,7 @@ int VTPage::FetchLine(int i, VectorMap<int, VTLine>& line) const
 int VTPage::FetchLine(int i, VectorMap<int, WString>& line) const
 {
 	LLOG("FetchLine(" << i << ", " << &line << ") [fetches as a text]");
-	
+
 	return FetchLine(i, [&](int ii, const VTLine& l) { line.Add(ii, l.ToWString()); return false; });
 }
 
@@ -1334,35 +1384,36 @@ void VTPage::LineFill(int pos, int begin, int end, const VTCell& filler, dword f
 		ClearEol();
 }
 
-
 void VTPage::RectCopy(const Point &p, const Rect& r, const Rect& rr, dword flags)
 {
-	LTIMING("VTPage::RectCopy");
+	LTIMING("VTPage::RectCopy_Optimized");
 
 	Rect src(Bind(rr, r.TopLeft()), Bind(rr, r.BottomRight()));
 	Rect dest(p, src.GetSize());
 	dest.Set(Bind(rr, dest.TopLeft()), Bind(rr, dest.BottomRight()));
 
-	Buffer<VTCell> temp((src.Height() + 1) * (src.Width() + 1));
-
-	for(int pass = 0; pass < 2; pass++)
-	{
-		const Rect& rx = pass == 0 ? src : dest;
-		for(int i = rx.top, pos = 0; i <= rx.bottom; i++)
-		{
-			VTLine& line = lines[i - 1];
-			for(int j = rx.left; j <= rx.right; j++, pos++)
-			{
-				VTCell& a = line[j - 1];
-				VTCell& b = *(temp + pos);
-				if(pass == 0)
-					b.Fill(a, flags);
-				else
-					a.Fill(b, flags);
-			}
-			if(pass == 1)
-				line.Invalidate();
+	const int width = src.Width();
+	const int dy = dest.top - src.top;
+	Buffer<VTCell> row_buf(width);
+	bool reverse = (dy > 0);
+	int y_start = reverse ? src.bottom : src.top;
+	int y_end   = reverse ? src.top : src.bottom;
+	int step    = reverse ? -1 : 1;
+	for(int y = y_start; ; y += step) {
+		VTLine& src_line = lines[y - 1];
+		VTLine& dst_line = lines[y + dy - 1];
+		const VTCell* src_ptr = &src_line[src.left - 1];
+		for(int x = 0; x < width; ++x) {
+			row_buf[x] = src_ptr[x];
 		}
+		VTCell* dst_ptr = &dst_line[dest.left - 1];
+		for(int x = 0; x < width; ++x) {
+			dst_ptr[x].Fill(row_buf[x], flags);
+		}
+
+		dst_line.Invalidate();
+		if(y == y_end)
+			break;
 	}
 }
 
@@ -1381,12 +1432,12 @@ Rect VTPage::AdjustRect(const Rect& r, bool displaced)
 	if(displaced && cursor.displaced) {
 		Rect rr = r.Offseted(margins.TopLeft() - 1);
 		return Rect(Bind(margins, rr.TopLeft()),
-                    Bind(margins, rr.BottomRight()));
+					Bind(margins, rr.BottomRight()));
 	}
 
 	Rect view = GetView();
 	return Rect(Bind(view, r.TopLeft()),
-                Bind(view, r.BottomRight()));
+				Bind(view, r.BottomRight()));
 }
 
 VTPage& VTPage::FillRect(const Rect& r, const VTCell& filler, dword flags)
@@ -1498,7 +1549,7 @@ void VTPage::Serialize(Stream& s)
 		s % history;
 		s % historysize;
 	}
-	
+
 	if(s.IsLoading()) {
 		historysize = max(1, historysize);
 		SetTabs(tabsize);

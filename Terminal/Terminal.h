@@ -760,10 +760,9 @@ private:
 
 private:
 	template <class T>
-	void PutCharsPick(const T *chars, int length);
-
-	void        PutChar(int chr);
+	void PutCharsPick(const T *chars, int length, int width);
     void        PutChars(const int *unicode, const byte *ascii, int length);
+	void        PutChar(int chr);
     
     int         LookupChar(int c);
 

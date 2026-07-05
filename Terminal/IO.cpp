@@ -61,7 +61,7 @@ void TerminalCtrl::Reset(bool full)
 	cellattrs.Clear();
 
 	udk.Clear();
-	
+
 	modes.Clear();
 
 	modes.Set(SRM);
@@ -127,20 +127,22 @@ void TerminalCtrl::PutChar(int chr)
 }
 
 template <class T>
-void TerminalCtrl::PutCharsPick(const T *chars, int length)
+void TerminalCtrl::PutCharsPick(const T *chars, int length, int width)
 {
-	VTCell cell = cellattrs;
 	if(modes[IRM]) {
+		VTCell cell = cellattrs;
 		for(int i = 0; i < length; i++) {
 			cell.chr = LookupChar(chars[i]);
 			page->InsertCell(cell);
 		}
 	}
 	else {
+		Buffer<VTCell> cells(length);
 		for(int i = 0; i < length; i++) {
-			cell.chr = LookupChar(chars[i]);
-			page->AddCell(cell);
+			cells[i] = cellattrs;
+			cells[i].chr = LookupChar(chars[i]);
 		}
+		page->AddCells(cells, length, width);
 	}
 }
 
@@ -148,12 +150,14 @@ void TerminalCtrl::PutChars(const int *unicode, const byte *ascii, int length)
 {
 	if(!length)
 		return;
-	
+
 	if(ascii)
-		PutCharsPick(ascii, length);
+		PutCharsPick(ascii, length, 1);
+
+
 	else
 	if(unicode)
-		PutCharsPick(unicode, length);
+		PutCharsPick(unicode, length, 0);
 }
 
 void TerminalCtrl::Write(const void *data, int size, bool utf8)
@@ -394,7 +398,7 @@ void TerminalCtrl::Serialize(Stream& s)
 {
 	ColorTableSerializer cts(colortable);
 	String chrset = CharsetName(charset);
-	
+
 	int version = 1;
 	s / version;
 
@@ -504,7 +508,7 @@ void TerminalCtrl::Jsonize(JsonIO& jio)
 		("NotifyProgress",      notifyprogress)
 		("Brightness",          brightness)
 		("ColorTable",          cts);
-		
+
 	if(jio.IsLoading()) {
 		SetCharset(CharsetByName(chrset));
 		SetEmulation(clevel, false);

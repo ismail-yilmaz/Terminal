@@ -144,6 +144,7 @@ public:
     const VTCell&   GetCell(Point pt) const                 { return GetCell(pt.x, pt.y);   }
     const VTCell&   GetCell() const                         { return GetCell(cursor);       }
     int             AddCell(const VTCell& cell)             { return CellAdd(cell, cell.GetWidth(ambiguouscellwidth)); }
+    VTPage&         AddCells(const VTCell* cells, int n, int width = 0);
     VTPage&         InsertCell(const VTCell& cell);
     VTPage&         RepeatCell(int n);
 
@@ -184,6 +185,7 @@ public:
 
     VTPage&         InsertCells(int pos, int n);
     VTPage&         InsertCells(int n)                      { return InsertCells(cursor.x, n); }
+
     VTPage&         RemoveCells(int pos, int n);
     VTPage&         RemoveCells(int n)                      { return RemoveCells(cursor.x, n); }
     VTPage&         EraseCells(int n, dword flags = 0);
