@@ -381,14 +381,16 @@ VT_END_STATE_MAP;
 namespace {
 
 #ifdef CPU_SSE2
-force_inline int MoveMask(i8x16 v)
+force_inline
+int MoveMask(i8x16 v)
 {
 	return _mm_movemask_epi8(v.data);
 }
 #elif CPU_NEON
-force_inline int MoveMask(i8x16 v)
+force_inline
+int MoveMask(i8x16 v)
 {
-	static const uint8x16_t bitmask = {
+	constexpr uint8x16_t bitmask = {
 		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80,
 		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 	};
@@ -451,12 +453,11 @@ struct StringPolicy {
 };
 
 template<class Policy, class T> force_inline
-void sCollectInto(T& out, byte *start, byte*& ptr, const byte* limit, const Policy& policy)
+void sCollectInto(T& out, const byte *start, byte*& ptr, const byte* end, const Policy& policy)
 {
-	const byte *b = start;
 
 #ifdef CPU_SIMD
-	while(ptr + 64 <= limit) {
+	while(ptr + 64 <= end) {
 		i8x16 m0 = policy.GetInvalidMask(i8x16(ptr +  0));
 		i8x16 m1 = policy.GetInvalidMask(i8x16(ptr + 16));
 		i8x16 m2 = policy.GetInvalidMask(i8x16(ptr + 32));
@@ -467,25 +468,25 @@ void sCollectInto(T& out, byte *start, byte*& ptr, const byte* limit, const Poli
 						| ((uint64)(uint16) MoveMask(m2) << 32)
 						| ((uint64)(uint16) MoveMask(m3) << 48);
 			ptr += CountTrailingZeroBits64(mask);
-			out.Cat(b, ptr - b);
+			out.Cat(start, (int)(ptr - start));
 			return;
 		}
 		ptr += 64;
 	}
-	while(ptr + 16 <= limit) {
+	while(ptr + 16 <= end) {
 		i8x16 chunk(ptr);
 		if(i8x16 mask = policy.GetInvalidMask(chunk); AnyTrue(mask)) {
 			ptr += CountTrailingZeroBits(MoveMask(mask));
-			out.Cat(b, ptr - b);
+			out.Cat(start, (int)(ptr - start));
 			return;
 		}
 		ptr += 16;
 	}
 #endif
-	while((ptr < limit) && policy.ScalarCheck(*ptr))
+	while((ptr < end) && policy.ScalarCheck(*ptr))
 		ptr++;
 
-	out.Cat(b, ptr - b);
+	out.Cat(start, (int)(ptr - start));
 }
 
 force_inline
@@ -750,10 +751,10 @@ void AnsiParser::CollectChr(int c)
 		const i8x16 lo = i8all(0x20);
 		const i8x16 hi = i8all(0x7E);
 		while(ptr + 64 <= end) {
-			i8x16 c0(ptr +  0), m0 = (c0 < lo | (c0 > hi));
-			i8x16 c1(ptr + 16), m1 = (c1 < lo | (c1 > hi));
-			i8x16 c2(ptr + 32), m2 = (c2 < lo | (c2 > hi));
-			i8x16 c3(ptr + 48), m3 = (c3 < lo | (c3 > hi));
+			i8x16 c0(ptr +  0), m0 = (c0 < lo) | (c0 > hi);
+			i8x16 c1(ptr + 16), m1 = (c1 < lo) | (c1 > hi);
+			i8x16 c2(ptr + 32), m2 = (c2 < lo) | (c2 > hi);
+			i8x16 c3(ptr + 48), m3 = (c3 < lo) | (c3 > hi);
 			if(AnyTrue(m0 | m1 | m2 | m3)) {
 				uint64 mask = (uint64)(uint16) MoveMask(m0)
 							| ((uint64)(uint16) MoveMask(m1) << 16)
@@ -777,7 +778,6 @@ void AnsiParser::CollectChr(int c)
 		if(ptr > start)
 			WhenChr(nullptr, start, (int)(ptr - start));
 #endif
-
 COMPLEX_CHAR_FALLBACK:
 		p = ptr;
 		c = GetChr();

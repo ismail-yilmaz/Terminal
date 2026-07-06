@@ -164,7 +164,7 @@ public:
 
     TerminalCtrl&   SetPadding(Size sz);
     Size            GetPadding() const                              { return padding; }
-    
+
     void            SetCharset(byte cs)                             { charset = ResolveCharset(cs); }
     byte            GetCharset() const                              { return charset;    }
 
@@ -578,7 +578,7 @@ private:
             ENCODED      = 1 << 3,
         };
 
-		int                   id       = 0;
+        int                   id       = 0;
         String                data     = Null;
         Size                  size     = Null;
         Protocol              format   = SIXEL;
@@ -759,12 +759,13 @@ private:
     };
 
 private:
-	template <class T>
-	void PutCharsPick(const T *chars, int length, int width);
+    template <class T>
+    void PutCharsPick(const T *chars, int length, int width);
     void        PutChars(const int *unicode, const byte *ascii, int length);
-	void        PutChar(int chr);
-    
+    void        PutChar(int chr);
+
     int         LookupChar(int c);
+    bool        CharsNeedLookup();
 
     void        ParseControlChars(byte c)                                               { DispatchCtl(c); }
     void        ParseEscapeSequences(const AnsiParser::Sequence& seq);
@@ -832,7 +833,7 @@ private:
     void        SetDeviceConformanceLevel(const AnsiParser::Sequence& seq);
 
     void        SetUserDefinedKeys(const AnsiParser::Sequence& seq);
-    
+
     void        ReportXTermCapabilities(const AnsiParser::Sequence& seq);
 
     void        CopyRectArea(const AnsiParser::Sequence& seq);

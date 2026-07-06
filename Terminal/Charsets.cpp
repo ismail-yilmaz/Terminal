@@ -103,12 +103,12 @@ INITIALIZER(DECGSets)
 int TerminalCtrl::DecodeCodepoint(int c, byte gset)
 {
 	byte cs = ResolveVTCharset(gset);
-	
+
 	if(c < 0x80
 	&&(gset == CHARSET_DEC_DCS		// Allow these charsets even when the g-sets are overridden.
 	|| gset == CHARSET_DEC_TCS
 	|| gset == CHARSET_DEC_VT52))
-        c = ToUnicode(c | 0x80, gset);
+		c = ToUnicode(c | 0x80, gset);
 	else
 	if(cs == CHARSET_TOASCII)
 		c = ToAscii(c);
@@ -122,7 +122,7 @@ int TerminalCtrl::DecodeCodepoint(int c, byte gset)
 int TerminalCtrl::EncodeCodepoint(int c, byte gset)
 {
 	byte cs = ResolveVTCharset(gset);
-	
+
 	if(gset == CHARSET_DEC_DCS		// Allow these charsets even when the g-sets are overridden.
 	|| gset == CHARSET_DEC_TCS
 	|| gset == CHARSET_DEC_VT52)
@@ -141,17 +141,21 @@ WString TerminalCtrl::DecodeDataString(const String& s)
 {
 	if(IsUtf8Mode() && CheckUtf8(s))
 		return s.ToWString();
-	
-	WString txt;
-	bool b = IsLevel2();
-	const char *p = ~s;
 
-	while(*p) {
-		byte c = *p++;
-		txt.Cat(DecodeCodepoint(c, gsets.Get(c, b)));
+	int len = s.GetLength();
+	if(len == 0)
+		return Null;
+
+	WStringBuffer txt(len);
+	bool b = IsLevel2();
+	const byte *p = (const byte *) ~s;
+	wchar *t = ~txt;
+
+	for(int i = 0; i < len; i++) {
+		t[i] = DecodeCodepoint(p[i], gsets.Get(p[i], b));
 	}
 
-	return txt;
+	return WString(txt);
 }
 
 String TerminalCtrl::EncodeDataString(const WString& ws)
@@ -159,37 +163,50 @@ String TerminalCtrl::EncodeDataString(const WString& ws)
 	if(IsUtf8Mode())
 		return ToUtf8(ws);
 
-	String txt;
+	int len = ws.GetLength();
+	if(len == 0)
+		return Null;
+
+	StringBuffer txt(len);
 	bool b = IsLevel2();
 	const wchar *s = ~ws;
+	char *t = ~txt;
 
-	while(*s) {
-		wchar c = *s++;
-		c = (wchar) EncodeCodepoint(c, gsets.Get(c, b));
-		txt.Cat(c == DEFAULTCHAR ? '?' : c);
+	for(int i = 0; i < len; i++) {
+		int enc = EncodeCodepoint(s[i], gsets.Get((byte) s[i], b));
+		t[i] = (enc == DEFAULTCHAR) ? '?' : (char)enc;
 	}
 
-	return txt;
+	return String(txt);
 }
 
 int TerminalCtrl::LookupChar(int c)
 {
 	// Perform single or locking shifts for GL and GR...
 	// Single shifts are available on devices with level >= 1
-	
+
 	if(IsLevel1() && gsets.GetSS() != 0x00) {
-		switch(gsets.GetSS()) {
-		case 0x8E: // SS2
-			c = DecodeCodepoint(c, gsets.GetG2());
-			break;
-		case 0x8F: // SS3
-			c = DecodeCodepoint(c, gsets.GetG3());
-			break;
-		}
+		byte ss = gsets.GetSS();
 		gsets.SS(0x00);
-		return c;
+		if(ss == 0x8E)
+			return DecodeCodepoint(c, gsets.GetG2());
+		if(ss == 0x8F)
+			return DecodeCodepoint(c, gsets.GetG3());
 	}
+
 	return DecodeCodepoint(c, gsets.Get(c, IsLevel2()));
+}
+
+bool TerminalCtrl::CharsNeedLookup()
+{
+	byte glset = gsets.GetGL();
+
+	return gsets.GetSS() != 0x00
+		|| glset == CHARSET_DEC_DCS
+		|| glset == CHARSET_DEC_TCS
+		|| glset == CHARSET_DEC_VT52
+		|| ResolveVTCharset(glset) != CHARSET_UNICODE
+		|| (IsLevel2() && ResolveVTCharset(gsets.GetGR()) != CHARSET_UNICODE);
 }
 
 TerminalCtrl::GSets::GSets(byte defgset)
@@ -213,7 +230,7 @@ void TerminalCtrl::GSets::ConformtoANSILevel1()
 	g[1] = CHARSET_ISO8859_1;
 	G0toGL();
 	G1toGR();
-	
+
 }
 
 void TerminalCtrl::GSets::ConformtoANSILevel2()
@@ -259,7 +276,7 @@ void TerminalCtrl::GSets::Serialize(Stream& s)
 		CharsetName(g[2]),
 		CharsetName(g[3])
 	};
-	
+
 	s % v;
 	s % l;
 	s % r;
@@ -295,10 +312,10 @@ void TerminalCtrl::GSets::Jsonize(JsonIO& jio)
 		{ "G2",         CharsetName(g[2]) },
 		{ "G3",         CharsetName(g[3]) }
 	};
-	
+
 	for(int i = 0; i < vm.GetCount(); i++)
 		jio(vm.GetKey(i), vm[i]);
-		
+
 	jio	("L",  l)
 		("R",  r)
 		("SingleShift", ss);

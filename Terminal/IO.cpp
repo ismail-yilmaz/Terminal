@@ -115,34 +115,57 @@ void TerminalCtrl::Restore(bool tpage, bool csets, bool attrs)
 
 void TerminalCtrl::PutChar(int chr)
 {
+	LTIMING("PutChar");
+
 	VTCell cell = cellattrs;
-	if(modes[IRM]) {
-		cell.chr = LookupChar(chr);
-		page->InsertCell(cell);
-	}
-	else {
-		cell.chr = LookupChar(chr);
+	cell.chr = CharsNeedLookup() ? LookupChar(chr) : chr;
+
+	if(!modes[IRM])
 		page->AddCell(cell);
-	}
+	else
+		page->InsertCell(cell);
 }
 
 template <class T>
 void TerminalCtrl::PutCharsPick(const T *chars, int length, int width)
 {
-	if(modes[IRM]) {
-		VTCell cell = cellattrs;
-		for(int i = 0; i < length; i++) {
-			cell.chr = LookupChar(chars[i]);
-			page->InsertCell(cell);
-		}
+	LTIMING("PutCharsPick");
+
+	if(!length)
+		return;
+
+	if(length == 1) {
+		PutChar(chars[0]);
+		return;
+	}
+
+	// ~32% speedup on bulk text processing
+	bool passthrough = !CharsNeedLookup();
+
+	if(!modes[IRM]) {
+		Buffer<VTCell> cells(length, cellattrs);
+		if(passthrough)
+			for(int i = 0; i < length; i++)
+				cells[i].chr = chars[i];
+		else
+			for(int i = 0; i < length; i++)
+				cells[i].chr = LookupChar(chars[i]);
+
+		page->AddCells(cells, length, width);
 	}
 	else {
-		Buffer<VTCell> cells(length);
-		for(int i = 0; i < length; i++) {
-			cells[i] = cellattrs;
-			cells[i].chr = LookupChar(chars[i]);
-		}
-		page->AddCells(cells, length, width);
+		VTCell cell = cellattrs;
+		if(passthrough)
+			for(int i = 0; i < length; i++) {
+				cell.chr = chars[i];
+				page->InsertCell(cell);
+			}
+		else
+			for(int i = 0; i < length; i++) {
+				cell.chr = LookupChar(chars[i]);
+				page->InsertCell(cell);
+			}
+	// TODO: page->InsertCells(cells, length, width);
 	}
 }
 
@@ -154,7 +177,6 @@ void TerminalCtrl::PutChars(const int *unicode, const byte *ascii, int length)
 	if(ascii)
 		PutCharsPick(ascii, length, 1);
 
-
 	else
 	if(unicode)
 		PutCharsPick(unicode, length, 0);
@@ -162,6 +184,8 @@ void TerminalCtrl::PutChars(const int *unicode, const byte *ascii, int length)
 
 void TerminalCtrl::Write(const void *data, int size, bool utf8)
 {
+	LTIMING("Write");
+
 	if(size > 0) {
 		PreParse();
 		parser.Parse(data, size, utf8);
@@ -184,35 +208,67 @@ void TerminalCtrl::Flush()
 
 TerminalCtrl& TerminalCtrl::Put0(int c, int cnt)
 {
+	if(cnt <= 0)
+		return *this;
+
 	bool bit8 = Is8BitMode();
 	bool lvl2 = IsLevel2();
-
 	c &= 0xFF;
 
-	do
-	{
-		if(c <= 0x7F) {
-			out.Cat(c);
-		}
-		else
-		if(c <= 0x9F) {
-			if(!bit8)
-				out.Cat(0x1B);
-			out.Cat(bit8 ? c : c - 0x40);
-		}
-		else {	// 0xA0 - 0xFF
-			out.Cat(lvl2 ? c : c - 0x80);
-		}
+	byte seq[2];
+	int len = 0;
+
+	if(c <= 0x7F) {
+		seq[len++] = c;
 	}
-	while (--cnt > 0);
+	else if(c <= 0x9F) {
+		if(!bit8) seq[len++] = 0x1B;
+		seq[len++] = bit8 ? c : c - 0x40;
+	}
+	else {
+		seq[len++] = lvl2 ? c : c - 0x80;
+	}
+
+	while(cnt-- > 0)
+		out.Cat(seq, len);
 
 	return *this;
 }
 
 TerminalCtrl& TerminalCtrl::Put0(const String& s, int cnt)
 {
+	if(cnt <= 0 || s.IsEmpty())
+		return *this;
+
+	bool bit8 = Is8BitMode();
+	bool lvl2 = IsLevel2();
+
+	int slen = s.GetLength();
+
+	// Max possible length is exactly double the string (if all chars are 0x80-0x9F)
+	StringBuffer tb(slen * 2);
+	char *t = ~tb;
+	const byte *p = (const byte *) ~s;
+
+	for(int i = 0; i < slen; i++) {
+		byte c = p[i];
+		if(c <= 0x7F)
+			*t++ = c;
+		else
+		if(c <= 0x9F) {
+			if(!bit8) *t++ = 0x1B;
+			*t++ = bit8 ? c : c - 0x40;
+		}
+		else
+			*t++ = lvl2 ? c : c - 0x80;
+	}
+
+	int tlen = (int)(t - ~tb);
+	const char *tstr = ~tb;
+
 	while(cnt-- > 0)
-		for(byte c : s) Put0(c);
+		out.Cat(tstr, tlen);
+
 	return *this;
 }
 
@@ -230,8 +286,10 @@ TerminalCtrl& TerminalCtrl::Put(const WString& s, int cnt)
 
 TerminalCtrl& TerminalCtrl::Put(int c, int cnt)
 {
-	if(IsUtf8Mode())
-		while(cnt-- > 0) out.Cat(ToUtf8(c));
+	if(IsUtf8Mode()) {
+		String s = ToUtf8(c);
+		while(cnt-- > 0) out.Cat(s);
+	}
 	else
 		Put0(c, cnt);
 	Flush();
@@ -264,7 +322,7 @@ TerminalCtrl& TerminalCtrl::PutESC(int c, int cnt)
 
 TerminalCtrl& TerminalCtrl::PutCSI(const String& s, int cnt)
 {
-	LLOG("PutOSC() -> " << s);
+	LLOG("PutCSI() -> " << s);
 
 	while(cnt-- > 0) { Put0(0x9B).Put0(s); }
 	Flush();
