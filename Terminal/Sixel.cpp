@@ -5,6 +5,32 @@
 
 namespace Upp {
 
+#ifdef CPU_SIMD
+namespace SimdSixel {
+#ifdef CPU_SSE2
+static force_inline
+int MoveMask(i8x16 v)
+{
+	return _mm_movemask_epi8(v.data);
+}
+#elif CPU_NEON
+static force_inline
+int MoveMask(i8x16 v)
+{
+	constexpr uint8x16_t bitmask = {
+		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80,
+		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
+	};
+	uint8x16_t masked = vandq_u8(vreinterpretq_u8_s8(v.data), bitmask);
+	uint8x8_t sum = vpadd_u8(vget_low_u8(masked), vget_high_u8(masked));
+	sum           = vpadd_u8(sum, sum);
+	sum           = vpadd_u8(sum, sum);
+	return vget_lane_u16(vreinterpret_u16_u8(sum), 0);
+}
+#endif
+}
+#endif
+
 void SixelStream::Palette::Init()
 {
 	SetCount(256, RGBAZero());
@@ -75,13 +101,13 @@ int SixelStream::ReadParams()
 	Zero(params);
 	int c = 0, n = 0, i = 0;
 	for(;;) {
-		while((c = Peek()) > 0x2F && c < 0x3A)
-			n = n * 10 + (Get() - 0x30);
+		while((c = *ptr) > 0x2F && c < 0x3A)
+			n = n * 10 + (*ptr++ - 0x30);
 		params[i++ & 7] = n;
 		if(c != ';')
 			break;
 		n = 0;
-		Get(); // faster than Stream::Skip(1)
+		ptr++;
 	}
 	return i;
 }
@@ -201,7 +227,6 @@ void SixelStream::AdjustBufferSize()
 	CalcYOffests();
 }
 
-force_inline
 void SixelStream::PaintSixel(int c)
 {
 	LTIMING("SixelStream::PaintSixel");
@@ -235,7 +260,44 @@ SixelStream::operator Image()
 
 	try {
 		for(;;) {
-			int c = Get() & 0x7F;
+#ifdef CPU_SIMD
+			i8x16 lo = i8all(0x3F);
+			i8x16 del = i8all(0x7F);
+			while(ptr + 64 <= rdlim && !repeat) {
+				i8x16 c0(ptr +  0), m0 = ((c0 & del) < lo) | (c0 == del);
+				i8x16 c1(ptr + 16), m1 = ((c1 & del) < lo) | (c1 == del);
+				i8x16 c2(ptr + 32), m2 = ((c2 & del) < lo) | (c2 == del);
+				i8x16 c3(ptr + 48), m3 = ((c3 & del) < lo) | (c3 == del);
+				if(AnyTrue(m0 | m1 | m2 | m3)) {
+					uint64 mask = (uint64)(uint16) SimdSixel::MoveMask(m0)
+								| ((uint64)(uint16) SimdSixel::MoveMask(m1) << 16)
+								| ((uint64)(uint16) SimdSixel::MoveMask(m2) << 32)
+								| ((uint64)(uint16) SimdSixel::MoveMask(m3) << 48);
+					for(int i = 0, n = CountTrailingZeroBits64(mask); i < n; i++)
+						PaintSixel(*ptr++ - 0x03F);
+					goto SCALAR_FALLBACK;
+				}
+                for(int i = 0; i < 64; i++)
+                    PaintSixel(*ptr++ - 0x3F);
+                size.cx = max(size.cx, cursor.x);
+			}
+			while(ptr + 16 <= rdlim && !repeat) {
+	            i8x16 chunk(ptr);
+	            if(int mask = SimdSixel::MoveMask(((chunk & del) < lo) | (chunk == del)); mask != 0) {
+                    for(int i = 0, n = CountTrailingZeroBits(mask); i < n; i++)
+	                    PaintSixel(*ptr++ - 0x3F);
+	                goto SCALAR_FALLBACK;
+	            }
+                for(int i = 0; i < 16; i++)
+                    PaintSixel(*ptr++ - 0x3F);
+                size.cx = max(size.cx, cursor.x);
+	        }
+#endif
+SCALAR_FALLBACK:
+			if(ptr >= rdlim)
+				break;
+			
+			byte c = *ptr++ & 0x7F;
 			switch(c) {
 			case 0x21:
 				GetRepeatCount();
@@ -258,8 +320,6 @@ SixelStream::operator Image()
 			case 0x1C:
 				goto Finalize;
 			case 0x7F:
-				if(IsEof())
-					goto Finalize;
 				break;
 			default:
 				if(c > 0x3E)
@@ -273,7 +333,6 @@ SixelStream::operator Image()
 	}
 
 Finalize:
-
 	return Crop(buffer, 0, 1, size.cx, max(size.cy, 6));
 }
 }

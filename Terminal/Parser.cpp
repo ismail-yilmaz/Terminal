@@ -378,8 +378,8 @@ VT_END_STATE_MAP;
 #undef VT_BEGIN_STATE_MAP
 #undef VT_END_STATE_MAP
 
-namespace {
-
+#ifdef CPU_SIMD
+namespace SimdAnsi {
 #ifdef CPU_SSE2
 force_inline
 int MoveMask(i8x16 v)
@@ -401,6 +401,10 @@ int MoveMask(i8x16 v)
 	return vget_lane_u16(vreinterpret_u16_u8(sum), 0);
 }
 #endif
+}
+#endif
+
+namespace {
 
 struct ParameterPolicy {
 #ifdef CPU_SIMD
@@ -463,10 +467,10 @@ void sCollectInto(T& out, const byte *start, byte*& ptr, const byte* end, const 
 		i8x16 m2 = policy.GetInvalidMask(i8x16(ptr + 32));
 		i8x16 m3 = policy.GetInvalidMask(i8x16(ptr + 48));
 		if(AnyTrue(m0 | m1 | m2 | m3)) {
-			uint64 mask = (uint64)(uint16)  MoveMask(m0)
-						| ((uint64)(uint16) MoveMask(m1) << 16)
-						| ((uint64)(uint16) MoveMask(m2) << 32)
-						| ((uint64)(uint16) MoveMask(m3) << 48);
+			uint64 mask = (uint64)(uint16)  SimdAnsi::MoveMask(m0)
+						| ((uint64)(uint16) SimdAnsi::MoveMask(m1) << 16)
+						| ((uint64)(uint16) SimdAnsi::MoveMask(m2) << 32)
+						| ((uint64)(uint16) SimdAnsi::MoveMask(m3) << 48);
 			ptr += CountTrailingZeroBits64(mask);
 			out.Cat(start, (int)(ptr - start));
 			return;
@@ -476,7 +480,7 @@ void sCollectInto(T& out, const byte *start, byte*& ptr, const byte* end, const 
 	while(ptr + 16 <= end) {
 		i8x16 chunk(ptr);
 		if(i8x16 mask = policy.GetInvalidMask(chunk); AnyTrue(mask)) {
-			ptr += CountTrailingZeroBits(MoveMask(mask));
+			ptr += CountTrailingZeroBits(SimdAnsi::MoveMask(mask));
 			out.Cat(start, (int)(ptr - start));
 			return;
 		}
@@ -756,10 +760,10 @@ void AnsiParser::CollectChr(int c)
 			i8x16 c2(ptr + 32), m2 = (c2 < lo) | (c2 > hi);
 			i8x16 c3(ptr + 48), m3 = (c3 < lo) | (c3 > hi);
 			if(AnyTrue(m0 | m1 | m2 | m3)) {
-				uint64 mask = (uint64)(uint16) MoveMask(m0)
-							| ((uint64)(uint16) MoveMask(m1) << 16)
-							| ((uint64)(uint16) MoveMask(m2) << 32)
-							| ((uint64)(uint16) MoveMask(m3) << 48);
+				uint64 mask = (uint64)(uint16)  SimdAnsi::MoveMask(m0)
+							| ((uint64)(uint16) SimdAnsi::MoveMask(m1) << 16)
+							| ((uint64)(uint16) SimdAnsi::MoveMask(m2) << 32)
+							| ((uint64)(uint16) SimdAnsi::MoveMask(m3) << 48);
 				if(ptr += CountTrailingZeroBits64(mask); ptr > start)
 					WhenChr(nullptr, start, (int)(ptr - start));
 				goto COMPLEX_CHAR_FALLBACK;
@@ -768,7 +772,7 @@ void AnsiParser::CollectChr(int c)
 		}
 		while(ptr + 16 <= end) {
 			i8x16 chunk(ptr);
-			if(int m = MoveMask((chunk < lo) | (chunk > hi)); m != 0) {
+			if(int m = SimdAnsi::MoveMask((chunk < lo) | (chunk > hi)); m != 0) {
 				if(ptr += CountTrailingZeroBits(m); ptr > start)
 					WhenChr(nullptr, start, (int)(ptr - start));
 				goto COMPLEX_CHAR_FALLBACK;
