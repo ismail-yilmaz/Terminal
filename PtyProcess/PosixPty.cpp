@@ -3,8 +3,14 @@
 namespace Upp {
 
 #define LLOG(x)	// RLOG("PtyProcess [POSIX]: " << x);
-	
+
 #ifdef PLATFORM_POSIX
+
+namespace {
+
+static constexpr int BUFSIZE   = 4096;
+static constexpr int MAXBATCH  = 65536;
+static constexpr int CAP       = 1 << 20;
 
 static void sNoBlock(int fd)
 {
@@ -19,9 +25,8 @@ bool sParseEnv(Vector<const char*>& out, const char* penv)
 			out.Add(p);
 			p += strlen(p) + 1;
 		}
-		int i = FindMatch(out, [](const char *p) { return String(p).Find("TERM=") >= 0; });
-		if(i < 0)
-			out.Add("TERM=xterm");
+		if(int i = FindMatch(out, [](const char *p) { return String(p).Find("TERM=") >= 0; }); i < 0)
+			out.Add("TERM=xterm-256color");
 		out.Add(nullptr);
 	}
 	return !out.IsEmpty();
@@ -85,27 +90,32 @@ bool sParseArgs(Vector<char*>& out, const char *cmd, const Vector<String> *pargs
 	return true;
 }
 
+}
+
 void PosixPtyProcess::Init()
 {
 	pid    =  0;
 	master = -1;
 	slave  = -1;
+	co     = false;
 	convertcharset = false;
 	exit_code = Null;
 }
 
 void PosixPtyProcess::Free()
 {
+	StopAsync();
+
 	if(master >= 0) {
 		close(master);
 		master = -1;
 	}
-	
+
 	if(slave >= 0) {
 		close(slave);
 		slave = -1;
 	}
-	
+
 	if(pid) {
 		waitpid(pid, 0, WNOHANG | WUNTRACED);
 		pid = 0;
@@ -132,7 +142,7 @@ bool PosixPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const
 		Free();
 		return false;
 	}
-	
+
 	String fullpath = GetFileOnPath(vargs[0], getenv("PATH"), true);
 	if(IsNull(fullpath)) {
 		LLOG("Couldn't retrieve full path.");
@@ -143,19 +153,19 @@ bool PosixPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const
 	Buffer<char> arg0(fullpath.GetCount() + 1);
 	memcpy(~arg0, ~fullpath, fullpath.GetCount() + 1);
 	vargs[0] = ~arg0;
-	
+
 	if((master = posix_openpt(O_RDWR | O_NOCTTY)) < 0) {
 		LLOG("Couldn't open pty master.");
 		Free();
 		return false;
 	}
-	
+
 	if(grantpt(master) < 0) {
 		LLOG("grantpt() failed.");
 		Free();
 		return false;
 	}
-	
+
 	if(unlockpt(master) < 0) {
 		LLOG("unlockpt() failed.");
 		Free();
@@ -179,7 +189,7 @@ bool PosixPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const
 		LLOG("Setting user-defined termios flags for initial pty setup.");
 		SetAttrs(tio);
 	}
-	
+
 	pid = fork();
 	if(pid < 0) {
 		LLOG("fork() failed.");
@@ -192,18 +202,19 @@ bool PosixPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const
 		close(slave);
 		slave = -1;
 		sNoBlock(master);
+		if(co) StartAsync(); // Use a dedicated sink
 		return true;
 	}
 	// Child process...
 	close(master);
-		
+
 	ResetSignals();
-	
+
 	if(setsid() < 0) {
 		LLOG("setsid() failed.");
 		Exit(1);
 	}
-	
+
 	//setpgid(pid, 0);
 
 #if defined(TIOCSCTTY)
@@ -235,21 +246,21 @@ bool PosixPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const
 #endif
 
 	if((dup2(slave, STDIN_FILENO)  != STDIN_FILENO)  ||
-	   (dup2(slave, STDOUT_FILENO) != STDOUT_FILENO) ||
-	   (dup2(slave, STDERR_FILENO) != STDERR_FILENO)) {
-	       LLOG("dup2() failed.");
-	       Free();
-	       return false;
+	(dup2(slave, STDOUT_FILENO) != STDOUT_FILENO) ||
+	(dup2(slave, STDERR_FILENO) != STDERR_FILENO)) {
+		LLOG("dup2() failed.");
+		Free();
+		return false;
 	}
-	
+
 	//sNoBlock(slave); // Leads to infamous "resource unavailable" error on bash.
-	
+
 	if(slave > STDERR_FILENO)
 		close(slave);
 
 	if(cd)
 		(void) chdir(cd);
-	
+
 	if(env) {
 		Vector<const char*> venv;
 		sParseEnv(venv, env);
@@ -267,10 +278,9 @@ bool PosixPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const
 void PosixPtyProcess::Kill()
 {
 	if(IsRunning()) {
-		LLOG("\nPtyProcess::Hang up, pid = " << (int) pid);
+		LLOG("\nPtyProcess::Hang up, pid = " << (int)pid);
 		exit_code = 255;
 		kill(pid, SIGHUP);
-		GetExitCode();
 		int status;
 		if(pid && waitpid(pid, &status, 0) == pid)
 			DecodeExitCode(status);
@@ -305,29 +315,118 @@ int PosixPtyProcess::GetExitCode()
 bool PosixPtyProcess::Read(String& s)
 {
 	String rread;
-	constexpr int BUFSIZE = 4096;
-
 	bool running = IsRunning() || master >= 0;
-	if(running && Wait(WAIT_READ, 0)) { // Poll
+
+	if(async) {
+		{
+			Mutex::Lock __(async->lock);
+			rread = async->buffer;
+			bool full = async->buffer.GetCount() >= CAP;
+			async->buffer.Clear();
+			if(full)
+				async->cv.Signal();
+		}
+		running |= !rread.IsEmpty();
+		if(rread.GetCount()) {
+			LLOG("Read(Async) -> " << rread.GetCount() << " bytes");
+			s << (convertcharset ? FromSystemCharset(rread) : rread);
+		}
+	}
+	else
+	if(running) { // Poll (Wait is delegated to PtyWaitEvent)
 		char buffer[BUFSIZE];
-		int n = 0;
 		[[maybe_unused]] int done = 0;
-		while((n = read(master, buffer, BUFSIZE)) > 0) {
-			done += n;
-			rread.Cat(buffer, n);
+		for(;;) {
+			int n = read(master, buffer, BUFSIZE);
+
+			if(n > 0) {
+				done += n;
+				rread.Cat(buffer, n);
+				continue;
+			}
+
+			if(n == 0) { // EOF
+				LLOG("Read(Sync) -> EOF");
+				close(master);
+				master = -1;
+			}
+			else {
+				if(errno == EINTR)
+					continue;
+
+				if(errno == EAGAIN || errno == EWOULDBLOCK)
+					break;
+			}
+			break;
 		}
-		LLOG("Read() -> " << done << " bytes read.");
-		if(n == 0) {
-			close(master);
-			master = -1;
-		}
+		LLOG("Read(Sync) -> " << done << " bytes read.");
 		if(!IsNull(rread)) {
 			s << (convertcharset ? FromSystemCharset(rread) : rread);
+			Write(Null); // Flush pending input
 			return true;
 		}
 	}
 	Write(Null); // Flush pending input...
 	return !IsNull(rread) && running;
+}
+
+void PosixPtyProcess::StartAsync()
+{
+	if(async)
+		return;
+	async.Create().thread.Run([this]{ DrainAsync(); });
+}
+
+void PosixPtyProcess::StopAsync()
+{
+	if(!async)
+		return;
+	{
+		Mutex::Lock __(async->lock);
+		async->stop = true;
+	}
+	async->cv.Broadcast();
+	async->thread.Wait();
+	async->eof = false;
+	{
+		Mutex::Lock __(async->lock);
+		async->buffer.Clear();
+	}
+	async.Clear();
+}
+
+void PosixPtyProcess::DrainAsync()
+{
+	char buffer[BUFSIZE];
+
+	while(!async->stop) {
+		if(!Wait(WAIT_READ, 100))
+			continue;
+		for(;;) {
+			int n = read(master, buffer, BUFSIZE);
+			if(n > 0) {
+				Mutex::Lock __(async->lock);
+				async->buffer.Cat(buffer, n);
+				while(!async->stop && async->buffer.GetCount() >= CAP)
+					async->cv.Wait(async->lock, 5);
+				continue;
+			}
+			if(n == 0) {
+				async->eof = true;
+				close(master);
+				master = -1;
+				return;
+			}
+			if(errno == EINTR)
+				continue;
+			if(errno == EAGAIN || errno == EWOULDBLOCK)
+				break;
+			async->eof = true;
+			close(master);
+			master = -1;
+			return;
+		}
+	}
 }
 
 void PosixPtyProcess::Write(String s)
@@ -339,11 +438,21 @@ void PosixPtyProcess::Write(String s)
 	wbuffer.Cat(s);
 	[[maybe_unused]] dword done = 0;
 	if(master >= 0 && Wait(WAIT_WRITE, 0)) { // Poll
-		int n = 0;
-		while((n = write(master, ~wbuffer, min(wbuffer.GetLength(), 4096))) > 0 || n == EINTR) {
-			done += n;
-			if(n > 0)
+		while(!IsNull(wbuffer)) {
+			int n = write(master, ~wbuffer, min(wbuffer.GetLength(), BUFSIZE));
+			if(n > 0) {
+				done += n;
 				wbuffer.Remove(0, n);
+				continue;
+			}
+			if(n < 0) {
+				if(errno == EINTR)
+					continue;
+
+				if(errno == EAGAIN || errno == EWOULDBLOCK)
+					break;
+			}
+			break;
 		}
 	}
 	LLOG("Write() -> " << done << "/" << wbuffer.GetLength() << " bytes.");
@@ -357,10 +466,10 @@ bool PosixPtyProcess::ResetSignals()
 		LLOG("Couldn't unblock signals for child process.");
 		return false;
 	}
-	
+
 	// We also need to reset the signal handlers.
 	// See signal.h for NSIG constant.
-	
+
 	for(int i = 1; i < NSIG; i++) {
 		if(i != SIGSTOP && i != SIGKILL)
 			signal(i, SIG_DFL);

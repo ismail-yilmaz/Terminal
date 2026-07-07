@@ -6,6 +6,14 @@ namespace Upp {
 	
 #ifdef PLATFORM_WIN32
 
+namespace {
+
+static constexpr int BUFSIZE   = 4096;
+static constexpr int MAXBATCH  = 65536;
+static constexpr int CAP       = 1 << 20;
+
+}
+
 String sParseArgs(const char *cmd, const Vector<String> *pargs)
 {
 	while(*cmd && (byte) *cmd <= ' ') ++cmd;
@@ -126,6 +134,8 @@ void WindowsPtyProcess::Init()
 
 void WindowsPtyProcess::Free()
 {
+	StopAsync();
+	
 	if(hProcess) {
 		CloseHandle(hProcess);
 		hProcess = nullptr;
@@ -194,28 +204,119 @@ int WindowsPtyProcess::GetExitCode()
 bool WindowsPtyProcess::Read(String& s)
 {
 	String rread;
-	constexpr const DWORD BUFSIZE = 4096;
-
-	s = rbuffer;
-	rbuffer.Clear();
 	bool running = IsRunning();
-	char buffer[BUFSIZE];
-	DWORD n = 0;
-	
-	for(HANDLE hPipe : { hOutputRead, hErrorRead }) {
-		while(hPipe
-			&& PeekNamedPipe(hPipe, nullptr, 0, nullptr, &n, nullptr) && n
-			&& ReadFile(hPipe, buffer, min(n, BUFSIZE), &n, nullptr) && n)
-				rread.Cat(buffer, n);
+
+	if(async) {
+		{
+			Mutex::Lock __(async->lock);
+			rread = async->buffer;
+			bool full = async->buffer.GetCount() >= CAP;
+			async->buffer.Clear();
+			if(full)
+				async->cv.Broadcast();
+			running |= !async->eof || !rread.IsEmpty();
+		}
+		if(rread.GetCount()) {
+			LLOG("Read(Async) -> " << rread.GetCount() << " bytes");
+			s << (convertcharset ? FromSystemCharset(rread) : rread);
+		}
 	}
-
-	LLOG("Read() -> " << rread.GetLength() << " bytes read.");
-
-	if(!IsNull(rread)) {
-		s << (convertcharset ? FromOEMCharset(rread) : rread);
+	else
+	if(running || hOutputRead || hErrorRead) {
+		char buffer[BUFSIZE];
+		DWORD avail = 0;
+		DWORD done = 0;
+		[[maybe_unused]] int total = 0;
+		if(hOutputRead) {
+			while(PeekNamedPipe(hOutputRead, nullptr, 0, nullptr, &avail, nullptr) && avail) {
+				DWORD todo = min<DWORD>(avail, BUFSIZE);
+				if(!ReadFile(hOutputRead, buffer, todo, &done, nullptr) || done == 0)
+					break;
+				rread.Cat(buffer, done);
+				total += done;
+			}
+		}
+		if(hErrorRead) {
+			while(PeekNamedPipe(hErrorRead, nullptr, 0, nullptr, &avail, nullptr) && avail) {
+				DWORD todo = min<DWORD>(avail, BUFSIZE);
+				if(!ReadFile(hErrorRead, buffer, todo, &done, nullptr) || done == 0)
+					break;
+				rread.Cat(buffer, done);
+				total += done;
+			}
+		}
+		LLOG("Read(Sync) -> " << total << " bytes read.");
+		if(rread.GetCount()) {
+			s << (convertcharset ? FromSystemCharset(rread) : rread);
+			Write(Null); // Flush pending input
+			return true;
+		}
 	}
-
+	Write(Null); // Flush pending input...
 	return !IsNull(rread) && running;
+}
+
+void WindowsPtyProcess::StartAsync()
+{
+	if(async)
+		return;
+	async.Create().thread.Run([this]{ DrainAsync(); });
+}
+
+void WindowsPtyProcess::StopAsync()
+{
+	if(!async)
+		return;
+	{
+		Mutex::Lock __(async->lock);
+		async->stop = true;
+	}
+	async->cv.Broadcast();
+	async->thread.Wait();
+	async->eof = false;
+	{
+		Mutex::Lock __(async->lock);
+		async->buffer.Clear();
+	}
+	async.Clear();
+}
+
+void WindowsPtyProcess::DrainAsync()
+{
+	char buffer[BUFSIZE];
+
+	while(!async->stop) {
+		String batch;
+		bool activity = false;
+		for(HANDLE hPipe : { hOutputRead, hErrorRead }) {
+			if(!hPipe)
+				continue;
+			DWORD avail = 0;
+			if(!PeekNamedPipe(hPipe, nullptr, 0, nullptr, &avail, nullptr))
+				continue;
+			int total = 0;
+			while(avail && total < MAXBATCH) {
+				DWORD todo = min<DWORD>(avail, min<int>(BUFSIZE, MAXBATCH - total));
+				DWORD done = 0;
+				if(!ReadFile(hPipe, buffer, todo, &done, nullptr) || done == 0)
+					break;
+				batch.Cat(buffer, done);
+				total += done;
+				activity = true;
+				if(!PeekNamedPipe(hPipe, nullptr, 0, nullptr, &avail, nullptr))
+					break;
+			}
+		}
+		if(activity) {
+			Mutex::Lock __(async->lock);
+			async->buffer.Cat(batch);
+			while(!async->stop && async->buffer.GetCount() >= CAP)
+				async->cv.Wait(async->lock, 5);
+		}
+		else
+			Sleep(10);
+	}
+	async->eof = true;
 }
 
 void WindowsPtyProcess::Write(String s)
@@ -323,6 +424,9 @@ bool WinPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const c
 		Free();
 		return false;
 	}
+
+	if(co)
+		StartAsync();
 
 	return true;
 }
@@ -544,6 +648,9 @@ bool ConPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const c
 		Free();
 		return false;
 	}
+
+	if(co)
+		StartAsync();
 
 	return true;
 }

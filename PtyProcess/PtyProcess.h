@@ -20,6 +20,9 @@ public:
     APtyProcess()                                                                                                    {}
     virtual ~APtyProcess()                                                                                           {}
 
+    APtyProcess& Co(bool b = true)                      { co = b; return *this; }
+    APtyProcess& NoCo()                                 { return Co(false); }
+
     APtyProcess& ConvertCharset(bool b = true)          { convertcharset = b; return *this; }
     APtyProcess& NoConvertCharset()                     { return ConvertCharset(false); }
 
@@ -28,7 +31,7 @@ public:
     bool         Start(const char *cmdline, const VectorMap<String, String>& env, const char *cd = nullptr);
 
     virtual Size GetSize() = 0;
-	virtual bool SetSize(Size csz, Size psz) = 0;
+    virtual bool SetSize(Size csz, Size psz) = 0;
     bool         SetSize(Size sz)                   { return SetSize(sz, Null); }
     bool         SetSize(int col, int row)          { return SetSize(Size(col, row)); }
 
@@ -41,8 +44,21 @@ protected:
     virtual void Free() = 0;
     virtual bool DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd) = 0;
 
-    int         exit_code;
-    bool        convertcharset:1;
+    // Optional MT (async) support
+    struct AsyncData {
+        Thread            thread;
+        Mutex             lock;
+        ConditionVariable cv;
+        String            buffer;
+        bool              stop:1;
+        bool              eof:1;
+        AsyncData() : stop(false), eof(false) {}
+    };
+
+    One<AsyncData>        async;
+    bool                  co:1;
+    bool                  convertcharset:1;
+    int                   exit_code;
 };
 
 #if defined(PLATFORM_POSIX)
@@ -77,6 +93,10 @@ private:
     void        Free() final;
     bool        DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd) final;
 
+    void        StartAsync();
+    void        StopAsync();
+    void        DrainAsync();
+    
     bool        ResetSignals();
     bool        Wait(dword event, int ms = 10);
     bool        DecodeExitCode(int status);
@@ -96,7 +116,7 @@ inline constexpr bool is_upp_guest<pollfd> = true;
 #elif defined(PLATFORM_WIN32)
 
 class WindowsPtyProcess : public APtyProcess {
-	friend class PtyWaitEvent;
+    friend class PtyWaitEvent;
 public:
     WindowsPtyProcess()                                                                                                    { Init(); }
     virtual ~WindowsPtyProcess()                                                                                           { Kill(); }
@@ -115,6 +135,10 @@ protected:
     void        Free() override;
     bool        DoStart(const char *cmd, const Vector<String> *args, const char *env, const char *cd) override;
 
+    void        StartAsync();
+    void        StopAsync();
+    void        DrainAsync();
+    
     HANDLE      hProcess;
     HANDLE      hOutputRead;
     HANDLE      hErrorRead;
@@ -203,24 +227,24 @@ using PtyProcess = WinPtyProcess;
 
 class PtyWaitEvent {
 public:
-	PtyWaitEvent()  {}
-	~PtyWaitEvent() {}
-	
-	void            Clear();
-	void            Add(const APtyProcess& pty, dword events);
-	void            Remove(const APtyProcess& pty);
-	bool            Wait(int timeout);
-	dword           Get(int i) const;
-	dword           operator[](int i) const;
-	
+    PtyWaitEvent()  {}
+    ~PtyWaitEvent() {}
+    
+    void            Clear();
+    void            Add(const APtyProcess& pty, dword events);
+    void            Remove(const APtyProcess& pty);
+    bool            Wait(int timeout);
+    dword           Get(int i) const;
+    dword           operator[](int i) const;
+    
 private:
-	PtyWaitEvent(const PtyWaitEvent&);
+    PtyWaitEvent(const PtyWaitEvent&);
 
 #ifdef PLATFORM_WIN32
 
-	struct Slot : Moveable<Slot> {
-		Slot();
-		~Slot();
+    struct Slot : Moveable<Slot> {
+        Slot();
+        ~Slot();
         HANDLE hProcess;
         HANDLE hRead;
         HANDLE hWrite;
@@ -230,13 +254,13 @@ private:
         bool   eError;
         bool   eException;
         dword  events;
-	};
-	
-	Vector<Slot> slots;
-	
+    };
+    
+    Vector<Slot> slots;
+    
 #elif PLATFORM_POSIX
 
-	Vector<pollfd> slots;
+    Vector<pollfd> slots;
 
 #endif
 };
