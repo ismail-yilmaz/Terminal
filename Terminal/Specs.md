@@ -359,11 +359,12 @@
 | 1 | Bold | Level 1 |
 | 2 | Faint. | Level 1 |
 | 3 | Italic. | Level 1 |
-| 4 | Underline. | Level 1 |
+| 4 | Underline. (Plain, Double, Curly) | Level 1 |
 | 5 | Blink. | Level 1 |
 | 7 | Inverse. | Level 1 |
 | 8 | Hidden. | Level 1 |
 | 9 | Striked out. | Level 1 |
+| 21 | Double underline. (Legacy version.) | Level 1 |
 | 22 | Neither bold nor faint. | Level 1 |
 | 23 | Not Italic. | Level 1 |
 | 24 | Not Underlined. | Level 1 |

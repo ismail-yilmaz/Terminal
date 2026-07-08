@@ -31,7 +31,8 @@ void TerminalCtrl::SetGraphicsRendition(VTCell& attrs, const Vector<String>& opc
 			attrs.Italic();
 			break;
 		case 4:
-			attrs.Underline();
+			//Check for extended underline sub-parameters (e.g., "4:3")
+			ParseExtendedUnderlines(attrs, opcodes, i);
 			break;
 		case 5:
 		case 6:
@@ -51,6 +52,10 @@ void TerminalCtrl::SetGraphicsRendition(VTCell& attrs, const Vector<String>& opc
 			break;
 		case 15:
 			 //ACS off
+			break;
+		case 21:
+			// Legacy double underline
+			attrs.SetUnderlineStyle(VTCell::UNDERLINE_DOUBLE);
 			break;
 		case 22:
 			attrs.Faint(false).Bold(false);
@@ -113,38 +118,39 @@ void TerminalCtrl::SetGraphicsRendition(VTCell& attrs, const Vector<String>& opc
 
 void TerminalCtrl::InvertGraphicsRendition(VTCell& attrs, const Vector<String>& opcodes)
 {
-	for(const auto& opcode : opcodes) {
-		switch(ReadInt(opcode, 0)) {
-		case 0:
-			attrs.Reset();
-			break;
-		case 1:
-			attrs.sgr ^= VTCell::SGR_BOLD;
-			break;
-		case 3:
-			attrs.sgr ^= VTCell::SGR_ITALIC;
-			break;
-		case 4:
-			attrs.sgr ^= VTCell::SGR_UNDERLINE;
-			break;
-		case 5:
-			attrs.sgr ^= VTCell::SGR_BLINK;
-			break;
-		case 7:
-			attrs.sgr ^= VTCell::SGR_INVERTED;
-			break;
-		case 8:
-			attrs.sgr ^= VTCell::SGR_HIDDEN;
-			break;
-		case 9:
-			attrs.sgr ^= VTCell::SGR_STRIKEOUT;
-			break;
-		case 53:
-			attrs.sgr ^= VTCell::SGR_OVERLINE;
-		default:
-			break;
-		}
-	}
+    for(const auto& opcode : opcodes) {
+        switch(ReadInt(opcode, 0)) {
+        case 0:
+            attrs.Reset();
+            break;
+        case 1:
+            attrs.Bold(!attrs.IsBold());
+            break;
+        case 3:
+            attrs.Italic(!attrs.IsItalic());
+            break;
+        case 4:
+            attrs.Underline(!attrs.IsUnderlined());
+            break;
+        case 5:
+            attrs.Blink(!attrs.IsBlinking());
+            break;
+        case 7:
+            attrs.Invert(!attrs.IsInverted());
+            break;
+        case 8:
+            attrs.Conceal(!attrs.IsConcealed());
+            break;
+        case 9:
+            attrs.Strikeout(!attrs.IsStrikeout());
+            break;
+        case 53:
+            attrs.Overline(!attrs.IsOverlined());
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 String TerminalCtrl::GetGraphicsRenditionOpcodes(const VTCell& attrs)
@@ -169,7 +175,7 @@ String TerminalCtrl::GetGraphicsRenditionOpcodes(const VTCell& attrs)
 		v.Add("9");
 	if(attrs.IsOverlined())
 		v.Add("53");
-	
+
 	if(attrs.ink.GetSpecial() == -1)    // Direct color (24 bit)
 		v.Add(Format("38:2::%ld:%ld:%ld",
 				attrs.ink.GetR(),
@@ -181,8 +187,30 @@ String TerminalCtrl::GetGraphicsRenditionOpcodes(const VTCell& attrs)
 				attrs.paper.GetR(),
 				attrs.paper.GetG(),
 				attrs.paper.GetB()));
-	
+
 	return Join(v, ";", true);
 
 }
+
+void TerminalCtrl::ParseExtendedUnderlines(VTCell& attrs, const Vector<String>& opcodes, int& index)
+{
+	int i = opcodes[index].Find(":");
+	if(i < 0) {
+		attrs.Underline();
+		return;
+	}
+	
+	switch(ReadInt(~opcodes[index] + i + 1, 0)) {
+	case 2:
+		attrs.SetUnderlineStyle(VTCell::UNDERLINE_DOUBLE);
+		break;
+	case 3:
+		attrs.SetUnderlineStyle(VTCell::UNDERLINE_CURLY);
+		break;
+	default:
+		attrs.SetUnderlineStyle(VTCell::UNDERLINE_SINGLE);
+		break;
+	}
+}
+
 }

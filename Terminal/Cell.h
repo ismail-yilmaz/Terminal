@@ -7,6 +7,7 @@ namespace Upp {
 
 struct VTCell : Moveable<VTCell> {
     dword   chr; // TODO: Grapheme support.
+
     union {
         dword data;
         struct {
@@ -14,35 +15,51 @@ struct VTCell : Moveable<VTCell> {
             word row; // Max. 65536
         } object;
     };
-    word    attrs;
-    word    sgr;
+
+    union {
+        word attrs;
+        struct {
+            word protect_dec : 1;
+            word protect_iso : 1;
+            word semantic    : 2;  // Bits 2-3 (Fits 0 to 3: None, Prompt, Input, Output)
+            word reserved    : 12;
+        } attr;
+    };
+
+    union {
+        word sgr;
+        struct {
+            word bold             : 1;
+            word italic           : 1;
+            word underline        : 1;
+            word overline         : 1;
+            word strikeout        : 1;
+            word blink            : 1;
+            word inverted         : 1;
+            word hidden           : 1;
+            word faint            : 1;
+            word image            : 1;
+            word hyperlink        : 1;
+            word annotation       : 1;
+            word underlinestyle   : 2; // Bits 12-13 (Fits 0 to 3: Single, Double, Curly)
+            word reserved         : 2;
+        } style;
+    };
+
     Color   ink;
     Color   paper;
 
-    enum Attrs : word { // It is possible to have both DEC and ISO selective erases...
-        ATTR_PROTECTION_DEC  = 0x0001,
-        ATTR_PROTECTION_ISO  = 0x0002,
-        ATTR_PROTECTION_ALL  = ATTR_PROTECTION_DEC | ATTR_PROTECTION_ISO,
-        ATTR_SEMANTIC_PROMPT = 0x0004,
-        ATTR_SEMANTIC_INPUT  = 0x0008,
-        ATTR_SEMANTIC_OUTPUT = 0x0010,
-        ATTR_SEMANTIC_MASK   = ATTR_SEMANTIC_PROMPT | ATTR_SEMANTIC_INPUT | ATTR_SEMANTIC_OUTPUT,
+    enum SemanticType {
+        SEMANTIC_NONE   = 0,
+        SEMANTIC_PROMPT = 1,
+        SEMANTIC_INPUT  = 2,
+        SEMANTIC_OUTPUT = 3
     };
-    
-    enum Sgr : word {
-        SGR_NORMAL       = 0x0000,
-        SGR_BOLD         = 0x0001,
-        SGR_ITALIC       = 0x0002,
-        SGR_UNDERLINE    = 0x0004,
-        SGR_OVERLINE     = 0x0008,
-        SGR_STRIKEOUT    = 0x0010,
-        SGR_BLINK        = 0x0020,
-        SGR_INVERTED     = 0x0040,
-        SGR_HIDDEN       = 0x0080,
-        SGR_FAINT        = 0x0100,
-        SGR_IMAGE        = 0x0200,
-        SGR_HYPERLINK    = 0x0400,
-        SGR_ANNOTATION   = 0x0800,
+
+    enum UnderlineStyle {
+        UNDERLINE_SINGLE = 0,
+        UNDERLINE_DOUBLE = 1,
+        UNDERLINE_CURLY  = 2,
     };
 
     enum FillerFlags : dword {
@@ -57,78 +74,82 @@ struct VTCell : Moveable<VTCell> {
         FILL_DATA          = 0x0080,
         XOR_SGR            = 0x0100,
     };
-    
-    VTCell& Normal()                         { sgr = SGR_NORMAL; return *this; }
-    VTCell& Bold(bool b = true)              { sgr = (sgr & ~SGR_BOLD)       | (-word(b) & SGR_BOLD);  return *this;     }
-    VTCell& Faint(bool b = true)             { sgr = (sgr & ~SGR_FAINT)      | (-word(b) & SGR_FAINT); return *this;     }
-    VTCell& Italic(bool b = true)            { sgr = (sgr & ~SGR_ITALIC)     | (-word(b) & SGR_ITALIC); return *this;    }
-    VTCell& Underline(bool b = true)         { sgr = (sgr & ~SGR_UNDERLINE)  | (-word(b) & SGR_UNDERLINE); return *this; }
-    VTCell& Overline(bool b = true)          { sgr = (sgr & ~SGR_OVERLINE)   | (-word(b) & SGR_OVERLINE); return *this;  }
-    VTCell& Blink(bool b = true)             { sgr = (sgr & ~SGR_BLINK)      | (-word(b) & SGR_BLINK); return *this;     }
-    VTCell& Strikeout(bool b = true)         { sgr = (sgr & ~SGR_STRIKEOUT)  | (-word(b) & SGR_STRIKEOUT); return *this; }
-    VTCell& Invert(bool b = true)            { sgr = (sgr & ~SGR_INVERTED)   | (-word(b) & SGR_INVERTED); return *this;  }
-    VTCell& Conceal(bool b = true)           { sgr = (sgr & ~SGR_HIDDEN)     | (-word(b) & SGR_HIDDEN); return *this;    }
-    VTCell& Image(bool b = true)             { sgr = (sgr & ~SGR_IMAGE)      | (-word(b) & SGR_IMAGE); return *this;     }
-    VTCell& Hyperlink(bool b = true)         { sgr = (sgr & ~SGR_HYPERLINK)  | (-word(b) & SGR_HYPERLINK); return *this; }
-    VTCell& Annotation(bool b = true)        { sgr = (sgr & ~SGR_ANNOTATION) | (-word(b) & SGR_ANNOTATION); return *this;}
 
-    VTCell& ProtectDEC(bool b = true)        { attrs = (attrs & ~ATTR_PROTECTION_DEC) | (-word(b) & ATTR_PROTECTION_DEC); return *this; }
-    VTCell& ProtectISO(bool b = true)        { attrs = (attrs & ~ATTR_PROTECTION_ISO) | (-word(b) & ATTR_PROTECTION_ISO); return *this; }
-    VTCell& Protect(bool b = true)           { attrs = (attrs & ~ATTR_PROTECTION_ALL) | (-word(b) & ATTR_PROTECTION_ALL); return *this; }
-    
-    // Semantic information, mutually exclusive
-    VTCell& SetAsPrompt(bool b = true);
-    VTCell& SetAsInput(bool b = true);
-    VTCell& SetAsOutput(bool b = true);
-    VTCell& ClearSemanticInfo();
+    VTCell& Normal()                             { sgr = 0; return *this; }
+    VTCell& Bold(bool b = true)                  { style.bold = b; return *this; }
+    VTCell& Faint(bool b = true)                 { style.faint = b; return *this; }
+    VTCell& Italic(bool b = true)                { style.italic = b; return *this; }
+    VTCell& Overline(bool b = true)              { style.overline = b; return *this; }
+    VTCell& Blink(bool b = true)                 { style.blink = b; return *this; }
+    VTCell& Strikeout(bool b = true)             { style.strikeout = b; return *this; }
+    VTCell& Invert(bool b = true)                { style.inverted = b; return *this; }
+    VTCell& Conceal(bool b = true)               { style.hidden = b; return *this; }
+    VTCell& Image(bool b = true)                 { style.image = b; return *this; }
+    VTCell& Hyperlink(bool b = true)             { style.hyperlink = b; return *this; }
+    VTCell& Annotation(bool b= true)             { style.annotation = b; return *this;}
+
+    VTCell& Underline(bool b = true)             { style.underline = b; if(!b) style.underlinestyle = UNDERLINE_SINGLE; return *this; }
+    VTCell& SetUnderlineStyle(UnderlineStyle st) { style.underlinestyle = st; return Underline(true); }
+
+    VTCell& ProtectDEC(bool b = true)            { attr.protect_dec = b; return *this; }
+    VTCell& ProtectISO(bool b = true)            { attr.protect_iso = b; return *this; }
+    VTCell& Protect(bool b = true)               { attr.protect_dec = b; attr.protect_iso = b; return *this; }
+
+    VTCell& SetAsPrompt(bool b = true)           { attr.semantic = b ? SEMANTIC_PROMPT : SEMANTIC_NONE; return *this; }
+    VTCell& SetAsInput(bool b = true)            { attr.semantic = b ? SEMANTIC_INPUT : SEMANTIC_NONE; return *this;  }
+    VTCell& SetAsOutput(bool b = true)           { attr.semantic = b ? SEMANTIC_OUTPUT : SEMANTIC_NONE; return *this; }
+    VTCell& ClearSemanticInfo()                  { attr.semantic = SEMANTIC_NONE; return *this; }
 
     static const VTCell& Void();
-    
-    VTCell& Ink(Color c)                     { ink = c; return *this;   }
-    VTCell& Paper(Color c)                   { paper = c; return *this; }
+
+    VTCell& Ink(Color c)                         { ink = c; return *this;   }
+    VTCell& Paper(Color c)                       { paper = c; return *this; }
 
     int  GetWidth(int ambiguouswidth = 1) const;
-    
-    bool IsVoid() const                      { return this == &Void();       }
-    bool IsNormal() const                    { return sgr == SGR_NORMAL;     }
-    bool IsBold() const                      { return sgr & SGR_BOLD;        }
-    bool IsFaint() const                     { return sgr & SGR_FAINT;       }
-    bool IsItalic() const                    { return sgr & SGR_ITALIC;      }
-    bool IsUnderlined() const                { return sgr & SGR_UNDERLINE;   }
-    bool IsOverlined() const                 { return sgr & SGR_OVERLINE;    }
-    bool IsBlinking() const                  { return sgr & SGR_BLINK;       }
-    bool IsInverted() const                  { return sgr & SGR_INVERTED;    }
-    bool IsStrikeout() const                 { return sgr & SGR_STRIKEOUT;   }
-    bool IsConcealed() const                 { return sgr & SGR_HIDDEN;      }
-    bool IsImage() const                     { return sgr & SGR_IMAGE;       }
-    bool IsHyperlink() const                 { return sgr & SGR_HYPERLINK;   }
-    bool IsAnnotation() const                { return sgr & SGR_ANNOTATION;  }
-    bool IsWideCharTrail() const             { return chr == 1;              }
-    bool IsSpecial() const                   { return chr > 0 && chr < 32;   }
-    bool IsHypertext() const                 { return IsHyperlink() || IsAnnotation(); }
-    bool IsPrompt() const                    { return attrs & ATTR_SEMANTIC_PROMPT;}
-    bool IsInput() const                     { return attrs & ATTR_SEMANTIC_INPUT; }
-    bool IsOutput() const                    { return attrs & ATTR_SEMANTIC_OUTPUT;}
-    bool HasSemanticInfo() const             { return attrs & ATTR_SEMANTIC_MASK;  }
-    bool IsProtected() const                 { return attrs & ATTR_PROTECTION_ALL; }
-    bool HasDECProtection() const            { return attrs & ATTR_PROTECTION_DEC; }
-    bool HasISOProtection() const            { return attrs & ATTR_PROTECTION_ISO; }
+
+    bool IsVoid() const                          { return this == &Void();       }
+    bool IsNormal() const                        { return sgr == 0;              }
+    bool IsBold() const                          { return style.bold;            }
+    bool IsFaint() const                         { return style.faint;           }
+    bool IsItalic() const                        { return style.italic;          }
+    bool IsUnderlined() const                    { return style.underline;       }
+    bool IsOverlined() const                     { return style.overline;        }
+    bool IsBlinking() const                      { return style.blink;           }
+    bool IsInverted() const                      { return style.inverted;        }
+    bool IsStrikeout() const                     { return style.strikeout;       }
+    bool IsConcealed() const                     { return style.hidden;          }
+    bool IsImage() const                         { return style.image;           }
+    bool IsHyperlink() const                     { return style.hyperlink;       }
+    bool IsAnnotation() const                    { return style.annotation;      }
+    int  GetUnderlineStyle() const               { return style.underlinestyle;  }
+
+    bool IsWideCharTrail() const                 { return chr == 1;              }
+    bool IsSpecial() const                       { return chr > 0 && chr < 32;   }
+    bool IsHypertext() const                     { return IsHyperlink() || IsAnnotation(); }
+
+    bool IsPrompt() const                        { return attr.semantic == SEMANTIC_PROMPT; }
+    bool IsInput() const                         { return attr.semantic == SEMANTIC_INPUT;  }
+    bool IsOutput() const                        { return attr.semantic == SEMANTIC_OUTPUT; }
+    bool HasSemanticInfo() const                 { return attr.semantic != SEMANTIC_NONE;   }
+
+    bool IsProtected() const                     { return attr.protect_dec || attr.protect_iso; }
+    bool HasDECProtection() const                { return attr.protect_dec; }
+    bool HasISOProtection() const                { return attr.protect_iso; }
     bool IsNullInstance() const;
 
     void    Fill(const VTCell& filler, dword flags);
-
     void    Reset();
-    
-    void    Clear()                             { Reset(); chr = 0; attrs = 0; }
-    void    operator=(const Nuller&)            { Clear(); }
-    void    operator=(dword c)                  { chr = c; }
-    operator dword() const                      { return chr; }
+
+    void    Clear()                              { Reset(); chr = 0; attrs = 0; }
+    void    operator=(const Nuller&)             { Clear(); }
+    void    operator=(dword c)                   { chr = c; }
+    operator dword() const                       { return chr; }
 
     hash_t  GetHashValue() const;
-    
     void    Serialize(Stream& s);
-    
-    VTCell()                                    { Clear(); }
+
+    VTCell()                                     { Clear(); }
 };
+
 }
 #endif

@@ -796,6 +796,8 @@ private:
     void        InvertGraphicsRendition(VTCell& attrs, const Vector<String>& opcodes);
     String      GetGraphicsRenditionOpcodes(const VTCell& attrs);
 
+    void        ParseExtendedUnderlines(VTCell& attrs, const Vector<String>& opcodes, int& index);
+
     void        ParseiTerm2Protocols(const AnsiParser::Sequence& seq);
 
     void        ParseTerminalCtrlProtocols(const AnsiParser::Sequence& seq);

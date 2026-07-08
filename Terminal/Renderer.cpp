@@ -71,6 +71,8 @@ class sTextRenderer {
 	Tuple<dword, Color> lastkey;
 	Chrs* last = nullptr;
 
+	void DrawExtendedUnderline(int x, int cx, int y, int h, Color ink, const VTCell& cell);
+
 public:
 	int  GetImageCount() const                     { return icount; }
 	int  GetLinkCount()  const                     { return lcount; }
@@ -85,6 +87,48 @@ public:
 	~sTextRenderer()                               { Flush();  }
 };
 
+void sTextRenderer::DrawExtendedUnderline(int x, int cx, int y, int h, Color ink, const VTCell& cell)
+{
+	LTIMING("sTextRenderer::DrawExtendedUnderline");
+	
+	// 1. Calculate native thickness and baseline offset matching Upp::DrawText logic
+	int hg = abs(font.GetCy());
+	if(hg == 0)
+		hg = 10;
+
+	int thickness = max(cell.style.bold ? hg / 10 : hg / 20, 1);
+	int descent = font.GetDescent();
+
+	int p = min(descent - thickness, max(descent > 0 ? descent / 2 : hg / 15, int(descent > 0)));
+
+	int ul = cell.GetUnderlineStyle();
+	if(ul == VTCell::UNDERLINE_DOUBLE) {
+		w.DrawRect(x, y + h + p - thickness, cx - x, thickness, ink);
+		w.DrawRect(x, y + h + p + thickness, cx - x, thickness, ink);
+	}
+	else
+	if(ul == VTCell::UNDERLINE_CURLY) {
+		const int amplitude = 1;
+		const int period = max(2, hg / 10);
+		thickness = 1;
+	
+		static thread_local Vector<Point> wave;
+		int wavecount = 0;
+
+		for(int px = x; px <= cx; px++) {
+			// Apply p offset to center the wave on the expected underline position
+			int py = y + h + p + (((px - x) / period) % 2 == 0 ? amplitude : -amplitude);
+			if(wavecount < wave.GetCount())
+				wave[wavecount] = Point(px, py);
+			else
+				wave.Add(Point(px, py));
+			wavecount++;
+		}
+		if(wavecount > 1)
+			w.DrawPolyline(wave.Begin(), wavecount, thickness, ink);
+	}
+}
+
 void sTextRenderer::Flush()
 {
 	if(cache.GetCount() == 0)
@@ -93,29 +137,40 @@ void sTextRenderer::Flush()
 	LTIMING("sTextRenderer::Flush");
 
 	const int fcx = font.GetMonoWidth();
-
 	for(int i = 0; i < cache.GetCount(); i++) {
 		Chrs& c = cache[i];
 		if(c.x.GetCount()) {
 			const Tuple<dword, Color>& fc = cache.GetKey(i);
 			const int x = c.x[0], cx = c.x.Top() + fcx;
-			font.Bold(fc.a & VTCell::SGR_BOLD)
-				.Italic(fc.a & VTCell::SGR_ITALIC)
-				.Strikeout(fc.a & VTCell::SGR_STRIKEOUT)
-				.Underline(fc.a & VTCell::SGR_UNDERLINE);
+			
+			VTCell style;
+			style.sgr = (word) fc.a;
+			
+			font.Bold(style.IsBold())
+				.Italic(style.IsItalic())
+				.Strikeout(style.IsStrikeout())
+				.Underline(style.IsUnderlined() && style.GetUnderlineStyle() == VTCell::UNDERLINE_SINGLE);
+				
 			for(int i = 0; i < c.x.GetCount() - 1; i++)
 				c.x[i] = c.x[i + 1] - c.x[i];
 			c.x.Top() = c.width.Top();
-			if(fc.a & VTCell::SGR_OVERLINE) {
+			
+			if(style.IsOverlined()) {
 				int h = font.GetDescent() - 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_SOLID, fc.b);
 			}
-			if(canhyperlink && fc.a & VTCell::SGR_HYPERLINK) {
+			
+			if(style.IsUnderlined() && style.GetUnderlineStyle() != VTCell::UNDERLINE_SINGLE) {
+				int h = font.GetAscent();
+				DrawExtendedUnderline(x, cx, y, h, fc.b, style);
+			}
+			
+			if(canhyperlink && style.IsHyperlink()) {
 				int h = font.GetAscent() + 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_DOT, fc.b);
 				font.NoUnderline();
 			}
-			if(canannotate && fc.a & VTCell::SGR_ANNOTATION) {
+			if(canannotate && style.IsAnnotation()) {
 				int h = font.GetAscent() + 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_SOLID, annotationcolor);
 				font.NoUnderline();
@@ -159,8 +214,8 @@ void sTextRenderer::DrawChar(const VTCell& cell, const CellPaintData& data)
 		last = c;
 	}
 
-	icount += (int) cell.sgr & VTCell::SGR_IMAGE;
-	lcount += (int) cell.sgr & VTCell::SGR_HYPERLINK;
+	icount += (int) cell.style.image;
+	lcount += (int) cell.style.hyperlink;
 
 	bool hide = false;
 	hide |= cell.chr < 0x20;
@@ -201,7 +256,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 	cpd.size = csz;
 	Vector<CellPaintData> linepaintdata(psz.cx, cpd);
 
-	
+
 	auto PaintLine = [&](const VTLine& line, int i) {
 		LTIMING("TerminalCtrl::PaintLine");
 		int y = i * csz.cy - (csz.cy * pos);
