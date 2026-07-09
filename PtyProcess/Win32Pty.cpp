@@ -3,14 +3,13 @@
 namespace Upp {
 
 #define LLOG(x)	// RLOG("PtyProcess [WIN32]: " << x);
-	
+
 #ifdef PLATFORM_WIN32
 
 namespace {
 
 static constexpr int BUFSIZE   = 4096;
-static constexpr int MAXBATCH  = 65536;
-static constexpr int CAP       = 1 << 20;
+static constexpr int DRAINCAP  = 1 << 20;
 
 }
 
@@ -61,7 +60,7 @@ String sParseArgs(const char *cmd, const Vector<String> *pargs)
 Vector<WCHAR> sEnvtoWCHAR(const char *envptr)
 {
 	Vector<WCHAR> env;
-	
+
 	if(envptr) {
 		int len = 0;
 		while(envptr[len] || envptr[len + 1]) len++;
@@ -70,7 +69,7 @@ Vector<WCHAR> sEnvtoWCHAR(const char *envptr)
 			env.Add(0);
 		}
 	}
-	
+
 	env.Add(0);
 	return env;
 }
@@ -95,14 +94,14 @@ HANDLE WinPtyCreateProcess(const char *cmdptr, const char *envptr, const char *c
 		cd ? ToSystemCharsetW(cd).begin() : nullptr,
 		sEnvtoWCHAR(envptr),
 		nullptr);
-		
+
 	if(!hSpawnConfig) {
 		LLOG("winpty_spawn_config_new() failed.");
 		return nullptr;
 	}
-	
+
 	HANDLE hProcess = nullptr;
-	
+
 	auto success = winpty_spawn(
 		hConsole,
 		hSpawnConfig,
@@ -112,7 +111,7 @@ HANDLE WinPtyCreateProcess(const char *cmdptr, const char *envptr, const char *c
 		nullptr);
 
 	winpty_spawn_config_free(hSpawnConfig);
-	
+
 	if(!success) {
 		LLOG("winpty_spawn() failed.");
 		return nullptr;
@@ -135,7 +134,7 @@ void WindowsPtyProcess::Init()
 void WindowsPtyProcess::Free()
 {
 	StopAsync();
-	
+
 	if(hProcess) {
 		CloseHandle(hProcess);
 		hProcess = nullptr;
@@ -210,10 +209,10 @@ bool WindowsPtyProcess::Read(String& s)
 		{
 			Mutex::Lock __(async->lock);
 			rread = async->buffer;
-			bool full = async->buffer.GetCount() >= CAP;
+			bool full = async->buffer.GetCount() >= DRAINCAP;
 			async->buffer.Clear();
 			if(full)
-				async->cv.Broadcast();
+				async->cv.Signal();
 			running |= !async->eof || !rread.IsEmpty();
 		}
 		if(rread.GetCount()) {
@@ -286,39 +285,44 @@ void WindowsPtyProcess::DrainAsync()
 	char buffer[BUFSIZE];
 
 	while(!async->stop) {
-		String batch;
 		bool activity = false;
+		bool eof = true;
 		for(HANDLE hPipe : { hOutputRead, hErrorRead }) {
 			if(!hPipe)
 				continue;
 			DWORD avail = 0;
 			if(!PeekNamedPipe(hPipe, nullptr, 0, nullptr, &avail, nullptr))
 				continue;
-			int total = 0;
-			while(avail && total < MAXBATCH) {
-				DWORD todo = min<DWORD>(avail, min<int>(BUFSIZE, MAXBATCH - total));
+			eof = false; // At least one pipe is still alive
+			while(avail > 0 && !async->stop) {
+				DWORD todo = min<DWORD>(avail, BUFSIZE);
 				DWORD done = 0;
 				if(!ReadFile(hPipe, buffer, todo, &done, nullptr) || done == 0)
 					break;
-				batch.Cat(buffer, done);
-				total += done;
+				Mutex::Lock __(async->lock);
+				bool wasempty = async->buffer.IsEmpty();
+				async->buffer.Cat(buffer, done);
+				if(done < 1024 || wasempty)
+					WhenWakeUp();
+				while(!async->stop && async->buffer.GetCount() >= DRAINCAP)
+					async->cv.Wait(async->lock, 5);
 				activity = true;
 				if(!PeekNamedPipe(hPipe, nullptr, 0, nullptr, &avail, nullptr))
 					break;
 			}
 		}
-		if(activity) {
+		if(eof) {
 			Mutex::Lock __(async->lock);
-			async->buffer.Cat(batch);
-			while(!async->stop && async->buffer.GetCount() >= CAP)
-				async->cv.Wait(async->lock, 5);
+			async->eof = true;
+			WhenWakeUp();
+			return;
 		}
-		else
+		// The necessary Win32 evil.
+		// We only sleep if both pipes were completely dry.
+		if(!activity)
 			Sleep(10);
 	}
-	async->eof = true;
 }
-
 void WindowsPtyProcess::Write(String s)
 {
 	if(IsNull(s) && IsNull(wbuffer))
@@ -355,7 +359,7 @@ void WinPtyProcess::Init()
 void WinPtyProcess::Free()
 {
 	WindowsPtyProcess::Free();
-	
+
 	if(hConsole) {
 		winpty_free(hConsole);
 		hConsole = nullptr;
@@ -376,7 +380,7 @@ bool WinPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const c
 	}
 
 	winpty_config_set_initial_size(hAgentConfig, 80, 24);
-		
+
 	hConsole = winpty_open(hAgentConfig, nullptr);
 	winpty_config_free(hAgentConfig);
 	if(!hConsole) {
@@ -384,7 +388,7 @@ bool WinPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const c
 		Free();
 		return false;
 	}
-	
+
 	hInputWrite = CreateFileW(
 		winpty_conin_name(hConsole),
 		GENERIC_WRITE,
@@ -402,7 +406,7 @@ bool WinPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const c
 		OPEN_EXISTING,
 		0,
 		nullptr);
-	
+
 	hErrorRead = CreateFileW(
 		winpty_conerr_name(hConsole),
 		GENERIC_READ,
@@ -417,7 +421,7 @@ bool WinPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const c
 		Free();
 		return false;
 	}
-	
+
 	hProcess = WinPtyCreateProcess(cmd, env, cd, hConsole);
 	if(!hProcess) {
 		LLOG("WinPtyCreateProcess() failed.");
@@ -482,7 +486,7 @@ bool ConPtyDll::Init()
 			return false;
 		}
 	}
-	
+
 	LLOG("ConPty API is succesfully initialized.");
 
 
@@ -520,7 +524,7 @@ bool Win32CreateProcess(const char *cmdptr, const char *envptr, STARTUPINFOEX& s
 {
 	Vector<WCHAR> cmd = ToSystemCharsetW(cmdptr);
 	cmd.Add(0);
-	
+
 	return CreateProcessW(
 		nullptr,
 		cmd,
@@ -561,7 +565,7 @@ bool ConPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const c
 	if(!WindowsPtyProcess::DoStart(cmd, args, env, cd) || !conptylib.Init())
 		return false;
 
-	
+
 	HANDLE hOutputReadTmp, hOutputWrite;
 	HANDLE hInputWriteTmp, hInputRead;
 	HANDLE hErrorWrite;
@@ -576,18 +580,18 @@ bool ConPtyProcess::DoStart(const char *cmd, const Vector<String> *args, const c
 
 	CreatePipe(&hInputRead, &hInputWriteTmp, &sa, 0);
 	CreatePipe(&hOutputReadTmp, &hOutputWrite, &sa, 0);
-	
+
 	DuplicateHandle(hp, hInputWriteTmp, hp, &hInputWrite, 0, FALSE, DUPLICATE_SAME_ACCESS);
 	DuplicateHandle(hp, hOutputReadTmp, hp, &hOutputRead, 0, FALSE, DUPLICATE_SAME_ACCESS);
 	DuplicateHandle(hp, hOutputWrite,   hp, &hErrorWrite, 0, TRUE,  DUPLICATE_SAME_ACCESS);
-	
+
 	CloseHandle(hInputWriteTmp);
 	CloseHandle(hOutputReadTmp);
 
 	COORD size;
 	size.X = 80;
 	size.Y = 24;
-	
+
 	if(conptylib.Create(size, hInputRead, hOutputWrite, 0, &hConsole) != S_OK) {
 		LLOG("CreatePseudoConsole() failed.");
 		Free();

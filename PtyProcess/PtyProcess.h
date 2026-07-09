@@ -15,16 +15,17 @@
 
 namespace Upp {
 
-class APtyProcess : public AProcess {
+class APtyProcess : public Pte<APtyProcess>, public AProcess {
 public:
     APtyProcess()                                                                                                    {}
     virtual ~APtyProcess()                                                                                           {}
 
-    APtyProcess& Co(bool b = true)                      { co = b; return *this; }
-    APtyProcess& NoCo()                                 { return Co(false); }
+    APtyProcess& Co(bool b = true)                  { co = b; return *this; }
+    APtyProcess& NoCo()                             { return Co(false); }
+    bool         IsCo() const                       { return async; }
 
-    APtyProcess& ConvertCharset(bool b = true)          { convertcharset = b; return *this; }
-    APtyProcess& NoConvertCharset()                     { return ConvertCharset(false); }
+    APtyProcess& ConvertCharset(bool b = true)      { convertcharset = b; return *this; }
+    APtyProcess& NoConvertCharset()                 { return ConvertCharset(false); }
 
     bool         Start(const char *cmdline, const char *env = nullptr, const char *cd = nullptr)                         { return DoStart(cmdline, nullptr, env, cd); }
     bool         Start(const char *cmd, const Vector<String> *args, const char *env = nullptr, const char *cd = nullptr) { return DoStart(cmd, args, env, cd); }
@@ -35,10 +36,12 @@ public:
     bool         SetSize(Size sz)                   { return SetSize(sz, Null); }
     bool         SetSize(int col, int row)          { return SetSize(Size(col, row)); }
 
+    Event<>      WhenWakeUp;
+
     template<class T> bool Is() const               { return dynamic_cast<T*>(this); }
     template<class T> T& To()                       { static_assert(std::is_base_of<APtyProcess, T>::value); return static_cast<T&>(*this); }
     template<class T> const T& To() const           { static_assert(std::is_base_of<APtyProcess, T>::value); return static_cast<T&>(*this); }
-
+    
 protected:
     virtual void Init() = 0;
     virtual void Free() = 0;
@@ -225,26 +228,28 @@ using PtyProcess = WinPtyProcess;
 
 #endif
 
-class PtyWaitEvent {
+class PtyWaitEvent : NoCopy {
 public:
-    PtyWaitEvent()  {}
-    ~PtyWaitEvent() {}
+    PtyWaitEvent();
+    ~PtyWaitEvent();
     
     void            Clear();
-    void            Add(const APtyProcess& pty, dword events);
-    void            Remove(const APtyProcess& pty);
+    void            Add(APtyProcess& pty, dword events);
+    void            Remove(APtyProcess& pty);
     bool            Wait(int timeout);
     dword           Get(int i) const;
     dword           operator[](int i) const;
     
+    void            WakeUp();
+    
 private:
-    PtyWaitEvent(const PtyWaitEvent&);
 
 #ifdef PLATFORM_WIN32
 
     struct Slot : Moveable<Slot> {
         Slot();
         ~Slot();
+        const  APtyProcess* ptyptr = nullptr;
         HANDLE hProcess;
         HANDLE hRead;
         HANDLE hWrite;
@@ -257,10 +262,12 @@ private:
     };
     
     Vector<Slot> slots;
+    HANDLE hWakeUpEvent;
     
 #elif PLATFORM_POSIX
 
     Vector<pollfd> slots;
+    int wakeuppipe[2];
 
 #endif
 };

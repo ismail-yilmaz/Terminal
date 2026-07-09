@@ -39,13 +39,47 @@ PtyWaitEvent::Slot::~Slot()
 
 #endif
 
+PtyWaitEvent::PtyWaitEvent()
+{
+#ifdef PLATFORM_WIN32
+
+	hWakeUpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
+#elif PLATFORM_POSIX
+
+	if(pipe(wakeuppipe) == 0) {
+		fcntl(wakeuppipe[0], F_SETFL, O_NONBLOCK);
+		fcntl(wakeuppipe[1], F_SETFL, O_NONBLOCK);
+	}
+
+#endif
+}
+
+PtyWaitEvent::~PtyWaitEvent()
+{
+#ifdef PLATFORM_WIN32
+
+	if(hWakeUpEvent)
+		CloseHandle(hWakeUpEvent);
+
+#elif PLATFORM_POSIX
+
+	close(wakeuppipe[0]);
+	close(wakeuppipe[1]);
+
+#endif
+}
+
 void PtyWaitEvent::Clear()
 {
 	slots.Clear();
 }
 
-void PtyWaitEvent::Add(const APtyProcess& pty, dword events)
+void PtyWaitEvent::Add(APtyProcess& pty, dword events)
 {
+	if(pty.IsCo())
+		return;
+
 #ifdef PLATFORM_WIN32
 
 	const auto& p = static_cast<const WindowsPtyProcess&>(pty);
@@ -75,21 +109,35 @@ void PtyWaitEvent::Add(const APtyProcess& pty, dword events)
 #endif
 }
 
-void PtyWaitEvent::Remove(const APtyProcess& pty)
+void PtyWaitEvent::Remove(APtyProcess& pty)
 {
+	if(pty.IsCo())
+		return;
+
 #ifdef PLATFORM_WIN32
 
 	const auto& q = static_cast<const WindowsPtyProcess&>(pty);
-	slots.RemoveIf([this, &q](int i) {
-		return slots[i].hProcess == q.hProcess;
-	});
+	slots.RemoveIf([this, &q](int i) {	return slots[i].hProcess == q.hProcess; });
 
 #elif PLATFORM_POSIX
 
 	const auto& q = static_cast<const PosixPtyProcess&>(pty);
-	slots.RemoveIf([this, &q](int i) {
-		return slots[i].fd == q.GetSocket();
-	});
+	slots.RemoveIf([this, &q](int i) { return slots[i].fd == q.GetSocket(); });
+
+#endif
+}
+
+void PtyWaitEvent::WakeUp()
+{
+#ifdef PLATFORM_WIN32
+
+	if(hWakeUpEvent)
+		SetEvent(hWakeUpEvent);
+
+#elif PLATFORM_POSIX
+
+	char c = 1;
+	(void) write(wakeuppipe[1], &c, 1);
 
 #endif
 }
@@ -99,27 +147,25 @@ bool PtyWaitEvent::Wait(int timeout)
 #ifdef PLATFORM_WIN32
 
 	auto CheckPipe = [](HANDLE h, bool& dataFlag, bool& exceptionFlag, dword events, bool& hasEvents) -> bool {
-		if(!h)
-			return false;
-		
+		if(!h) return false;
+
 		DWORD n = 0;
 		if(PeekNamedPipe(h, nullptr, 0, nullptr, &n, nullptr)) {
 			if(n > 0) {
-				dataFlag = true;
-				hasEvents = true;
+				dataFlag = hasEvents = true;
 				return true;
 			}
 		}
-		else
-		if((events & WAIT_IS_EXCEPTION) && IsException(GetLastError())) {
-			exceptionFlag = true;
-			hasEvents = true;
+		else if((events & WAIT_IS_EXCEPTION) && IsException(GetLastError())) {
+			exceptionFlag = hasEvents = true;
 			return true;
 		}
 		return false;
 	};
 
 	bool hasEvents = false;
+
+	// Initial Peek for all Sync pipes
 	for(Slot& slot : slots) {
 		slot.eRead = slot.eWrite = slot.eError = slot.eException = false;
 		if(slot.events & WAIT_READ) {
@@ -127,30 +173,79 @@ bool PtyWaitEvent::Wait(int timeout)
 			CheckPipe(slot.hError, slot.eError, slot.eException, slot.events, hasEvents);
 		}
 		if((slot.events & WAIT_WRITE) && slot.hWrite) {
-			slot.eWrite = true;
-			hasEvents = true;
+			slot.eWrite = hasEvents = true;
 		}
 	}
-	
-	// If no events are pending, sleep for the specified timeout
-	if(!hasEvents && timeout > 0)
-		Sleep(timeout);
-	
+	if(hasEvents)
+		return true;
+	// The granular wait logic to mimic POSIX behavior (roughly)
+	if(timeout > 0) {
+		if(slots.IsEmpty()) {
+			// 100% Async Setup: Pure, 0% CPU kernel wait.
+			if(hWakeUpEvent)
+				WaitForSingleObject(hWakeUpEvent, timeout);
+			else
+				Sleep(timeout);
+		}
+		else {
+			// Mixed Setup (Sync + Async): We must periodically peek the Sync pipes,
+			// but we still want instant interruptibility for Async triggers.
+			int elapsed = 0;
+			const int slice = 10;
+			while(elapsed < timeout) {
+				int waittime = min(slice, timeout - elapsed);
+
+				if (hWakeUpEvent) {
+					if (WaitForSingleObject(hWakeUpEvent, waittime) == WAIT_OBJECT_0)
+						return true; // Async thread woke us instantly!
+				}
+				else
+					Sleep(waittime);
+				elapsed += waittime;
+				// Re-peek the Sync pipes after the short slice
+				for(Slot& slot : slots) {
+					if(slot.events & WAIT_READ) {
+						CheckPipe(slot.hRead, slot.eRead, slot.eException, slot.events, hasEvents);
+						CheckPipe(slot.hError, slot.eError, slot.eException, slot.events, hasEvents);
+					}
+				}
+				if(hasEvents)
+					return true;
+			}
+		}
+	}
+
 	return hasEvents;
 
 #elif PLATFORM_POSIX
+
+	pollfd& q = slots.Add();
+	q.fd = wakeuppipe[0];
+	q.events = POLLIN;
+	q.revents = 0;
 
 	int rc = 0;
 	do {
 		rc = poll((pollfd*) slots.begin(), slots.GetCount(), timeout);
 	}
-	while(rc == -1 && errno == EINTR);  // Retry on signal interruption
+	while(rc == -1 && errno == EINTR);
+
+	// Check if our event pipe woke us up
+	bool triggered = (slots.Top().revents & POLLIN);
+
+	// Remove the wakeup pipe so Get(i) indexes remain undisturbed
+	slots.Drop();
 
 	if(rc == -1)
 		LLOG("poll() failed: " << strerror(errno));
 
-	return rc > 0;
+	// Drain the pipe so it doesn't constantly trigger on the next loop
+	if(triggered) {
+		char buf[64];
+		while(read(wakeuppipe[0], buf, sizeof(buf)) > 0);
+	}
 
+	return rc > 0;
 #endif
 }
 
@@ -163,7 +258,7 @@ dword PtyWaitEvent::Get(int i) const
 
 	const Slot& slot = slots[i];
 	dword events = 0;
-	
+
 	if((slot.events & WAIT_READ) && (slot.eRead || slot.eError))
 		events |= WAIT_READ;
 	if((slot.events & WAIT_WRITE) && slot.eWrite)
@@ -172,7 +267,7 @@ dword PtyWaitEvent::Get(int i) const
 		events |= WAIT_IS_EXCEPTION;
 
 	return events;
-	
+
 #elif PLATFORM_POSIX
 
 	if(slots.IsEmpty() || i < 0 || i >= slots.GetCount())
@@ -183,7 +278,7 @@ dword PtyWaitEvent::Get(int i) const
 		return 0;
 
 	dword events = 0;
-	
+
 	if(q.revents & POLLIN)
 		events |= WAIT_READ;
 	if(q.revents & POLLOUT)

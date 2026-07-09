@@ -281,8 +281,10 @@ void VTPage::AdjustHistorySize(int n)
 {
 	const int count = saved.GetCount() + n;
 	if(count > historysize) {
-		saved.DropHead(count - historysize);
-		LLOG("AdjustHistorySize() -> Before: " << count << ", after: " << saved.GetCount());
+		if(int ndrop = min (saved.GetCount(), count - historysize); ndrop > 0) {
+			saved.DropHead(ndrop);
+			LLOG("AdjustHistorySize() -> Before: " << count << ", after: " << saved.GetCount());
+		}
 	}
 }
 
@@ -290,8 +292,13 @@ bool VTPage::SaveToHistory(int pos, int n)
 {
 	if(margins != GetView() || n <= 0)
 		return false;
+	int start = 0;
+	if(n > historysize) {
+		start = n - historysize;
+		n = historysize;
+	}
 	AdjustHistorySize(n);
-	for(int i = 0; i < n; i++)
+	for(int i = start; i < start + n; i++)
 		saved.AddTail(pick(lines[pos - 1 + i]));
 	return true;
 }

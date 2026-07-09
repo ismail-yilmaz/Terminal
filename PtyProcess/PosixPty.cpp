@@ -8,9 +8,8 @@ namespace Upp {
 
 namespace {
 
-static constexpr int BUFSIZE   = 4096;
-static constexpr int MAXBATCH  = 65536;
-static constexpr int CAP       = 1 << 20;
+static constexpr int BUFSIZE  = 4 * 1024;
+static constexpr int DRAINCAP = 1024 * 1024;
 
 static void sNoBlock(int fd)
 {
@@ -321,12 +320,12 @@ bool PosixPtyProcess::Read(String& s)
 		{
 			Mutex::Lock __(async->lock);
 			rread = async->buffer;
-			bool full = async->buffer.GetCount() >= CAP;
+			bool full = async->buffer.GetCount() >= DRAINCAP;
 			async->buffer.Clear();
 			if(full)
 				async->cv.Signal();
+			running |= !async->eof || !rread.IsEmpty();
 		}
-		running |= !rread.IsEmpty();
 		if(rread.GetCount()) {
 			LLOG("Read(Async) -> " << rread.GetCount() << " bytes");
 			s << (convertcharset ? FromSystemCharset(rread) : rread);
@@ -338,13 +337,11 @@ bool PosixPtyProcess::Read(String& s)
 		[[maybe_unused]] int done = 0;
 		for(;;) {
 			int n = read(master, buffer, BUFSIZE);
-
 			if(n > 0) {
 				done += n;
 				rread.Cat(buffer, n);
 				continue;
 			}
-
 			if(n == 0) { // EOF
 				LLOG("Read(Sync) -> EOF");
 				close(master);
@@ -406,13 +403,17 @@ void PosixPtyProcess::DrainAsync()
 			int n = read(master, buffer, BUFSIZE);
 			if(n > 0) {
 				Mutex::Lock __(async->lock);
+				bool wasempty = async->buffer.IsEmpty();
 				async->buffer.Cat(buffer, n);
-				while(!async->stop && async->buffer.GetCount() >= CAP)
+				if(n < 1024 || wasempty)
+					WhenWakeUp();
+				while(!async->stop && async->buffer.GetCount() >= DRAINCAP)
 					async->cv.Wait(async->lock, 5);
 				continue;
 			}
 			if(n == 0) {
 				async->eof = true;
+				WhenWakeUp();
 				close(master);
 				master = -1;
 				return;
@@ -422,6 +423,7 @@ void PosixPtyProcess::DrainAsync()
 			if(errno == EAGAIN || errno == EWOULDBLOCK)
 				break;
 			async->eof = true;
+			WhenWakeUp();
 			close(master);
 			master = -1;
 			return;

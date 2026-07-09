@@ -91,7 +91,7 @@ void sTextRenderer::DrawExtendedUnderline(int x, int cx, int y, int h, Color ink
 {
 	LTIMING("sTextRenderer::DrawExtendedUnderline");
 	
-	// 1. Calculate native thickness and baseline offset matching Upp::DrawText logic
+	// Calculate native thickness and baseline offset matching Upp::DrawText logic
 	int hg = abs(font.GetCy());
 	if(hg == 0)
 		hg = 10;
