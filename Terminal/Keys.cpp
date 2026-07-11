@@ -11,6 +11,7 @@ Point TerminalCtrl::SnapWordCursor(Point cursor, Size psz, dword dir, Point& anc
 {
 	Point p = cursor;
 	Point out = cursor;
+	
 	int cy = GetPage().GetLineCount() - 1;
 
 	if(dir == K_LEFT) {
@@ -95,6 +96,25 @@ Point TerminalCtrl::SnapWordCursor(Point cursor, Size psz, dword dir, Point& anc
 			out = anchor;
 	}
 	return out;
+}
+
+Point TerminalCtrl::SnapCursor(Point p, Size psz, dword k, Point& anchor, Point& selpos)
+{
+	if(seltype == SEL_WORD)
+		return SnapWordCursor(p, psz, k, anchor, selpos);
+
+	if(p.y < 0 || p.y >= GetPage().GetLineCount())
+		return p;
+
+	const VTLine& line = GetPage()[p.y];
+	if(p.x < 0 || p.x >= line.GetCount())
+		return p;
+
+	if(line[p.x].IsWideCharTrail()) {
+		int dir = k == K_RIGHT ? +1 : -1;
+		p.x = clamp(p.x + dir, 0, line.GetCount());
+	}
+	return p;
 }
 
 void TerminalCtrl::ProcessSelectorKey(dword key, int count)
@@ -195,12 +215,13 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 	else
 		return;
 
+	cursor = SnapCursor(cursor, psz, k, anchor, selpos);
+
 	if(!selecting) {
 		anchor = selpos = cursor;
 	}
 	else
 	if(seltype == SEL_WORD) {
-		cursor = SnapWordCursor(cursor, psz, k, anchor, selpos);
 		GetWordSelection(cursor, anchor, selpos);
 	}
 	else
@@ -224,9 +245,8 @@ void TerminalCtrl::ProcessSelectorKey(dword key, int count)
 		if(k == K_DOWN)
 			cursor = selpos;
 	}
-	else {
+	else
 		selpos = cursor;
-	}
 
 	Goto(cursor.y);
 
@@ -425,11 +445,11 @@ bool TerminalCtrl::VTKey(dword key, int count)
 	int i = sFunctionKeyMap.Find(key & ~keymask);
 	if(i < 0)
 		return false;
-	
+
 	const FunctionKey& k = sFunctionKeyMap[i];
 	if(k.level > clevel)
 		return false;
-	
+
 	if(IsLevel0()) { // VT52
 			if(k.type == FunctionKey::Cursor || k.type == FunctionKey::Programmable) {
 				PutESC(k.code, count);
@@ -458,7 +478,7 @@ bool TerminalCtrl::UDKey(dword key, int count)
 		return false;
 
 	// DEC user-defined keys (DECUDK) support
-	
+
 	const static Tuple<dword, dword> sUDKMap[] = {
 		{ K_F1,      11 },  { K_F2,      12 },
 		{ K_F3,      13 },  { K_F4,      14 },
@@ -478,7 +498,7 @@ bool TerminalCtrl::UDKey(dword key, int count)
 		return false;
 
 	dword userkey  = 0;
-	
+
 	if(pcstylefunctionkeys) {
 		if((key & K_SHIFT) && (key & K_ALT)) {
 			userkey = k->b < 25 ? (K_SHIFT|K_ALT|k->b) : 0;
@@ -538,7 +558,7 @@ bool TerminalCtrl::NavKey(dword key, int count)
 	}
 	else
 		return false;
-	
+
 	return true;
 }
 
@@ -564,7 +584,7 @@ bool TerminalCtrl::Key(dword key, int count)
 		return false;
 		#endif
 	};
-	
+
 #ifdef PLATFORM_WIN32
 	// Windows reports AltGr as Ctrl+Alt.
 	bool altgr = ctrlkey && altkey;
@@ -574,7 +594,7 @@ bool TerminalCtrl::Key(dword key, int count)
 
 	if(key & K_KEYUP)
 		return false;
-	
+
 	if(UDKey(key, count)) {
 		SyncSb(true);
 		goto End;
@@ -588,12 +608,12 @@ bool TerminalCtrl::Key(dword key, int count)
 
 #ifdef PLATFORM_COCOA
 	if(findarg(key & ~(K_CTRL|K_ALT|K_SHIFT|K_OPTION),
-	           K_CTRL_KEY, K_ALT_KEY, K_SHIFT_KEY, K_OPTION_KEY) >= 0)
+			K_CTRL_KEY, K_ALT_KEY, K_SHIFT_KEY, K_OPTION_KEY) >= 0)
 		return false;
 	key &= ~K_OPTION;
 #else
 	if(findarg(key & ~(K_CTRL|K_ALT|K_SHIFT),
-	           K_CTRL_KEY, K_ALT_KEY, K_SHIFT_KEY) >= 0)
+			K_CTRL_KEY, K_ALT_KEY, K_SHIFT_KEY) >= 0)
 		return false;
 #endif
 
@@ -705,7 +725,7 @@ bool TerminalCtrl::Key(dword key, int count)
 			}
 
 			dword base = key & ~(K_CTRL|K_ALT|K_SHIFT);
-		
+
 			// Alt/meta printable fallback for symbolic key enums
 			// Needed because U++ may report Alt+letter as K_ALT|K_A instead of ASCII.
 			if(altkey && !altgr) {

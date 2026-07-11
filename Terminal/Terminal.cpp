@@ -1,7 +1,7 @@
 #include "Terminal.h"
 
 #define LLOG(x)     // RLOG("TerminalCtrl (#" << this << "]: " << x)
-#define LTIMING(x)	// RTIMING(x)
+#define LTIMING(x)  // RTIMING(x)
 
 namespace Upp {
 
@@ -19,7 +19,7 @@ bool sDefaultCellFilter(const VTCell& cell)
 
 bool IsWCh(const VTCell& cell, bool line_wrap, Gate<const VTCell&> f = Null)
 {
-	return (cell == 0 && line_wrap) || cell == 1 || (f ? f(cell) : sDefaultCellFilter(cell));
+	return (cell == 0 && line_wrap) || cell == 1 || cell.GetWidth() > 1 || (f ? f(cell) : sDefaultCellFilter(cell));
 }
 
 TerminalCtrl::TerminalCtrl()
@@ -112,7 +112,7 @@ void TerminalCtrl::PlaceCaret(bool scroll)
 	}
 	else
 		caretrect = GetSelectorCaretRect();
-	
+
 	if(!caret.IsBlinking()) {
 		Refresh(oldrect);
 		Refresh(caretrect);
@@ -238,12 +238,12 @@ void TerminalCtrl::SyncSize(bool notify)
 		}
 	};
 
-	auto OnSizeHint	= [=]
+	auto OnSizeHint = [=]
 	{
 		RefreshSizeHint();
 		hinting = false;
 	};
-	
+
 	auto OnResize = [=]
 	{
 		ClearSelection();
@@ -278,7 +278,7 @@ void TerminalCtrl::ScheduleRefresh()
 {
 	if(modes[XTSYNCOUT])
 		return;
-	
+
 	if(!delayedrefresh) {
 		SyncSb();
 		RefreshDisplay();
@@ -330,14 +330,14 @@ void TerminalCtrl::SyncSb(bool forcescroll)
 
 	int  pcy = sb.GetPage();
 	int  tcy = sb.GetTotal();
-	
+
 	if(!forcescroll)
 		forcescroll = (scrolltoend || (sb + pcy == tcy)) && !ignorescroll;
-	
+
 	sb.SetTotal(page->GetLineCount());
 	sb.SetPage(page->GetSize().cy);
 	sb.SetLine(1);
-	
+
 	if(forcescroll)
 		sb.End();
 	else {
@@ -375,29 +375,29 @@ void TerminalCtrl::RefreshDisplay()
 {
 	if(modes[XTSYNCOUT])
 		return;
-	
+
 	const Size wsz = GetSize();
 	const Size psz = GetPageSize();
 	const Size csz = GetCellSize();
 	const int  pos = GetSbPos();
-	
+
 	LTIMING("TerminalCtrl::RefreshDisplay");
-	
+
 	const int cnt = min(pos + psz.cy, page->GetLineCount());
 	int blinkingcells = 0;
 
 	const bool hypertext = hyperlinks || annotations;
 	const bool plaintext = !hypertext && !blinkingtext;
-	
+
 	Rect rdirty = Null;
 	Rect rblink = Null;
 	Rect rhtext = Null;
-	
+
 	for(int i = pos; i < cnt; i++) {
 		const VTLine& line = page->FetchLine(i);
 		int y = i * csz.cy - (csz.cy * pos);
 		bool invalid = line.IsInvalid();
-		
+
 		if(!plaintext) {
 			for(int j = 0; j < line.GetCount(); j++) {
 				const VTCell& cell = line[j];
@@ -424,24 +424,24 @@ void TerminalCtrl::RefreshDisplay()
 	}
 
 	bool isdirty = false;
-	
+
 	if(!rdirty.IsEmpty()) {
 		Refresh(rdirty.Inflated(4));
 		isdirty = true;
 	}
-	
+
 	if(!plaintext) {
 		if(!rblink.IsEmpty()) {
 			Refresh(rblink.Inflated(4));
 			isdirty = true;
 		}
-		
+
 		if(!rhtext.IsEmpty()) {
 			Refresh(rhtext.Inflated(4));
 			isdirty = true;
 		}
 	}
-	
+
 	PlaceCaret();
 	Blink(blinkingcells > 0);
 
@@ -466,7 +466,7 @@ void TerminalCtrl::DragAndDrop(Point pt, PasteClip& d)
 {
 	if(IsReadOnly() || IsDragAndDropSource())
 		return;
-	
+
 	WString s;
 
 	if(AcceptFiles(d)) {
@@ -484,7 +484,7 @@ void TerminalCtrl::DragAndDrop(Point pt, PasteClip& d)
 		return;
 
 	d.SetAction(DND_COPY);
-	
+
 	bool noctl = WhenClip(d);
 
 	if(d.IsAccepted())
@@ -506,6 +506,7 @@ void TerminalCtrl::LeftDown(Point pt, dword keyflags)
 		}
 		else {
 			pt = SelectionToPagePos(pt);
+			NormalizeSelection();
 			SetSelection(pt, pt, (keyflags & K_CTRL) ? SEL_RECT : SEL_TEXT);
 		}
 	}
@@ -533,7 +534,7 @@ void TerminalCtrl::LeftDrag(Point pt, dword keyflags)
 {
 	pt = ClientToPagePos(pt);
 	bool modifier = keyflags & K_CTRL;
-	
+
 	if(!IsMouseTracking(keyflags)) {
 		VectorMap<String, ClipData> data;
 		if(!HasCapture() && !modifier && IsSelected(pt)) {
@@ -663,7 +664,7 @@ void TerminalCtrl::RightDown(Point pt, dword keyflags)
 		if(!IsSelected(pt))
 			ClearSelection();
 		MenuBar::Execute(WhenBar);
-//		SetFocus();
+//      SetFocus();
 	}
 }
 
@@ -694,6 +695,7 @@ void TerminalCtrl::MouseMove(Point pt, dword keyflags)
 	else
 	if(captured) {
 		selpos = SelectionToPagePos(pt);
+		NormalizeSelection();
 		Refresh();
 	}
 	else
@@ -732,7 +734,7 @@ void TerminalCtrl::VTMouseEvent(Point pt, dword event, dword keyflags, int zdelt
 {
 	if(IsReadOnly())
 		return;
-	
+
 	int  mouseevent = 0;
 
 	// Some interactive applications, particularly those using a Text User Interface (TUI),
@@ -740,7 +742,7 @@ void TerminalCtrl::VTMouseEvent(Point pt, dword event, dword keyflags, int zdelt
 	// This behavior leads to offset mouse position reports because the scroll(bar) position is updated
 	// when the history or scrollback buffer is enabled. To address this issue, a workaround is implemented
 	// by refraining from calculating the scrolled position with VT mouse events.
-	
+
 	if(!modes[XTSGRPXMM])
 		pt = ClientToPagePos(pt, true) + 1;
 
@@ -798,7 +800,7 @@ void TerminalCtrl::VTMouseEvent(Point pt, dword event, dword keyflags, int zdelt
 			ReleaseCapture();
 	}
 	else {
-		buttondown = true;	// Combines everything else with a button-down event
+		buttondown = true;  // Combines everything else with a button-down event
 		if((event & DOWN) == DOWN)
 			if(!HasCapture())
 				SetCapture();
@@ -846,48 +848,68 @@ Point TerminalCtrl::ClientToPagePos(Point pt, bool ignoresb) const
 Point TerminalCtrl::SelectionToPagePos(Point pt) const
 {
 	// Aligns the anchor or selection point to cell boundaries.
-
 	Size csz = GetCellSize();
 	int mx = pt.x % csz.cx;
 	pt.x += int(mx >= csz.cx / 2) * csz.cx - mx;
-	return ClientToPagePos(pt);
+	
+	Point pagepos = ClientToPagePos(pt);
+	if(pagepos.y >= 0 && pagepos.y < page->GetLineCount()) {
+		const VTLine& line = page->FetchLine(pagepos.y);
+		if(!line.IsVoid() && pagepos.x < line.GetCount())
+			while(pagepos.x > 0 && line[pagepos.x].IsWideCharTrail())
+				pagepos.x--;
+	}
+	
+	return pagepos;
 }
 
-void TerminalCtrl::SetSelection(Point pl, Point ph, dword type, bool multi_click)
+void TerminalCtrl::NormalizeSelection()
+{
+	if(IsNull(anchor) || anchor == selpos) {
+		selbegin = selend = selpos;
+		return;
+	}
+
+	if(anchor.y == selpos.y || anchor.x == selpos.x || seltype == SEL_RECT) {
+		selbegin = min(anchor, selpos);
+		selend = max(anchor, selpos);
+	}
+	else
+	if(anchor.y > selpos.y) {
+		selbegin = selpos;
+		selend = anchor;
+	}
+	else {
+		selbegin = anchor;
+		selend = selpos;
+	}
+
+	if(seltype == SEL_LINE) {
+		// Updates the horizontal highlight on display resize.
+		selend.x = page->FetchLine(selend.y).GetCount();
+	}
+}
+
+void TerminalCtrl::SetSelection(Point pl, Point ph, dword type, bool multi)
 {
 	anchor = pl;
 	selpos = ph;
 	seltype = type;
-	multiclick = multi_click;
+	multiclick = multi;
+	NormalizeSelection();
 	SetSelectionSource(ClipFmtsText());
 	Refresh();
 }
 
 bool TerminalCtrl::GetSelection(Point& pl, Point& ph) const
 {
-	if(IsNull(anchor) || anchor == selpos) {
+	if(IsNull(selbegin) || selbegin == selend) {
 		pl = ph = selpos;
 		return false;
 	}
-	
-	if(anchor.y == selpos.y || anchor.x == selpos.x || seltype == SEL_RECT) {
-		pl = min(anchor, selpos);
-		ph = max(anchor, selpos);
-	}
-	else
-	if(anchor.y > selpos.y) {
-		pl = selpos;
-		ph = anchor;
-	}
-	else {
-		pl = anchor;
-		ph = selpos;
-	}
 
-	if(seltype == SEL_LINE) {
-		// Updates the horizontal highlight on display resize.
-		ph.x = page->FetchLine(ph.y).GetCount();
-	}
+	pl = selbegin;
+	ph = selend;
 	return true;
 }
 
@@ -902,7 +924,9 @@ void TerminalCtrl::ClearSelection()
 	ReleaseCapture();
 	anchor = Null;
 	selpos = Null;
-//	seltype = SEL_NONE;
+	selbegin = Null;
+	selend = Null;
+//  seltype = SEL_NONE;
 	selecting = false;
 	multiclick = false;
 	Refresh();
@@ -910,34 +934,33 @@ void TerminalCtrl::ClearSelection()
 
 bool TerminalCtrl::IsSelected(Point pt) const
 {
-	Point pl, ph;
-	if(!GetSelection(pl, ph))
+	if(IsNull(selbegin) || selbegin == selend)
 		return false;
 
 	if(seltype == SEL_RECT) {
-		return pt.x >= pl.x
-			&& pt.y >= pl.y
-			&& pt.x <  ph.x
-			&& pt.y <= ph.y;
+		return pt.x >= selbegin.x
+			&& pt.y >= selbegin.y
+			&& pt.x <  selend.x
+			&& pt.y <= selend.y;
 	}
 	else
-	if(pl.y == ph.y) {
-		return pt.y == pl.y
-			&& pt.x >= pl.x
-			&& pt.x <  ph.x;
+	if(selbegin.y == selend.y) {
+		return pt.y == selbegin.y
+			&& pt.x >= selbegin.x
+			&& pt.x <  selend.x;
 	}
 	else
-	if(pt.y == pl.y) {
+	if(pt.y == selbegin.y) {
 		Size psz = GetPageSize();
-		return pt.x >= pl.x
+		return pt.x >= selbegin.x
 			&& pt.x <  psz.cx;
 	}
 	else
-	if(pt.y == ph.y) {
-		return pt.x >= 0 && pt.x < ph.x;
+	if(pt.y == selend.y) {
+		return pt.x >= 0 && pt.x < selend.x;
 	}
 
-	return pl.y <= pt.y && pt.y <= ph.y;
+	return selbegin.y <= pt.y && pt.y <= selend.y;
 }
 
 WString TerminalCtrl::GetSelectedText() const
@@ -947,29 +970,33 @@ WString TerminalCtrl::GetSelectedText() const
 
 bool TerminalCtrl::GetLineSelection(const Point& pt, Point& pl, Point& ph) const
 {
-	pl = ph = pt;
-	
-	Tuple<int, int> span = page->GetLineSpan(pt.y);
-	pl.x = 0;
-	pl.y = span.a;
-	ph.x = GetPageSize().cx;
-	ph.y = span.b;
+    pl = ph = pt;
+    
+    Tuple<int, int> span = page->GetLineSpan(pt.y);
+    pl.x = 0;
+    pl.y = span.a;
+    ph.x = GetPageSize().cx;
+    ph.y = span.b;
 
-	if(pl.y == ph.y)
-		ph.x = page->FetchLine(ph.y).GetCount();
+    if(pl.y == ph.y)
+        ph.x = page->FetchLine(ph.y).GetCount();
 
-	return !(pl == ph);
+    return !(pl == ph);
 }
 
 bool TerminalCtrl::GetWordSelection(const Point& pt, Point& pl, Point& ph) const
 {
 	pl = ph = pt;
 	
-	const VTLine& line = page->FetchLine(pt.y);
-	if(!line.IsVoid()) {
-		const VTCell& cell = page->FetchCell(pt);
-		if(!cell.IsVoid() && IsWCh(cell, line.IsWrapped(), cellfilter)) {
-			ph.x++;
+	if(const VTLine& line = page->FetchLine(pt.y); !line.IsVoid()) {
+		Point root = pt;
+		while(root.x > 0 && page->FetchCell(root).IsWideCharTrail())
+			root.x--;
+		const VTCell& cell = page->FetchCell(root);
+		// Ensure we are evaluating the root cell, not a void or trail cell
+		if(!cell.IsVoid() && !cell.IsWideCharTrail() && IsWCh(cell, line.IsWrapped(), cellfilter)) {
+			pl = ph = root;
+			ph.x += max(1, cell.GetWidth(GetPage().GetAmbiguousCellWidth()));
 			GetWordPosL(line, pl);
 			GetWordPosH(line, ph);
 			return true;
@@ -1180,9 +1207,9 @@ void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly
 {
 	if(searching || s.IsEmpty() || begin >= end)
 		return;
-	
+
 	searching = true;
-	
+
 	if(visibleonly) {
 		begin = GetSbPos() + max(begin, 0);
 		end   = min(end, min(begin + GetPageSize().cy, page->GetLineCount()));
@@ -1191,7 +1218,7 @@ void TerminalCtrl::Search(const WString& s, int begin, int end, bool visibleonly
 		begin = max(begin, 0);
 		end   = min(end, page->GetLineCount());
 	}
-	
+
 	auto ScanBuffer = [this, &s, &fn](int i, int& o) {
 		VectorMap<int, WString> m;
 		o = page->FetchLine(i, m) + 1;
@@ -1294,7 +1321,7 @@ void TerminalCtrl::LinksBar(Bar& menu)
 {
 	if(!HasHyperlinks())
 		return;
-	
+
 	String uri = GetHyperlinkUri();
 	if(IsNull(uri))
 		return;
@@ -1307,7 +1334,7 @@ void TerminalCtrl::AnnotationsBar(Bar& menu)
 {
 	if(!HasAnnotations())
 		return;
-	
+
 	String txt = GetAnnotationText();
 	if(IsNull(txt))
 		return;
@@ -1322,7 +1349,7 @@ void TerminalCtrl::ImagesBar(Bar& menu)
 {
 	if(!HasInlineImages())
 		return;
-	
+
 	Point pt = mousepos;
 
 	menu.Add(AK_COPYIMAGE, CtrlImg::copy(), [=]
@@ -1362,7 +1389,7 @@ void TerminalCtrl::OptionsBar(Bar& menu)
 			menu.Separator();
 			menu.Add(unlocked,
 				t_("Blinking"),
-				[=] { caret.Blink(!caret.IsBlinking());	 })
+				[=] { caret.Blink(!caret.IsBlinking());  })
 				.Check(caret.IsBlinking());
 			menu.Separator();
 			menu.Add(t_("Locked"),

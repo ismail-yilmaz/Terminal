@@ -90,7 +90,7 @@ public:
 void sTextRenderer::DrawExtendedUnderline(int x, int cx, int y, int h, Color ink, const VTCell& cell)
 {
 	LTIMING("sTextRenderer::DrawExtendedUnderline");
-	
+
 	// Calculate native thickness and baseline offset matching Upp::DrawText logic
 	int hg = abs(font.GetCy());
 	if(hg == 0)
@@ -111,7 +111,7 @@ void sTextRenderer::DrawExtendedUnderline(int x, int cx, int y, int h, Color ink
 		const int amplitude = 1;
 		const int period = max(2, hg / 10);
 		thickness = 1;
-	
+
 		static thread_local Vector<Point> wave;
 		int wavecount = 0;
 
@@ -142,29 +142,29 @@ void sTextRenderer::Flush()
 		if(c.x.GetCount()) {
 			const Tuple<dword, Color>& fc = cache.GetKey(i);
 			const int x = c.x[0], cx = c.x.Top() + fcx;
-			
+
 			VTCell style;
 			style.sgr = (word) fc.a;
-			
+
 			font.Bold(style.IsBold())
 				.Italic(style.IsItalic())
 				.Strikeout(style.IsStrikeout())
 				.Underline(style.IsUnderlined() && style.GetUnderlineStyle() == VTCell::UNDERLINE_SINGLE);
-				
+
 			for(int i = 0; i < c.x.GetCount() - 1; i++)
 				c.x[i] = c.x[i + 1] - c.x[i];
 			c.x.Top() = c.width.Top();
-			
+
 			if(style.IsOverlined()) {
 				int h = font.GetDescent() - 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_SOLID, fc.b);
 			}
-			
+
 			if(style.IsUnderlined() && style.GetUnderlineStyle() != VTCell::UNDERLINE_SINGLE) {
 				int h = font.GetAscent();
 				DrawExtendedUnderline(x, cx, y, h, fc.b, style);
 			}
-			
+
 			if(canhyperlink && style.IsHyperlink()) {
 				int h = font.GetAscent() + 2;
 				w.DrawLine(x, y + h, cx, y + h, PEN_DOT, fc.b);
@@ -256,17 +256,26 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 	cpd.size = csz;
 	Vector<CellPaintData> linepaintdata(psz.cx, cpd);
 
+	auto GetSelectionRange = [&](int y) -> Tuple<int, int> {
+		if(!IsNull(selbegin) && !IsNull(selend) && y >= selbegin.y && y <= selend.y) {
+			if(seltype == SEL_RECT)
+				return MakeTuple(selbegin.x, selend.x);
+			return MakeTuple((y == selbegin.y) ? selbegin.x : 0, (y == selend.y) ? selend.x : psz.cx);
+		}
+		return MakeTuple(-1, -1);
+	};
 
 	auto PaintLine = [&](const VTLine& line, int i) {
 		LTIMING("TerminalCtrl::PaintLine");
 		int y = i * csz.cy - (csz.cy * pos);
+		auto selrange = GetSelectionRange(i);
 		{
 			// Render the background rectangles.
 			sRectRenderer rr(w, dim ? Blend(bkg, Black(), dimalpha) : bkg, nobackground);
 			for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
 				const VTCell& cell = line.Get(j, GetAttrs());
 				CellPaintData& data = linepaintdata[j];
-				data.highlight = IsSelected(Point(j,i));
+				data.highlight = (j >= selrange.a && j < selrange.b);
 				data.show = !nobackground;
 				data.show |= !IsNull(cell.paper);
 				data.show |= (cell.IsHypertext() && cell.data == activehtext);

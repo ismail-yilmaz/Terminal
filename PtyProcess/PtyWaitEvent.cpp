@@ -147,8 +147,9 @@ bool PtyWaitEvent::Wait(int timeout)
 #ifdef PLATFORM_WIN32
 
 	auto CheckPipe = [](HANDLE h, bool& dataFlag, bool& exceptionFlag, dword events, bool& hasEvents) -> bool {
-		if(!h) return false;
-
+		if(!h)
+			return false;
+		
 		DWORD n = 0;
 		if(PeekNamedPipe(h, nullptr, 0, nullptr, &n, nullptr)) {
 			if(n > 0) {
@@ -156,7 +157,8 @@ bool PtyWaitEvent::Wait(int timeout)
 				return true;
 			}
 		}
-		else if((events & WAIT_IS_EXCEPTION) && IsException(GetLastError())) {
+		else
+		if((events & WAIT_IS_EXCEPTION) && IsException(GetLastError())) {
 			exceptionFlag = hasEvents = true;
 			return true;
 		}

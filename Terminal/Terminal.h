@@ -505,6 +505,7 @@ protected:
 
     Point       ClientToPagePos(Point pt, bool ignoresb = false) const;
     Point       SelectionToPagePos(Point pt) const;
+    void        SetSelPos(Point pt);
 
 private:
     void        InitParser(AnsiParser& vts);
@@ -532,11 +533,15 @@ private:
     Rect        GetSelectorCaretRect() const;
     void        PlaceCaret(bool scroll = false);
 
+    void        NormalizeSelection();
+    
     void        GetWordPosL(const VTLine& line, Point& pl) const;
     void        GetWordPosH(const VTLine& line, Point& ph) const;
     bool        IsWord(VTCell& ch, bool iswrapped);
 
     Point       SnapWordCursor(Point cursor, Size psz, dword dir, Point& anchor, Point& selpos);
+    Point       SnapCursor(Point p, Size psz, dword k, Point& anchor, Point& selpos);
+
 
     bool        IsMouseTracking(dword keyflags) const;
     bool        IsMouseOverImage(Point pt) const                { return !IsSelected(pt) && page->FetchCell(pt).IsImage(); }
@@ -677,6 +682,8 @@ private:
     Rect        caretrect;
     Point       anchor           = Null;
     Point       selpos           = Null;
+    Point       selbegin         = Null;
+    Point       selend           = Null;
     Point       cursor           = Null;
     dword       seltype          = SEL_NONE;
     bool        selectormode     = false;
