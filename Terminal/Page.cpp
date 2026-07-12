@@ -1393,13 +1393,12 @@ void VTPage::LineFill(int pos, int begin, int end, const VTCell& filler, dword f
 
 void VTPage::RectCopy(const Point &p, const Rect& r, const Rect& rr, dword flags)
 {
-	LTIMING("VTPage::RectCopy_Optimized");
-
+	LTIMING("VTPage::RectCopy");
+	
 	Rect src(Bind(rr, r.TopLeft()), Bind(rr, r.BottomRight()));
 	Rect dest(p, src.GetSize());
 	dest.Set(Bind(rr, dest.TopLeft()), Bind(rr, dest.BottomRight()));
-
-	const int width = src.Width();
+	const int width = src.Width() + 1;
 	const int dy = dest.top - src.top;
 	Buffer<VTCell> row_buf(width);
 	bool reverse = (dy > 0);
@@ -1417,7 +1416,6 @@ void VTPage::RectCopy(const Point &p, const Rect& r, const Rect& rr, dword flags
 		for(int x = 0; x < width; ++x) {
 			dst_ptr[x].Fill(row_buf[x], flags);
 		}
-
 		dst_line.Invalidate();
 		if(y == y_end)
 			break;

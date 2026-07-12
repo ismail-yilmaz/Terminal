@@ -234,7 +234,7 @@ void TerminalCtrl::ParseExtendedColors(VTCell& attrs, const Vector<String>& opco
 
 	// Handles ISO-8613-6 (mixed colons/semicolons) color formats
 
-	int values[8] = {0};
+	int values[8] = { 0 };
 	int count = 0;
 	int opconsumed = 0;
 	bool hascolon = false;
@@ -293,42 +293,48 @@ void TerminalCtrl::ParseExtendedColors(VTCell& attrs, const Vector<String>& opco
 
 	int which = values[0];
 	int palette = values[1];
-	int cidx = 2; // Offset for where color variables actually start
+	int cid = 2; // Offset for where color variables actually start
 
 	// ISO-8613-6 specifies an optional color space ID before the colors.
 	if(hascolon) {
 		if((palette == 2 || palette == 3) && count >= 6)
-			cidx++;
+			cid++;
 		else
 		if(palette == 4 && count >= 7)
-			cidx++;
+			cid++;
 	}
 
 	Color color = Null;
 
-	if(palette == 2 && count >= cidx + 3) {
-		color = Color(clamp(values[cidx], 0, 255),
-					clamp(values[cidx+1], 0, 255),
-					clamp(values[cidx+2], 0, 255));
+	if(palette == 2 && count >= cid + 3) {
+		color = Color(clamp(values[cid], 0, 255),
+						clamp(values[cid + 1], 0, 255),
+						clamp(values[cid + 2], 0, 255));
 	}
 	else
-	if(palette == 3 && count >= cidx + 3) {
-		color = CmykColorf(values[cidx] / 100.0, values[cidx+1] / 100.0, values[cidx+2] / 100.0, 0.0);
+	if(palette == 3 && count >= cid + 3) {
+		color = CmykColorf(values[cid] / 100.0,
+							values[cid + 1] / 100.0,
+							values[cid + 2] / 100.0, 0.0);
 	}
 	else
-	if(palette == 4 && count >= cidx + 4) {
-		color = CmykColorf(values[cidx] / 100.0, values[cidx+1] / 100.0, values[cidx+2] / 100.0, values[cidx+3] / 100.0);
+	if(palette == 4 && count >= cid + 4) {
+		color = CmykColorf(values[cid] / 100.0,
+							values[cid + 1] / 100.0,
+							values[cid + 2] / 100.0,
+							values[cid + 3] / 100.0);
 	}
 	else
 	if(palette == 5 && count >= 3) {
-		color = Color::Special(clamp(values[cidx], 0, 255));
+		color = Color::Special(clamp(values[cid], 0, 255));
 	}
 	else
 		return; // Malformed sequence
 
 	if(which == 38)
 		attrs.ink = color;
-	else if(which == 48)
+	else
+	if(which == 48)
 		attrs.paper = color;
 
 	// Fast-forward external loop tracker
