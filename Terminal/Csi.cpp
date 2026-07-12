@@ -654,6 +654,8 @@ void TerminalCtrl::ChangeRectAreaAttrs(const AnsiParser::Sequence& seq, bool inv
 	dword flags = invert
 					? VTCell::XOR_SGR
 					: VTCell::FILL_SGR;
+					
+	flags |= VTCell::FILL_INK|VTCell::FILL_PAPER; // Kitty extension to DECCARA
 
 	streamfill
 		? page->FillStream(r, filler, flags)
