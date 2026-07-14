@@ -920,13 +920,9 @@ String AnsiParser::Sequence::GetStr(int n) const
 	return parameters.Get(n - 1, String::GetVoid());
 }
 
-dword AnsiParser::Sequence::GetHashValue() const
+hash_t AnsiParser::Sequence::GetHashValue() const
 {
-	constexpr auto Hash32 = [] (byte b0, byte b1, byte b2, byte b3, byte b4) {
-		dword packed = (b0) | (b1 << 8) | (b2 << 16) | (b3 << 24);
-		return packed ^ (b4 * 0x01000193);
-	};
-	return Hash32(type, opcode, mode, intermediate[0], intermediate[1]);
+	return Hash(type, opcode, mode, intermediate[0], intermediate[1]);
 }
 
 void AnsiParser::Sequence::Clear()

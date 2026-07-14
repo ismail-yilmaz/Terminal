@@ -26,7 +26,7 @@ public:
         int             GetInt(int n, int d = 1) const;
         String          GetStr(int n) const;
         String          ToString() const;
-        dword           GetHashValue() const;
+        hash_t          GetHashValue() const;
         void            Clear();
         Sequence()                                          { Clear(); }
     };
@@ -85,6 +85,9 @@ public:
     };
     
 public:
+    AnsiParser();
+    virtual ~AnsiParser() {}
+
     AnsiParser& ParametrizePayload(bool b = true)               { parametrize = b; return *this; }
     AnsiParser& DontParametrizePayload()                        { return ParametrizePayload(false); }
 
@@ -106,8 +109,8 @@ public:
     Event<const AnsiParser::Sequence&>  WhenOsc;
     Event<const AnsiParser::Sequence&>  WhenApc;
 
-    AnsiParser();
-    virtual ~AnsiParser() {}
+	template<typename... Args>
+	static constexpr hash_t Hash(byte h, Args... args)          { return (0xacf34ce7 * Hash(args...)) ^ h; }
     
 private:
     int             GetChr();
@@ -124,6 +127,7 @@ private:
     void            CollectPayload(byte *start, int c);
     void            CollectString(byte *start, int c);
 
+	static constexpr hash_t Hash(byte h)                        { return 0 ^ h; }
 private:
     byte *ptr, *begin, *end;
     Sequence    sequence;

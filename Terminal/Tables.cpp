@@ -4,46 +4,6 @@
 #define LTIMING(x)  // RTIMING(x)
 
 namespace Upp {
-
-namespace {
-	
-// Generic function table cache
-template<typename FnType, int N = 16>
-class TableEntryCache {
-	struct Entry         { dword hash; const FnType *fn; } entries[N];
-public:
-	TableEntryCache() {
-		Clear();
-	}
-	void Clear()         {
-		for(int i = 0; i < N; i++) {
-			entries[i].hash = 0xffffffff;
-			entries[i].fn   = nullptr;
-		}
-	}
-    template<typename MapType>
-    const FnType* Lookup(dword hash, const MapType& map) {
-        int i = FoldHash(hash) & (N - 1);
-        
-        if(entries[i].hash == hash) [[likely]]
-            return entries[i].fn;
-        
-        if(const FnType* fn = map.FindPtr(hash); fn) {
-            entries[i].hash = hash;
-            entries[i].fn = fn;
-	        return fn;
-        }
-        return nullptr;
-    }
-};
-
-constexpr auto Hash32 = [] (byte b0, byte b1, byte b2, byte b3, byte b4)
-{
-	dword packed = (b0) | (b1 << 8) | (b2 << 16) | (b3 << 24);
-    return packed ^ (b4 * 0x01000193);
-};
-
-}
 	
 void TerminalCtrl::DispatchCtl(byte ctl)
 {
@@ -93,7 +53,7 @@ const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const AnsiParser::
 {
 	#define VT_SEQUENCE(seq, opcode, mode, interm1, interm2, minlevel, maxlevel, fn)       \
 	{                                                                                      \
-		{ Hash32(AnsiParser::Sequence::seq, opcode, mode, interm1, interm2) },  \
+		{ AnsiParser::Hash(AnsiParser::Sequence::Type::seq, opcode, mode, interm1, interm2) },  \
 		{ TerminalCtrl::minlevel, TerminalCtrl::maxlevel, [](TerminalCtrl& t, const AnsiParser::Sequence& q) fn }   \
 	}
 	
@@ -101,7 +61,7 @@ const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const AnsiParser::
 	#define VT_CSI(opcode, mode, interm1, interm2, minlevel, maxlevel, fn)  VT_SEQUENCE(CSI, opcode, mode, interm1, interm2, minlevel, maxlevel, fn)
 	#define VT_DCS(opcode, mode, interm1, interm2, minlevel, maxlevel, fn)  VT_SEQUENCE(DCS, opcode, mode, interm1, interm2, minlevel, maxlevel, fn)
 
-	static VectorMap<dword, CbFunction> vtsequences;
+	static VectorMap<hash_t, CbFunction> vtsequences;
 	
 	ONCELOCK {
 	vtsequences = {
@@ -253,10 +213,8 @@ const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const AnsiParser::
 	#undef VT_SEQUENCE
 	
 	LTIMING("TerminalCtrl::FındFunctionPtr");
-
-	thread_local TableEntryCache<CbFunction> cache;
 	
-	const CbFunction* p = cache.Lookup(seq.GetHashValue(), vtsequences);
+	const CbFunction* p = vtsequences.FindPtr(seq.GetHashValue());
 	if( p && clevel >= p->a && clevel <= p->b) {
 		return p;
 	}
@@ -344,9 +302,9 @@ const TerminalCtrl::CbMode* TerminalCtrl::FindModePtr(word modenum, byte modetyp
 	
 	LTIMING("TerminalCtrl::FındModePtr");
 	
-	thread_local TableEntryCache<CbMode> cache;
+//	thread_local TableEntryCache<CbMode> cache;
 	
-	const CbMode* p = cache.Lookup(MAKELONG(modenum, modetype), vtmodes);
+	const CbMode* p = vtmodes.FindPtr(MAKELONG(modenum, modetype));
 	return (p && clevel >= p->b && clevel <= p->c) ? p : nullptr;
 }
 }
