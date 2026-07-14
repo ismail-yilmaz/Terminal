@@ -583,7 +583,7 @@ private:
             ENCODED      = 1 << 3,
         };
 
-        int                   id       = 0;
+        int64                 id       = 0;
         String                data     = Null;
         Size                  size     = Null;
         Protocol              format   = SIXEL;

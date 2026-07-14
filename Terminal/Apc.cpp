@@ -21,23 +21,23 @@ bool TerminalCtrl::ParseKittyGraphics(const AnsiParser::Sequence& seq)
 		return false;
 
 	String params, enc;
-	if(!SplitTo(seq.payload, ';', false, params, enc) || IsNull(enc))
+	if(!SplitTo(seq.payload.Mid(1), ';', false, params, enc) || IsNull(enc))
 		return false;
 
 	bool more = false;
 	bool query = false;
 	
-	CParser p(~params + 1);
+	CParser p(params);
 	p.SkipSpaces();
 	
 	auto SendAck = [this](const char *err) {
-		PutAPC(Format("Gi=%d;%s", chunkedimage.id, err));
+		PutAPC(Format("Gi=%ld;%s", chunkedimage.id, err));
 	};
 	
 	try {
 		while(!p.IsEof()) {
 			if(p.Char2('i', '=')) {
-				chunkedimage.id = p.ReadInt();
+				chunkedimage.id = p.ReadInt64();
 			}
 			if(p.Char2('m', '=')) {
 				more = p.ReadInt() == 1;
