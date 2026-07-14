@@ -25,7 +25,7 @@ public:
     const FnType* Lookup(dword hash, const MapType& map) {
         int i = FoldHash(hash) & (N - 1);
         
-        if(entries[i].hash == hash)
+        if(entries[i].hash == hash) [[likely]]
             return entries[i].fn;
         
         if(const FnType* fn = map.FindPtr(hash); fn) {
