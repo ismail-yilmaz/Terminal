@@ -7,7 +7,7 @@ namespace Upp {
 
 void TerminalCtrl::InitParser(AnsiParser& vts)
 {
-	vts.Reset();
+	vts.ParametrizePayload().Reset();
 	vts.WhenCtl = [this](byte c) { ParseControlChars(c); };
 	vts.WhenEsc = [this](const AnsiParser::Sequence& seq) { ParseEscapeSequences(seq); };
 	vts.WhenCsi = [this](const AnsiParser::Sequence& seq) { ParseCommandSequences(seq); };

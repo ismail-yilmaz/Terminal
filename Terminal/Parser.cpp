@@ -838,11 +838,13 @@ void AnsiParser::Dispatch(byte type, const Event<const AnsiParser::Sequence&>& f
 	switch(type) {
 	case Sequence::CSI:
 	case Sequence::DCS:
-		sequence.parameters = pick(Split(collected, ';', false));
+		if(collected.GetCount())
+			sequence.parameters = pick(Split(collected, ';', false));
 		break;
 	case Sequence::OSC:
 	case Sequence::APC:
-		sequence.parameters = pick(Split(sequence.payload, ';', false));
+		if(parametrize && sequence.payload.GetCount())
+			sequence.parameters = pick(Split(sequence.payload, ';', false));
 		break;
 	}
 	sequence.type = type;
@@ -895,6 +897,7 @@ AnsiParser::AnsiParser()
 : ptr(nullptr)
 , begin(nullptr)
 , end(nullptr)
+, parametrize(false)
 {
 	Reset();
 }

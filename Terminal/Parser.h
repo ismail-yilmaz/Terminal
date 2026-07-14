@@ -85,14 +85,19 @@ public:
     };
     
 public:
-    void    Parse(const void *data, int size, bool utf8);
-    void    Parse(const String& data, bool utf8)            { Parse(~data, data.GetLength(), utf8); }
-    int     Peek() const                                    { return IsEof() ? -1 : *ptr; }
-    int     Get()                                           { return IsEof() ? -1 : *ptr++; }
-    bool    IsEof() const                                   { return ptr >= end; }
-    void    Reset();
-    bool    WasChr() const                                  { return waschr; }
-    
+    AnsiParser& ParametrizePayload(bool b = true)               { parametrize = b; return *this; }
+    AnsiParser& DontParametrizePayload()                        { return ParametrizePayload(false); }
+
+    void        Parse(const void *data, int size, bool utf8);
+    void        Parse(const String& data, bool utf8)            { Parse(~data, data.GetLength(), utf8); }
+                
+    int         Peek() const                                    { return IsEof() ? -1 : *ptr; }
+    int         Get()                                           { return IsEof() ? -1 : *ptr++; }
+                
+    bool        IsEof() const                                   { return ptr >= end; }
+    void        Reset();
+    bool        WasChr() const                                  { return waschr; }
+   
     Event<byte> WhenCtl;
     Event<const int*, const byte*, int> WhenChr;
     Event<const AnsiParser::Sequence&>  WhenEsc;
@@ -124,6 +129,7 @@ private:
     Sequence    sequence;
     bool        waschr:1;
     bool        utf8mode:1;
+    bool        parametrize:1;
     String      collected, buffer;
     const Vector<AnsiParser::State>*  state;
 };

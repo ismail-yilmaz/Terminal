@@ -52,7 +52,21 @@ eset()] method.&]
 ]&]
 [s2;%% Returns true if the last item was a character and not a sequence.&]
 [s3; &]
+[s4;%% &]
+[s5;:Upp`:`:AnsiParser`:`:ParametrizePayload`(bool`): AnsiParser[@(0.0.255) `&] 
+[* ParametrizePayload]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2;%% Enables or disables automatic splitting and parametrizing 
+of the OSC and APC payloads into [^topic`:`/`/Terminal`/src`/Upp`_VTInStream`_en`-us`#Upp`:`:AnsiParser`:`:Sequence`:`:parameters^ S
+equence`::parameters] vector, according to semicolon delimiter 
+rule. Returns `*this for method chaining. Disabled by default.&]
+[s3;%% &]
 [s4; &]
+[s5;:Upp`:`:AnsiParser`:`:DontParametrizePayload`(`): AnsiParser[@(0.0.255) `&] 
+[* DontParametrizePayload]()&]
+[s2;%% Disables automatic splitting and parametrizing of the OSC 
+and APC payloads. Return `*this for method chaining.&]
+[s3; &]
+[s4;%% &]
 [s5;:Upp`:`:AnsiParser`:`:WhenChr: [_^Upp`:`:Event^ Event]<const [@(0.0.255) int`*, 
 const] byte [@(0.0.255) `*], [@(0.0.255) int]>_[* WhenChr]&]
 [s2;%% This event serves as the unified data sink for the parser. 
