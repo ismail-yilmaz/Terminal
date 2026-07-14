@@ -191,7 +191,7 @@ bool TerminalCtrl::ParseiTerm2Graphics(const AnsiParser::Sequence& seq)
 	if(show) {
 		if(simg.size.cx == 0 && simg.size.cy == 0)
 			simg.size.SetNull();
-		RenderImage(simg, modes[DECSDM]);	// Rely on sixel scrolling mode.
+		RenderImage(simg);
 	}
 	
 	return true;

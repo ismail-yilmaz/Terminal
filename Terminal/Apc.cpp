@@ -88,7 +88,7 @@ bool TerminalCtrl::ParseKittyGraphics(const AnsiParser::Sequence& seq)
 			return true;
 	
 		chunkedimage.Encoded();
-		RenderImage(chunkedimage, !modes[DECSDM]); // rely on sixel scrolling mode
+		RenderImage(chunkedimage);
 	}
 	catch(CParser::Error)
 	{
