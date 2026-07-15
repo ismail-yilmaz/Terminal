@@ -873,6 +873,8 @@ void AnsiParser::Dispatch(Sequence::Type type, const Event<const AnsiParser::Seq
 	case Sequence::Type::DCS:
 		if(collected.GetCount())
 			sequence.parameters = pick(Split(collected, ';', false));
+		else // We can have empty parameter list, e.g. \033[m
+			sequence.parameters.Add();
 		break;
 	case Sequence::Type::OSC:
 	case Sequence::Type::APC:
@@ -963,6 +965,7 @@ void AnsiParser::Sequence::Clear()
 	opcode = mode = 0;
 	Zero(intermediate);
 	parameters.Clear();
+//	parameters.Add(); // parameters can be "empty". (This is for optimization)
 	payload.Clear();
 }
 
