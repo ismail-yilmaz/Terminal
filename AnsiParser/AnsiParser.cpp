@@ -965,7 +965,6 @@ void AnsiParser::Sequence::Clear()
 	opcode = mode = 0;
 	Zero(intermediate);
 	parameters.Clear();
-//	parameters.Add(); // parameters can be "empty". (This is for optimization)
 	payload.Clear();
 }
 
@@ -1003,7 +1002,8 @@ String AnsiParser::Sequence::ToString() const
 
 const AnsiParser::State& AnsiParser::State::GetVoid()
 {
-	return Single<State>(0, 0, Action::Ignore, Id::Repeat);
+	static State s(0, 0, Action::Ignore, Id::Repeat);
+	return s;
 }
 
 }
