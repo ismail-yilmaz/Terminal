@@ -797,8 +797,8 @@ void AnsiParser::CollectChr(int c)
 							| ((uint64)(uint16) SimdAnsi::MoveMask(m1) << 16)
 							| ((uint64)(uint16) SimdAnsi::MoveMask(m2) << 32)
 							| ((uint64)(uint16) SimdAnsi::MoveMask(m3) << 48);
-				if(ptr += CountTrailingZeroBits64(mask); ptr > start)
-					WhenChr(nullptr, start, (int)(ptr - start));
+				ptr += CountTrailingZeroBits64(mask);
+				WhenChr(nullptr, start, (int)(ptr - start));
 				goto COMPLEX_CHAR_FALLBACK;
 			}
 			ptr += 64;
@@ -806,8 +806,8 @@ void AnsiParser::CollectChr(int c)
 		while(ptr + 16 <= end) {
 			i8x16 chunk(ptr);
 			if(int m = SimdAnsi::MoveMask((chunk < lo) | (chunk > hi)); m != 0) {
-				if(ptr += CountTrailingZeroBits(m); ptr > start)
-					WhenChr(nullptr, start, (int)(ptr - start));
+				ptr += CountTrailingZeroBits(m);
+				WhenChr(nullptr, start, (int)(ptr - start));
 				goto COMPLEX_CHAR_FALLBACK;
 			}
 			ptr += 16;
