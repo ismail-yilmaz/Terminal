@@ -38,25 +38,25 @@ VT_BEGIN_STATE_MAP(EscEntry)
 	VT_STATE(0x30, 0x4f, DispatchEsc,   Ground),
 	VT_STATE(0x50, 0x50, Ignore,        DcsEntry),
 	VT_STATE(0x51, 0x57, DispatchEsc,   Ground),
-	VT_STATE(0x58, 0x58, Ignore,        Ignore),
+	VT_STATE(0x58, 0x58, Ignore,        SosString),
 	VT_STATE(0x59, 0x59, DispatchEsc,   Ground),
 	VT_STATE(0x5a, 0x5a, DispatchEsc,   Ground),
 	VT_STATE(0x5b, 0x5b, Ignore,        CsiEntry),
 	VT_STATE(0x5c, 0x5c, DispatchEsc,   Ground),
 	VT_STATE(0x5d, 0x5d, Ignore,        OscString),
-	VT_STATE(0x5e, 0x5e, Ignore,        Ignore),
+	VT_STATE(0x5e, 0x5e, Ignore,        PmString),
 	VT_STATE(0x5f, 0x5f, Ignore,        ApcString),
 	VT_STATE(0x60, 0x7e, DispatchEsc,   Ground),
 	VT_STATE(0x7f, 0x7f, Control,       Repeat),
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, Ignore,        Repeat),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -73,12 +73,12 @@ VT_BEGIN_STATE_MAP(EscIntermediate)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, Ignore,        Repeat),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -97,12 +97,12 @@ VT_BEGIN_STATE_MAP(CsiEntry)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        Repeat),
 	VT_STATE(0x9c, 0x9c, Ignore,        Repeat),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -121,12 +121,12 @@ VT_BEGIN_STATE_MAP(CsiParameter)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, Ignore,        Repeat),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -144,12 +144,12 @@ VT_BEGIN_STATE_MAP(CsiIntermediate)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, Ignore,        Repeat),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -166,12 +166,12 @@ VT_BEGIN_STATE_MAP(CsiIgnore)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, Ignore,        Repeat),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -190,12 +190,12 @@ VT_BEGIN_STATE_MAP(DcsEntry)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        Repeat),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, Ignore,        Repeat),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -214,12 +214,12 @@ VT_BEGIN_STATE_MAP(DcsParameter)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, Ignore,        Repeat),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -237,12 +237,12 @@ VT_BEGIN_STATE_MAP(DcsIntermediate)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, Ignore,        Repeat),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -258,12 +258,12 @@ VT_BEGIN_STATE_MAP(DcsPassthrough)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, DispatchDcs,   Ground),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -278,12 +278,12 @@ VT_BEGIN_STATE_MAP(DcsIgnore)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, Ignore,        Ground),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -300,12 +300,12 @@ VT_BEGIN_STATE_MAP(OscString)
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, DispatchOsc,   Ground),
 	VT_STATE(0x9d, 0x9d, Ignore,        Repeat),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString),
 	VT_STATE(0xa0, 0xff, String,        Repeat)
 VT_END_STATE_MAP;
@@ -319,16 +319,60 @@ VT_BEGIN_STATE_MAP(ApcString)
 	VT_STATE(0x1a, 0x1a, Control,       Ground),
 	VT_STATE(0x1b, 0x1b, DispatchApc,   EscEntry),
 	VT_STATE(0x1c, 0x1f, Ignore,        Repeat),
-	VT_STATE(0x20, 0x7f, String,        Repeat),
+	VT_STATE(0x20, 0x7f, Passthrough,   Repeat),
 	VT_STATE(0x80, 0x8f, Control,       Ground),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Ground),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, DispatchApc,   Ground),
-	VT_STATE(0x9d, 0x9d, Ignore,        Repeat),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
+	VT_STATE(0x9f, 0x9f, Ignore,        Repeat)
+VT_END_STATE_MAP;
+
+VT_BEGIN_STATE_MAP(SosString)
+	VT_STATE(0x00, 0x06, Ignore,        Repeat),
+	VT_STATE(0x07, 0x07, DispatchSos,   Ground),
+	VT_STATE(0x08, 0x17, Ignore,        Repeat),
+	VT_STATE(0x18, 0x18, Control,       Ground),
+	VT_STATE(0x19, 0x19, Ignore,        Repeat),
+	VT_STATE(0x1a, 0x1a, Control,       Ground),
+	VT_STATE(0x1b, 0x1b, DispatchSos,   EscEntry),
+	VT_STATE(0x1c, 0x1f, Ignore,        Repeat),
+	VT_STATE(0x20, 0x7f, Passthrough,   Repeat),
+	VT_STATE(0x80, 0x8f, Control,       Ground),
+	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
+	VT_STATE(0x91, 0x97, Control,       Ground),
+	VT_STATE(0x98, 0x98, Ignore,        Repeat),
+	VT_STATE(0x99, 0x9a, Control,       Ground),
+	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
+	VT_STATE(0x9c, 0x9c, DispatchSos,   Ground),
+	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
+	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
+VT_END_STATE_MAP;
+
+VT_BEGIN_STATE_MAP(PmString)
+	VT_STATE(0x00, 0x06, Ignore,        Repeat),
+	VT_STATE(0x07, 0x07, DispatchPm,    Ground),
+	VT_STATE(0x08, 0x17, Ignore,        Repeat),
+	VT_STATE(0x18, 0x18, Control,       Ground),
+	VT_STATE(0x19, 0x19, Ignore,        Repeat),
+	VT_STATE(0x1a, 0x1a, Control,       Ground),
+	VT_STATE(0x1b, 0x1b, DispatchPm,    EscEntry),
+	VT_STATE(0x1c, 0x1f, Ignore,        Repeat),
+	VT_STATE(0x20, 0x7f, Passthrough,   Repeat),
+	VT_STATE(0x80, 0x8f, Control,       Ground),
+	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
+	VT_STATE(0x91, 0x97, Control,       Ground),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
+	VT_STATE(0x99, 0x9a, Control,       Ground),
+	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
+	VT_STATE(0x9c, 0x9c, DispatchPm,    Ground),
+	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
+	VT_STATE(0x9e, 0x9e, Ignore,        Repeat),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
@@ -344,34 +388,14 @@ VT_BEGIN_STATE_MAP(Ground)
 	VT_STATE(0x80, 0x8f, Control,       Repeat),
 	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
 	VT_STATE(0x91, 0x97, Control,       Repeat),
-	VT_STATE(0x98, 0x98, Ignore,        Ignore),
+	VT_STATE(0x98, 0x98, Ignore,        SosString),
 	VT_STATE(0x99, 0x9a, Control,       Repeat),
 	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
 	VT_STATE(0x9c, 0x9c, Ignore,        Repeat),
 	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Ignore),
+	VT_STATE(0x9e, 0x9e, Ignore,        PmString),
 	VT_STATE(0x9f, 0x9f, Ignore,        ApcString),
 	VT_STATE(0xa0, 0xff, Ground,        Repeat)
-VT_END_STATE_MAP;
-
-VT_BEGIN_STATE_MAP(Ignore)  // SOS/PM's are currently ignored.
-	VT_STATE(0x00, 0x17, Ignore,        Repeat),
-	VT_STATE(0x18, 0x18, Control,       Ground),
-	VT_STATE(0x19, 0x19, Ignore,        Repeat),
-	VT_STATE(0x1a, 0x1a, Control,       Ground),
-	VT_STATE(0x1b, 0x1b, Ignore,        EscEntry),
-	VT_STATE(0x1c, 0x1f, Ignore,        Repeat),
-	VT_STATE(0x20, 0x7f, Ignore,        Repeat),
-	VT_STATE(0x80, 0x8f, Control,       Ground),
-	VT_STATE(0x90, 0x90, Ignore,        DcsEntry),
-	VT_STATE(0x91, 0x97, Control,       Ground),
-	VT_STATE(0x98, 0x98, Ignore,        Repeat),
-	VT_STATE(0x99, 0x9a, Control,       Ground),
-	VT_STATE(0x9b, 0x9b, Ignore,        CsiEntry),
-	VT_STATE(0x9c, 0x9c, Ignore,        Ground),
-	VT_STATE(0x9d, 0x9d, Ignore,        OscString),
-	VT_STATE(0x9e, 0x9e, Ignore,        Repeat),
-	VT_STATE(0x9f, 0x9f, Ignore,        ApcString)
 VT_END_STATE_MAP;
 
 #undef VT_STATE
@@ -563,20 +587,26 @@ void AnsiParser::Parse(const void *data, int size, bool utf8)
 			break;
 		case State::Action::DispatchEsc:
 			sequence.opcode = byte(c);
-			Dispatch(Sequence::ESC, WhenEsc);
+			Dispatch(Sequence::Type::ESC, WhenEsc);
 			break;
 		case State::Action::DispatchCsi:
 			sequence.opcode = byte(c);
-			Dispatch(Sequence::CSI, WhenCsi);
+			Dispatch(Sequence::Type::CSI, WhenCsi);
 			break;
 		case State::Action::DispatchDcs:
-			Dispatch(Sequence::DCS, WhenDcs);
+			Dispatch(Sequence::Type::DCS, WhenDcs);
 			break;
 		case State::Action::DispatchOsc:
-			Dispatch(Sequence::OSC, WhenOsc);
+			Dispatch(Sequence::Type::OSC, WhenOsc);
 			break;
 		case State::Action::DispatchApc:
-			Dispatch(Sequence::APC, WhenApc);
+			Dispatch(Sequence::Type::APC, WhenApc);
+			break;
+		case State::Action::DispatchSos:
+			Dispatch(Sequence::Type::SOS, WhenSos);
+			break;
+		case State::Action::DispatchPm:
+			Dispatch(Sequence::Type::PM, WhenPm);
 			break;
 		case State::Action::Ignore:
 			break;
@@ -635,8 +665,11 @@ void AnsiParser::NextState(State::Id  sid)
 	case State::Id::ApcString:
 		Reset0(&ApcString);
 		break;
-	case State::Id::Ignore:
-		Reset0(&Ignore);
+	case State::Id::SosString:
+		Reset0(&SosString);
+		break;
+	case State::Id::PmString:
+		Reset0(&PmString);
 		break;
 	case State::Id::Repeat:
 		break;
@@ -831,20 +864,24 @@ void AnsiParser::CollectString(byte *start, int c)
 }
 
 force_inline
-void AnsiParser::Dispatch(byte type, const Event<const AnsiParser::Sequence&>& fn)
+void AnsiParser::Dispatch(Sequence::Type type, const Event<const AnsiParser::Sequence&>& fn)
 {
 	LTIMING("VtInStream::Dispatch()");
 
 	switch(type) {
-	case Sequence::CSI:
-	case Sequence::DCS:
+	case Sequence::Type::CSI:
+	case Sequence::Type::DCS:
 		if(collected.GetCount())
 			sequence.parameters = pick(Split(collected, ';', false));
 		break;
-	case Sequence::OSC:
-	case Sequence::APC:
+	case Sequence::Type::OSC:
+	case Sequence::Type::APC:
+	case Sequence::Type::SOS:
+	case Sequence::Type::PM:
 		if(parametrize && sequence.payload.GetCount())
 			sequence.parameters = pick(Split(sequence.payload, ';', false));
+		break;
+	default:
 		break;
 	}
 	sequence.type = type;
@@ -920,14 +957,10 @@ String AnsiParser::Sequence::GetStr(int n) const
 	return parameters.Get(n - 1, String::GetVoid());
 }
 
-hash_t AnsiParser::Sequence::GetHashValue() const
-{
-	return Hash(type, opcode, mode, intermediate[0], intermediate[1]);
-}
-
 void AnsiParser::Sequence::Clear()
 {
-	type = opcode = mode = NUL;
+	type = Type::NUL;
+	opcode = mode = 0;
 	Zero(intermediate);
 	parameters.Clear();
 	payload.Clear();
@@ -938,22 +971,22 @@ String AnsiParser::Sequence::ToString() const
     String txt;
 
     txt << decode(type,
-        PM,  "PM  ",
-        SOS, "SOS ",
-        APC, "APC ",
-        OSC, "OSC ",
-        DCS, "DCS ",
-        CSI, "CSI ",
+        Type::PM,  "PM  ",
+        Type::SOS, "SOS ",
+        Type::APC, "APC ",
+        Type::OSC, "OSC ",
+        Type::DCS, "DCS ",
+        Type::CSI, "CSI ",
         "ESC "
     );
 
     if(intermediate[0] > 0) txt << intermediate[0] << " ";
     if(intermediate[1] > 0) txt << intermediate[1] << " ";
 
-    if(findarg(type, CSI, DCS) >= 0)
+    if(findarg(type, Type::CSI, Type::DCS) >= 0)
         txt << parameters.ToString();
 
-    if(findarg(type, ESC, CSI, DCS, APC) >= 0)
+    if(findarg(type, Type::ESC, Type::CSI, Type::DCS, Type::APC) >= 0)
         txt << AsString(opcode) << " ";
 
     if(mode)

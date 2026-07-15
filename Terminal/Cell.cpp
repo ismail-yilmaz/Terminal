@@ -3,7 +3,7 @@
 #define LLOG(x)	// RLOG("VTCell: " << x)
 
 namespace Upp {
-// Automatically generated file, do not edit.
+
 struct CompactRange { dword a, b; byte w1, w2; };
 
 static constexpr CompactRange sUnicodeWidthTable[] = {

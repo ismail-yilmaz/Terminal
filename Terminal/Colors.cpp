@@ -261,9 +261,8 @@ void TerminalCtrl::ParseExtendedColors(VTCell& attrs, const Vector<String>& opco
 				if(p < e && *p == ':')
 					p++;
 			}
-			else {
+			else
 				break;
-			}
 		}
 
 		opconsumed++;
@@ -400,7 +399,7 @@ Value ConvertHashColorSpec::Scan(const Value& text) const
 		}
 		else
 		if((c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
-			if(len < 16) x = (x << 4) | ((c & 0x0F) + 9); // Highly optimized hex addition math
+			if(len < 16) x = (x << 4) | ((c & 0x0F) + 9);
 			len++;
 		}
 		else
@@ -461,7 +460,6 @@ Value ConvertRgbColorSpec::Scan(const Value& text) const
 		}
 	}
 
-	// Zero-allocation strtol parsing
 	while(count < 4 && *p) {
 		while(*p && IsDelimiter(*p)) p++;
 		if(!*p) break;
@@ -514,9 +512,9 @@ Value ConvertCmykColorSpec::Scan(const Value& text) const
 			is_cmyk = true;
 			p++;
 		}
-	} else {
-		return ErrorValue(t_("Bad cmy/k color text format"));
 	}
+	else
+		return ErrorValue(t_("Bad cmy/k color text format"));
 
 	auto IsDelimiter = [](char c) {
 		return (c == ':' || c == '/' || c == ' ' || c == '\t');
@@ -525,7 +523,6 @@ Value ConvertCmykColorSpec::Scan(const Value& text) const
 	double components[4] = {0, 0, 0, 0};
 	int count = 0;
 
-	// Zero-allocation strtod parsing replaces dynamic string Splitting
 	while(count < 4 && *p) {
 		while(*p && IsDelimiter(*p)) p++;
 		if(!*p) break;
@@ -540,7 +537,8 @@ Value ConvertCmykColorSpec::Scan(const Value& text) const
 
 	if(count == 4 && is_cmyk)
 		return CmykColorf(components[0], components[1], components[2], components[3]);
-	else if(count == 3 && !is_cmyk)
+	else
+	if(count == 3 && !is_cmyk)
 		return CmykColorf(components[0], components[1], components[2], 0.0);
 
 	return ErrorValue(t_("Bad cmy/k color text format"));

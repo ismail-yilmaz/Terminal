@@ -5,6 +5,21 @@
 
 namespace Upp {
 	
+namespace {
+
+constexpr dword sVTTableHash__(byte h)
+{
+	return 0 ^ h;
+}
+
+template<typename... Args>
+constexpr dword sVTTableHash__(byte h, Args... args)
+{
+	return (0xacf34ce7 * sVTTableHash__(args...)) ^ h;
+}
+
+}
+
 void TerminalCtrl::DispatchCtl(byte ctl)
 {
 	LLOG(Format("CTL 0x%02X (C%[1:0;1]s`)", ctl, ctl < 0x80));
@@ -53,7 +68,7 @@ const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const AnsiParser::
 {
 	#define VT_SEQUENCE(seq, opcode, mode, interm1, interm2, minlevel, maxlevel, fn)       \
 	{                                                                                      \
-		{ AnsiParser::Hash(AnsiParser::Sequence::Type::seq, opcode, mode, interm1, interm2) },  \
+		{ sVTTableHash__((byte) AnsiParser::Sequence::Type::seq, opcode, mode, interm1, interm2) },  \
 		{ TerminalCtrl::minlevel, TerminalCtrl::maxlevel, [](TerminalCtrl& t, const AnsiParser::Sequence& q) fn }   \
 	}
 	
@@ -61,7 +76,12 @@ const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const AnsiParser::
 	#define VT_CSI(opcode, mode, interm1, interm2, minlevel, maxlevel, fn)  VT_SEQUENCE(CSI, opcode, mode, interm1, interm2, minlevel, maxlevel, fn)
 	#define VT_DCS(opcode, mode, interm1, interm2, minlevel, maxlevel, fn)  VT_SEQUENCE(DCS, opcode, mode, interm1, interm2, minlevel, maxlevel, fn)
 
-	static VectorMap<hash_t, CbFunction> vtsequences;
+	auto sGetHashValue = [](const AnsiParser::Sequence& seq) -> dword
+	{
+		return sVTTableHash__((byte) seq.type, seq.opcode, seq.mode, seq.intermediate[0], seq.intermediate[1]);
+	};
+
+	static VectorMap<dword, CbFunction> vtsequences;
 	
 	ONCELOCK {
 	vtsequences = {
@@ -214,8 +234,8 @@ const TerminalCtrl::CbFunction* TerminalCtrl::FindFunctionPtr(const AnsiParser::
 	
 	LTIMING("TerminalCtrl::FındFunctionPtr");
 	
-	const CbFunction* p = vtsequences.FindPtr(seq.GetHashValue());
-	if( p && clevel >= p->a && clevel <= p->b) {
+	const CbFunction* p = vtsequences.FindPtr(sGetHashValue(seq));
+	if(p && clevel >= p->a && clevel <= p->b) {
 		return p;
 	}
 	
@@ -301,8 +321,6 @@ const TerminalCtrl::CbMode* TerminalCtrl::FindModePtr(word modenum, byte modetyp
 	#undef VT_MODE
 	
 	LTIMING("TerminalCtrl::FındModePtr");
-	
-//	thread_local TableEntryCache<CbMode> cache;
 	
 	const CbMode* p = vtmodes.FindPtr(MAKELONG(modenum, modetype));
 	return (p && clevel >= p->b && clevel <= p->c) ? p : nullptr;

@@ -16,8 +16,8 @@ namespace Upp {
 class AnsiParser {
 public:
     struct Sequence {
-        enum Type : byte { NUL = 0, ESC, CSI, DCS, OSC, APC, PM, SOS };
-        byte            type;
+        enum class Type : byte { NUL = 0, ESC, CSI, DCS, OSC, APC, PM, SOS };
+        Type            type;
         byte            opcode;
         byte            mode;
         byte            intermediate[4];
@@ -26,11 +26,10 @@ public:
         int             GetInt(int n, int d = 1) const;
         String          GetStr(int n) const;
         String          ToString() const;
-        hash_t          GetHashValue() const;
         void            Clear();
-        Sequence()                                          { Clear(); }
+        Sequence()                                              { Clear(); }
     };
-    
+
     struct State : Moveable<State> {
         enum  class Id : byte {
             Ground,
@@ -47,8 +46,9 @@ public:
             DcsPassthrough,
             OscString,
             ApcString,
-            Repeat,
-            Ignore
+            SosString,
+            PmString,
+            Repeat
         };
 
         enum class Action : byte {
@@ -65,14 +65,16 @@ public:
             DispatchCsi,
             DispatchDcs,
             DispatchOsc,
-            DispatchApc
+            DispatchApc,
+            DispatchSos,
+            DispatchPm
         };
- 
+
         byte    begin;
         byte    end;
         Action  action;
         Id      next;
-        
+
         static const State& GetVoid();
 
         State(byte b, byte e, Action a, Id id)
@@ -83,7 +85,7 @@ public:
         {
         }
     };
-    
+
 public:
     AnsiParser();
     virtual ~AnsiParser() {}
@@ -93,14 +95,14 @@ public:
 
     void        Parse(const void *data, int size, bool utf8);
     void        Parse(const String& data, bool utf8)            { Parse(~data, data.GetLength(), utf8); }
-                
+
     int         Peek() const                                    { return IsEof() ? -1 : *ptr; }
     int         Get()                                           { return IsEof() ? -1 : *ptr++; }
-                
+
     bool        IsEof() const                                   { return ptr >= end; }
     void        Reset();
     bool        WasChr() const                                  { return waschr; }
-   
+
     Event<byte> WhenCtl;
     Event<const int*, const byte*, int> WhenChr;
     Event<const AnsiParser::Sequence&>  WhenEsc;
@@ -108,18 +110,17 @@ public:
     Event<const AnsiParser::Sequence&>  WhenDcs;
     Event<const AnsiParser::Sequence&>  WhenOsc;
     Event<const AnsiParser::Sequence&>  WhenApc;
+    Event<const AnsiParser::Sequence&>  WhenSos;
+    Event<const AnsiParser::Sequence&>  WhenPm;
 
-	template<typename... Args>
-	static constexpr hash_t Hash(byte h, Args... args)          { return (0xacf34ce7 * Hash(args...)) ^ h; }
-    
 private:
     int             GetChr();
     void            CheckLoadData(const char *data, int size, String& err);
     void            NextState(State::Id sid);
     const State*    GetState(int c) const;
-    void            Dispatch(byte type, const Event<const AnsiParser::Sequence&>& fn);
+    void            Dispatch(Sequence::Type type, const Event<const AnsiParser::Sequence&>& fn);
     void            Reset0(const Vector<AnsiParser::State>* st);
-    
+
     // Collectors.
     void            CollectChr(int c);
     void            CollectIntermediate(int c);
@@ -127,7 +128,6 @@ private:
     void            CollectPayload(byte *start, int c);
     void            CollectString(byte *start, int c);
 
-	static constexpr hash_t Hash(byte h)                        { return 0 ^ h; }
 private:
     byte *ptr, *begin, *end;
     Sequence    sequence;
