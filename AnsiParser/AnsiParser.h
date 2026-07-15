@@ -1,5 +1,5 @@
-#ifndef _AnsiParser_h_
-#define _AnsiParser_h_
+#ifndef _Upp_AnsiParser_h_
+#define _Upp_AnsiParser_h_
 
 #include <Core/Core.h>
 

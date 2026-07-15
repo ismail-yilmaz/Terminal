@@ -2,7 +2,8 @@ description "A flexible and powerful terminal emulation widget and library for U
 
 uses
 	CtrlLib,
-	plugin/jpg;
+	plugin/jpg,
+	AnsiParser;
 
 file
 	Terminal.h,
@@ -26,9 +27,6 @@ file
 	Page readonly separator,
 	Page.h,
 	Page.cpp,
-	Parser readonly separator,
-	Parser.h,
-	Parser.cpp,
 	Sixel readonly separator,
 	Sixel.h,
 	Sixel.cpp,

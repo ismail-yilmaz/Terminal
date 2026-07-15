@@ -1,4 +1,4 @@
-#include "Parser.h"
+#include "AnsiParser.h"
 
 // AnsiParser: A "lexical" parser for DEC and ANSI escape sequences in general.
 // This parser is based on the UML state diagram provided by Paul-Flo Williams

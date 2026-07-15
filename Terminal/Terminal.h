@@ -4,7 +4,8 @@
 #include <CtrlLib/CtrlLib.h>
 #include <plugin/jpg/jpg.h>
 
-#include "Parser.h"
+#include <AnsiParser/AnsiParser.h>
+
 #include "Page.h"
 #include "Sixel.h"
 

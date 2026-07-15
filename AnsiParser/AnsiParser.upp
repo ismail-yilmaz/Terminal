@@ -1,0 +1,11 @@
+description "A reliable and high-performance VT500 series \"lexical\" escape sequence parser.\377";
+
+file
+	AnsiParser.h,
+	AnsiParser.cpp,
+	Docs readonly separator,
+	src.tpp,
+	Info readonly separator,
+	README.md,
+	Copying;
+
