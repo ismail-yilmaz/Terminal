@@ -557,12 +557,12 @@ void AnsiParser::Parse(const void *data, int size, bool utf8)
 	CheckLoadData((const char*) data, size, iutf8);
 
 	while(!IsEof()) {
-		byte *start = ptr;
+		const byte *start = ptr;
 		const int c = GetChr();
 		const State* st = GetState(c);
 		switch(st->action) {
 		case State::Action::Mode:
-			sequence.mode = byte(c);
+			sequence.mode = (byte) c;
 			break;
 		case State::Action::Parameter:
 			CollectParameter(start, c);
@@ -571,10 +571,10 @@ void AnsiParser::Parse(const void *data, int size, bool utf8)
 			CollectIntermediate(c);
 			break;
 		case State::Action::Final:
-			sequence.opcode = byte(c);
+			sequence.opcode = (byte) c;
 			break;
 		case State::Action::Control:
-			WhenCtl(byte(c));
+			WhenCtl((byte) c);
 			break;
 		case State::Action::Ground:
 			CollectChr(c);
@@ -586,11 +586,11 @@ void AnsiParser::Parse(const void *data, int size, bool utf8)
 			CollectString(start, c);
 			break;
 		case State::Action::DispatchEsc:
-			sequence.opcode = byte(c);
+			sequence.opcode = (byte) c;
 			Dispatch(Sequence::Type::ESC, WhenEsc);
 			break;
 		case State::Action::DispatchCsi:
-			sequence.opcode = byte(c);
+			sequence.opcode = (byte) c;
 			Dispatch(Sequence::Type::CSI, WhenCsi);
 			break;
 		case State::Action::DispatchDcs:
@@ -715,7 +715,7 @@ int AnsiParser::GetChr()
 
 	// Using read-ahead.
 	byte *savedptr = ptr + 1;
-	int code = *ptr++;
+	const int code = *ptr++;
 
 	// Check for invalid start byte
 	if(code < 0xC2) {
@@ -840,7 +840,7 @@ void AnsiParser::CollectIntermediate(int c)
 }
 
 force_inline
-void AnsiParser::CollectParameter(byte *start, int c)
+void AnsiParser::CollectParameter(const byte *start, int c)
 {
 	LTIMING("VtInStream::CollectParameter()");
 	
@@ -848,7 +848,7 @@ void AnsiParser::CollectParameter(byte *start, int c)
 }
 
 force_inline
-void AnsiParser::CollectPayload(byte *start, int c)
+void AnsiParser::CollectPayload(const byte *start, int c)
 {
 	LTIMING("VtInStream::CollectPayload()");
 	
@@ -856,7 +856,7 @@ void AnsiParser::CollectPayload(byte *start, int c)
 }
 
 force_inline
-void AnsiParser::CollectString(byte *start, int c)
+void AnsiParser::CollectString(const byte *start, int c)
 {
 	LTIMING("VtInStream::CollectString()");
 	

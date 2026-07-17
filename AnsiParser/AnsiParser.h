@@ -124,9 +124,9 @@ private:
     // Collectors.
     void            CollectChr(int c);
     void            CollectIntermediate(int c);
-    void            CollectParameter(byte *start, int c);
-    void            CollectPayload(byte *start, int c);
-    void            CollectString(byte *start, int c);
+    void            CollectParameter(const byte *start, int c);
+    void            CollectPayload(const byte *start, int c);
+    void            CollectString(const byte *start, int c);
 
 private:
     byte *ptr, *begin, *end;
