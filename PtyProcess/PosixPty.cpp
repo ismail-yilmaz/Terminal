@@ -394,39 +394,62 @@ void PosixPtyProcess::StopAsync()
 
 void PosixPtyProcess::DrainAsync()
 {
-	char buffer[BUFSIZE];
-
+	static constexpr int STAGE = 8 * BUFSIZE;
+	char stage[STAGE];
+	
 	while(!async->stop) {
 		if(!Wait(WAIT_READ, 100))
 			continue;
 		for(;;) {
-			int n = read(master, buffer, BUFSIZE);
-			if(n > 0) {
-				Mutex::Lock __(async->lock);
-				bool wasempty = async->buffer.IsEmpty();
-				async->buffer.Cat(buffer, n);
-				if(n < 1024 || wasempty)
-					WhenWakeUp();
-				while(!async->stop && async->buffer.GetCount() >= DRAINCAP)
-					async->cv.Wait(async->lock, 5);
-				continue;
+			int off = 0, last = 0;
+			bool eof = false, err = false, again = false;
+			while(off + BUFSIZE <= STAGE) {
+				int n = read(master, stage + off, BUFSIZE);
+				if(n > 0) {
+					off += n;
+					last = n;
+					if(n < BUFSIZE)
+						break;
+					continue;
+				}
+				if(n == 0) {
+					eof = true;
+					break;
+				}
+				if(errno == EINTR)
+					continue;
+				if(errno == EAGAIN || errno == EWOULDBLOCK) {
+					again = true;
+					break;
+				}
+				err = true;
+				break;
 			}
-			if(n == 0) {
+			if(off > 0) {
+				bool wakeup = false;
+				{
+					Mutex::Lock __(async->lock);
+					bool wasempty = async->buffer.IsEmpty();
+					async->buffer.Cat(stage, off);
+					wakeup = last < 1024 || wasempty;
+				}
+				if(wakeup)
+					WhenWakeUp();
+				{
+					Mutex::Lock __(async->lock);
+					while(!async->stop && async->buffer.GetCount() >= DRAINCAP)
+						async->cv.Wait(async->lock, 5);
+				}
+			}
+			if(eof || err) {
 				async->eof = true;
 				WhenWakeUp();
 				close(master);
 				master = -1;
 				return;
 			}
-			if(errno == EINTR)
-				continue;
-			if(errno == EAGAIN || errno == EWOULDBLOCK)
+			if(again)
 				break;
-			async->eof = true;
-			WhenWakeUp();
-			close(master);
-			master = -1;
-			return;
 		}
 	}
 }
