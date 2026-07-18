@@ -282,7 +282,8 @@ void WindowsPtyProcess::StopAsync()
 
 void WindowsPtyProcess::DrainAsync()
 {
-	char buffer[BUFSIZE];
+	static constexpr DWORD STAGE = 8 * BUFSIZE;
+	char stage[STAGE];
 
 	while(!async->stop) {
 		bool activity = false;
@@ -295,34 +296,54 @@ void WindowsPtyProcess::DrainAsync()
 				continue;
 			eof = false; // At least one pipe is still alive
 			while(avail > 0 && !async->stop) {
-				DWORD todo = min<DWORD>(avail, BUFSIZE);
-				DWORD done = 0;
-				if(!ReadFile(hPipe, buffer, todo, &done, nullptr) || done == 0)
-					break;
-				Mutex::Lock __(async->lock);
-				bool wasempty = async->buffer.IsEmpty();
-				async->buffer.Cat(buffer, done);
-				if(done < 1024 || wasempty)
-					WhenWakeUp();
-				while(!async->stop && async->buffer.GetCount() >= DRAINCAP)
-					async->cv.Wait(async->lock, 5);
-				activity = true;
-				if(!PeekNamedPipe(hPipe, nullptr, 0, nullptr, &avail, nullptr))
-					break;
+				DWORD off = 0, last = 0;
+				while(avail > 0 && off < STAGE && !async->stop) {
+					DWORD todo = min(avail, STAGE - off);
+					DWORD done = 0;
+					if(!ReadFile(hPipe, stage + off, todo, &done, nullptr) || done == 0)
+						break;
+					off += done;
+					last = done;
+					activity = true;
+					if(!PeekNamedPipe(hPipe, nullptr, 0, nullptr, &avail, nullptr)) {
+						avail = 0;
+						break;
+					}
+				}
+				if(off > 0) {
+					bool wakeup = false;
+					{
+						Mutex::Lock __(async->lock);
+						bool wasempty = async->buffer.IsEmpty();
+						async->buffer.Cat(stage, off);
+						wakeup = last < 1024 || wasempty;
+					}
+					if(wakeup)
+						WhenWakeUp();
+					{
+						Mutex::Lock __(async->lock);
+						while(!async->stop && async->buffer.GetCount() >= DRAINCAP)
+							async->cv.Wait(async->lock, 5);
+					}
+				}
+				else
+					break; // ReadFile failed/returned 0 despite avail > 0, don't spin
 			}
 		}
 		if(eof) {
-			Mutex::Lock __(async->lock);
-			async->eof = true;
+			{
+				Mutex::Lock __(async->lock);
+				async->eof = true;
+			}
 			WhenWakeUp();
 			return;
 		}
-		// The necessary Win32 evil.
-		// We only sleep if both pipes were completely dry.
+		// Win32 necessary evil
 		if(!activity)
 			Sleep(10);
 	}
 }
+
 void WindowsPtyProcess::Write(String s)
 {
 	if(IsNull(s) && IsNull(wbuffer))
