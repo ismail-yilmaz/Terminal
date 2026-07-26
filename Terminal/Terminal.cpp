@@ -1397,6 +1397,9 @@ void TerminalCtrl::OptionsBar(Bar& menu)
 				.Check(!unlocked);
 		});
 	menu.Separator();
+	menu.Add(AK_TEXTREFLOW,
+		[=] { TextReflow(!IsTextReflowing()); })
+		.Check(IsTextReflowing());
 	menu.Add(AK_SCROLLBAR,
 		[=] { ShowScrollBar(!sb.IsChild()); })
 		.Check(sb.IsChild());

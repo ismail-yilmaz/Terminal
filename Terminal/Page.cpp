@@ -1684,6 +1684,7 @@ void VTPage::Serialize(Stream& s)
 		s % tabsize;
 		s % history;
 		s % historysize;
+		s % textflow;
 	}
 
 	if(s.IsLoading()) {
@@ -1696,7 +1697,8 @@ void VTPage::Jsonize(JsonIO& jio)
 {
 	jio ("TabSize", tabsize)
 		("HistoryBuffer", history)
-		("HistoryBufferMaxSize", historysize);
+		("HistoryBufferMaxSize", historysize)
+		("TextReflow", textflow);
 
 	if(jio.IsLoading()) {
 		historysize = max(1, historysize);
