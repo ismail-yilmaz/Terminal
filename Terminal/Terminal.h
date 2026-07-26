@@ -278,6 +278,10 @@ public:
     TerminalCtrl&   NoSemanticInformation()                         { return SemanticInformation(false); }
     bool            HasSemanticInformation() const                  { return semanticinformation; }
 
+    TerminalCtrl&   TextReflow(bool b = true)                       { dpage.TextFlow(b); return *this; }
+    TerminalCtrl&   NoTextReflow()                                  { return TextReflow(false); }
+    bool            IsTextReflowing() const                         { return dpage.IsTextFlowing(); }
+    
     TerminalCtrl&   ReverseWrap(bool b = true)                      { XTrewrapm((reversewrap = b)); return *this; }
     TerminalCtrl&   NoReverseWrap()                                 { return ReverseWrap(false); }
     bool            HasReverseWrap() const                          { return reversewrap; }

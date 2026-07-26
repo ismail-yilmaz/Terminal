@@ -101,6 +101,9 @@ public:
     VTPage&         ReverseWrap(bool b = true);
     bool            IsReverseWrapping() const               { return reversewrap; }
 
+    VTPage&         TextFlow(bool b = true);
+    bool            IsTextFlowing() const                   { return textflow; }
+
     VTPage&         History(bool b = true);
     bool            HasHistory() const                      { return history; }
     const Saved&    GetHistory() const                      { return saved;   }
@@ -277,6 +280,7 @@ private:
     bool            SaveToHistory(int pos, int n);
     void            UnwindHistory(const Size& prevsize);
     void            RewindHistory(const Size& prevsize);
+    void            Reflow(const Size& prevsize);
     Rect            AdjustRect(const Rect& r, bool displaced = true);
     void            RectFill(const Rect& r, const VTCell& filler, dword flags = 0);
     void            RectCopy(const Point& p, const Rect& r, const Rect& rr, dword flags = 0);
@@ -296,6 +300,7 @@ private:
     bool            history;
     bool            autowrap;
     bool            reversewrap;
+    bool            textflow;
     bool            tabsync;
     VTCell          cellattrs;
 };
@@ -305,4 +310,3 @@ int     GetLength(const VTPage& page, int begin, int end);
 int     GetOffset(const VTPage& page, int begin, int end);
 }
 #endif
-

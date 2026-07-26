@@ -175,6 +175,7 @@ VTPage::VTPage()
 , history(false)
 , autowrap(false)
 , reversewrap(false)
+, textflow(false)
 {
 	Reset();
 }
@@ -253,6 +254,14 @@ VTPage& VTPage::ReverseWrap(bool b)
 	return *this;
 }
 
+VTPage& VTPage::TextFlow(bool b)
+{
+	LLOG("TextFlow(" << b << ")");
+
+	textflow = b;
+	return *this;
+}
+
 VTPage& VTPage::History(bool b)
 {
 	LLOG("History(" << b << ")");
@@ -318,10 +327,127 @@ void VTPage::UnwindHistory(const Size& prevsize)
 
 void VTPage::RewindHistory(const Size& prevsize)
 {
-	int delta = min(cursor.y - size.cy, lines.GetCount());
+	int delta = min(min(prevsize.cy - size.cy, cursor.y - 1), lines.GetCount()), n = delta;
+	if(delta <= 0)
+		return;
 	while(delta-- > 0) {
 		saved.AddTail(pick(lines[0]));
 		lines.Remove(0, 1);
+	}
+	cursor.y -= n;
+}
+
+void VTPage::Reflow(const Size& prevsize)
+{
+	// Reflows the page and the scrollback as one continuous buffer, so a
+	// width change never drops content: Rows that no longer fit the new
+	// page move into history buffer, and rows pulled back on a later resize
+	// are unwrapped exactly as they were. The cursor's offset within its
+	// logical line is tracked through the reflow so it lands back on the
+	// same character.
+
+	LTIMING("VTPage::Reflow");
+
+	if(prevsize.cx <= 0)
+		return;
+
+	bool hist  = HasHistory();
+	int  sc    = hist ? saved.GetCount() : 0;
+	int  total = sc + lines.GetCount();
+
+	if(total == 0)
+		return;
+
+	auto row = [&](int i) -> VTLine& { return i < sc ? saved[i] : lines[i - sc]; };
+
+	int  cr    = sc + cursor.y - 1;
+	int  cc    = cursor.x - 1;
+	bool find  = cr >= 0 && cr < total;
+	bool found = false;
+	int  nrow  = 0, ncol = 0;
+
+	Lines flow;
+
+	for(int i = 0; i < total;) {
+		int last = i;
+		while(row(last).IsWrapped() && ++last < total)
+			;
+		last = min(last, total - 1);
+
+		Vector<VTCell> text;
+		int off = -1;
+
+		for(int k = i; k <= last; k++) {
+			int n  = min(prevsize.cx, row(k).GetCount());
+			int kn = n;
+			while(kn > 0 && row(k)[kn - 1].chr == 0)
+				kn--;
+			if(find && k == cr)
+				off = text.GetCount() + min(cc, n);
+			text.Append(row(k), 0, kn);
+		}
+
+		int fst = flow.GetCount();
+		i = last + 1;
+
+		int pos = 0, len = text.GetCount();
+		do {
+			int rem = len - pos;
+			int cnt = min(size.cx, rem);
+			if(cnt > 1 && cnt < rem && text[pos + cnt].IsWideCharTrail())
+				cnt--;
+			VTLine& ln = flow.Add();
+			ln.Append(text, pos, cnt);
+			ln.Wrap(cnt < rem);
+			ln.Invalidate();
+			pos += cnt;
+		}
+		while(pos < len);
+
+		if(off >= 0) {
+			found = true;
+			if(off < len) {
+				int p = 0;
+				for(int r = fst; r < flow.GetCount(); r++) {
+					int w = flow[r].GetCount();
+					if(off < p + w) {
+						nrow = r;
+						ncol = off - p;
+						break;
+					}
+					p += w;
+				}
+			}
+			else {
+				nrow = flow.GetCount() - 1;
+				ncol = flow[nrow].GetCount() + (off - len);
+			}
+		}
+	}
+
+	int content = flow.GetCount();
+	while(content > 0 && flow[content - 1].GetCount() == 0)
+		content--;
+
+	if(found)
+		nrow = min(nrow, content);
+
+	int keep = hist ? min(size.cy, content) : content;
+	int drop = content - keep;
+
+	if(hist) {
+		saved.Clear();
+		for(int i = 0; i < drop; i++)
+			saved.AddTail(pick(flow[i]));
+	}
+
+	flow.Remove(0, drop);
+	flow.SetCount(keep);
+	lines = pick(flow);
+
+	if(found) {
+		cursor.y = nrow - drop + 1;
+		cursor.x = ncol + 1;
 	}
 }
 
@@ -329,16 +455,21 @@ VTPage& VTPage::SetSize(Size sz)
 {
 	Size oldsize = GetSize();
 	size = Nvl(sz, Size(2, 2));
+	bool reflowed = textflow && oldsize.cx != size.cx;
+	if(reflowed)
+		Reflow(oldsize);
 	if(oldsize != size || HorzMarginsExist() || VertMarginsExist())
 		ResetMargins();
 	if(lines.IsEmpty())
 		cursor.Clear();
 	if(HasHistory()) {
-		if(oldsize.cy < size.cy)
-			UnwindHistory(oldsize);
-		else
-		if(oldsize.cy > size.cy)
-			RewindHistory(oldsize);
+		if(!reflowed) {
+			if(oldsize.cy < size.cy)
+				UnwindHistory(oldsize);
+			else
+			if(oldsize.cy > size.cy)
+				RewindHistory(oldsize);
+		}
 		AdjustHistorySize();
 	}
 	lines.SetCount(size.cy);

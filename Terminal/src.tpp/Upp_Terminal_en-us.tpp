@@ -1113,6 +1113,25 @@ emantic information] (also known as [/ semantic prompts])[%% . ]Returns
 emantic information] (also known as [/ semantic prompts]) is enabled.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:TextReflow`(bool`):%- TerminalCtrl[@(0.0.255) `&] 
+[* TextReflow]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2; Enables or disables automatic text reflow when the terminal 
+dimensions (width) change. When active, terminal contents adjust 
+to wrap/reflow cleanly according to the new page bounds. Disabled 
+by default. Returns `*this for method chaining.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:NoTextReflow`(`):%- TerminalCtrl[@(0.0.255) `&] 
+[* NoTextReflow]()&]
+[s2; Disables automatic text reflow. Same as TextReflow(false). Returns 
+`*this for method chaining.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:IsTextReflowing`(`)const:%- [@(0.0.255) bool] 
+[* IsTextReflowing]() [@(0.0.255) const]&]
+[s2; Returns true if text reflow is enabled.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:ReverseWrap`(bool`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T
 erminalCtrl][@(0.0.255) `&]_[* ReverseWrap]([@(0.0.255) bool]_[*@3 b]_`=_[@(0.0.255) true])
 &]

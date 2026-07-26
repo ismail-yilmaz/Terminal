@@ -101,6 +101,7 @@ Thanks to U++ team, it is possible to run U++ GUI applications from within a web
 - Supports VT4xx rectangular area operations: copy, invert, fill. erase.
 - Supports VT4xx rectangular area checksum calculation and reporting.
 - Supports both DEC and ISO style selective erases.
+- Supports text reflow on resize.
 - Supports reverse wrap.
 - Supports SGR overline attribute.
 - Supports alternate screen buffer.

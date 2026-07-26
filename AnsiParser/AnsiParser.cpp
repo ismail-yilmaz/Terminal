@@ -798,8 +798,7 @@ void AnsiParser::CollectChr(int c)
 							| ((uint64)(uint16) SimdAnsi::MoveMask(m2) << 32)
 							| ((uint64)(uint16) SimdAnsi::MoveMask(m3) << 48);
 				ptr += CountTrailingZeroBits64(mask);
-				WhenChr(nullptr, start, (int)(ptr - start));
-				goto COMPLEX_CHAR_FALLBACK;
+				goto EMIT_BATCH_ASCII;
 			}
 			ptr += 64;
 		}
@@ -807,15 +806,14 @@ void AnsiParser::CollectChr(int c)
 			i8x16 chunk(ptr);
 			if(int m = SimdAnsi::MoveMask((chunk < lo) | (chunk > hi)); m != 0) {
 				ptr += CountTrailingZeroBits(m);
-				WhenChr(nullptr, start, (int)(ptr - start));
-				goto COMPLEX_CHAR_FALLBACK;
+				goto EMIT_BATCH_ASCII;
 			}
 			ptr += 16;
 		}
+EMIT_BATCH_ASCII:
 		if(ptr > start)
 			WhenChr(nullptr, start, (int)(ptr - start));
 #endif
-COMPLEX_CHAR_FALLBACK:
 		p = ptr;
 		c = GetChr();
 	}
@@ -929,7 +927,7 @@ void AnsiParser::Reset0(const Vector<AnsiParser::State>* st)
 {
 	state = st;
 	sequence.Clear();
-	collected.Clear();
+	collected.Trim(0);
 }
 
 AnsiParser::AnsiParser()
@@ -964,8 +962,8 @@ void AnsiParser::Sequence::Clear()
 	type = Type::NUL;
 	opcode = mode = 0;
 	Zero(intermediate);
-	parameters.Clear();
-	payload.Clear();
+	parameters.Trim(0);
+	payload.Trim(0);
 }
 
 String AnsiParser::Sequence::ToString() const
