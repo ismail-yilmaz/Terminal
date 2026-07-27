@@ -341,10 +341,12 @@ void VTPage::Reflow(const Size& prevsize)
 {
 	// Reflows the page and the scrollback as one continuous buffer, so a
 	// width change never drops content: Rows that no longer fit the new
-	// page move into history buffer, and rows pulled back on a later resize
-	// are unwrapped exactly as they were. The cursor's offset within its
-	// logical line is tracked through the reflow so it lands back on the
-	// same character.
+	// page move into history, and rows pulled back on a later resize
+	// are unwrapped exactly as they were. Both the live cursor and the
+	// backed-up (DECSC) cursor are tracked through the reflow by their
+	// offset within their logical line, so each lands back on the same
+	// character; any pending autowrap state is reset, since it was tied
+	// to a line width that no longer applies.
 
 	LTIMING("VTPage::Reflow");
 
@@ -353,18 +355,28 @@ void VTPage::Reflow(const Size& prevsize)
 
 	bool hist  = HasHistory();
 	int  sc    = hist ? saved.GetCount() : 0;
-	int  total = sc + lines.GetCount();
+	int  total = hist ? GetLineCount() : lines.GetCount();
 
 	if(total == 0)
 		return;
 
-	auto row = [&](int i) -> VTLine& { return i < sc ? saved[i] : lines[i - sc]; };
+	auto row = [&](int i) -> const VTLine& { return hist ? FetchLine(i) : lines[i]; };
 
-	int  cr    = sc + cursor.y - 1;
-	int  cc    = cursor.x - 1;
-	bool find  = cr >= 0 && cr < total;
-	bool found = false;
-	int  nrow  = 0, ncol = 0;
+	struct Anchor {
+		int  in, at;
+		bool live = false, over = false, found = false;
+		int  off = -1;
+		int  row = 0, col = 0;
+	};
+
+	Anchor cur, bak;
+	cur.in = sc + cursor.y - 1;
+	cur.at = cursor.x - 1;
+	cur.live = cur.in >= 0 && cur.in < total;
+	bak.in = sc + backup.y - 1;
+	bak.at = backup.x - 1;
+	bak.live = bak.in >= 0 && bak.in < total;
+	Anchor* anchors[] = { &cur, &bak };
 
 	Lines flow;
 
@@ -375,15 +387,23 @@ void VTPage::Reflow(const Size& prevsize)
 		last = min(last, total - 1);
 
 		Vector<VTCell> text;
-		int off = -1;
+		for(Anchor* a : anchors) {
+			a->off = -1;
+			a->over = false;
+		}
 
 		for(int k = i; k <= last; k++) {
 			int n  = min(prevsize.cx, row(k).GetCount());
 			int kn = n;
 			while(kn > 0 && row(k)[kn - 1].chr == 0)
 				kn--;
-			if(find && k == cr)
-				off = text.GetCount() + min(cc, n);
+			for(Anchor* a : anchors)
+				if(a->live && k == a->in) {
+					if(a->at < kn)
+						a->off = text.GetCount() + a->at;
+					else
+						a->over = true;
+				}
 			text.Append(row(k), 0, kn);
 		}
 
@@ -404,23 +424,25 @@ void VTPage::Reflow(const Size& prevsize)
 		}
 		while(pos < len);
 
-		if(off >= 0) {
-			found = true;
-			if(off < len) {
+		for(Anchor* a : anchors) {
+			if(a->off >= 0) {
+				a->found = true;
 				int p = 0;
 				for(int r = fst; r < flow.GetCount(); r++) {
 					int w = flow[r].GetCount();
-					if(off < p + w) {
-						nrow = r;
-						ncol = off - p;
+					if(a->off < p + w) {
+						a->row = r;
+						a->col = a->off - p;
 						break;
 					}
 					p += w;
 				}
 			}
-			else {
-				nrow = flow.GetCount() - 1;
-				ncol = flow[nrow].GetCount() + (off - len);
+			else
+			if(a->over) {
+				a->found = true;
+				a->row = flow.GetCount() - 1;
+				a->col = flow[a->row].GetCount();
 			}
 		}
 	}
@@ -429,8 +451,11 @@ void VTPage::Reflow(const Size& prevsize)
 	while(content > 0 && flow[content - 1].GetCount() == 0)
 		content--;
 
-	if(found)
-		nrow = min(nrow, content);
+	if(cur.found)
+		cur.row = min(cur.row, content);
+
+	if(bak.found)
+		bak.row = min(bak.row, content);
 
 	int keep = hist ? min(size.cy, content) : content;
 	int drop = content - keep;
@@ -445,10 +470,17 @@ void VTPage::Reflow(const Size& prevsize)
 	flow.SetCount(keep);
 	lines = pick(flow);
 
-	if(found) {
-		cursor.y = nrow - drop + 1;
-		cursor.x = ncol + 1;
+	if(cur.found) {
+		cursor.y = cur.row - drop + 1;
+		cursor.x = cur.col + 1;
 	}
+	if(bak.found) {
+		backup.y = bak.row - drop + 1;
+		backup.x = bak.col + 1;
+	}
+
+	ClearEol();
+	backup.eol = false;
 }
 
 VTPage& VTPage::SetSize(Size sz)
