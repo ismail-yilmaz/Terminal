@@ -511,6 +511,7 @@ VTPage& VTPage::SetSize(Size sz)
 	}
 	if(tabsync)
 		SetTabs(tabsize);
+
 	return MoveTo(cursor);
 }
 
@@ -1811,5 +1812,6 @@ int GetOffset(const VTPage& page, int begin, int end)
 		offset += page.FetchLine(i).GetOffset();
 	return offset;
 }
+
 
 }

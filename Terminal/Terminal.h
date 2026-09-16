@@ -840,6 +840,8 @@ private:
     void        ParseConEmuWorkingDirectoryChangeRequest(const AnsiParser::Sequence& seq);
     void        ParseConEmuMessageBoxMessage(const AnsiParser::Sequence& seq);
 
+    void        ParseMinttyFontGlyphCoverageRequest(const AnsiParser::Sequence& seq);
+
     void        SetCaretStyle(const AnsiParser::Sequence& seq);
 
     void        SetProgrammableLEDs(const AnsiParser::Sequence& seq);

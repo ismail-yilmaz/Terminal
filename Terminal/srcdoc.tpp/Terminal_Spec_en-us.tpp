@@ -1247,7 +1247,11 @@ System Commands]&]
 :: [s0; [G 1337]]
 :: [s0; [G Display inline images. (iTerm2)]]
 :: [s0; [G Level 1]]
-:: [s0; [C@5$(245) OSC 1337 ; args ST]]}}&]
+:: [s0; [C@5$(245) OSC 1337 ; args ST]]
+:: [s0; [G 7771]]
+:: [s0; [G Font glyph coverage inquiy (mintty)]]
+:: [s0; [G Level 1]]
+:: [s0; [C@5$(245) OSC 7771;`[?`|!`] ;codepoint; ... ST]]}}&]
 [s0;b20;a20;pht300; [*G Notes]&]
 [s0;l200;i200;b20;O0; [G TerminalCtrl`'s responses to commands and 
 report requests are not included in this table.]&]
@@ -1932,4 +1936,21 @@ the future.]&]
 [s0;l200;i200;b20;O0; [G TerminalCtrl does not process or display semantic 
 information by itself. Instead, it is up to the client code to 
 make use of the protocol, typically in combination with features 
-like cell highlighting or search functionality.]]]
+like cell highlighting or search functionality.]&]
+[s0;b20;a20;pht300; [*G Font Glyph Coverage Inquiry Protocol]&]
+[ {{3333:5144:1523B20;A20;G(220)@(220.225.230) [s0; [G Sequence]]
+:: [s0; [G Description]]
+:: [s0; [G Device Level]]
+::@2 [s0; [C@5$(245) OSC 7771 ; `[mode`] ; codepoint ; ... ST]]
+:: [s0; [G Queries the terminal`'s font glyph coverage (tofu detection)]]
+:: [s0; [G Level 1]]}}&]
+[s0;b20;a20;pht300; [*G Notes]&]
+[s0;l200;i200;b20;O0; [G Applications (in) must set the ``][C@5$(245) mode][G `` 
+to ``][C@5$(245) ?][G `` for inquiry. TerminalCtrl (out) will set 
+it to ``][C@5$(245) !][G ``.]&]
+[s0;l200;i200;b20;O0; [C@5$(245) codepoint][G  must be represented as 
+a decimal unicode codepoint. TerminalCtrl will return the same 
+decimal codepoint if the codepoint can be displayed with the 
+current font. Any number of codepoints can be queried in a single 
+query.]&]
+[s0;G ]]

@@ -336,6 +336,7 @@
 | 133 | Semantic information. | Level 1 | `OSC 133 ; Pt ST` |
 | 444 | Display inline images. (Jexer) | Level 1 | `OSC 444 ; P1 ; P2 ; ... ST`|
 | 1337 | Display inline images. (iTerm2) | Level 1 | `OSC 1337 ; args ST` |
+| 7771 | Font glyph coverage inquiry (mintty) | Level 1 | `OSC 7771 ; [?|!] ; ucodepoint | ... ST`
 
 #### Notes
 
@@ -691,3 +692,13 @@
 * TerminalCtrl currently supports only a minimal—but reasonable—subset of this protocol. This may change in the future.
 * TerminalCtrl does not process or display semantic information by itself. Instead, it is up to the client code to make use of the protocol, typically in combination with features like cell highlighting or search functionality.
 
+### Font Glyph Coverage Inquiry Protocol
+
+| Sequence | Description | Device Level |
+| --- | --- | --- |
+| `OSC 7771 ; [mode] ; codepoint1 ; codepoint2 ; ... ST` | Queries the terminal's font glyph coverage (tofu detection) | Level 1 |
+
+#### Notes
+
+* Applications (in) must set the `mode` to `?` for inquiry. TerminalCtrl (out) will set it to `!`;
+* `codepoint` must be represented as a decimal unicode codepoint. TerminalCtrl will return the same decimal codepoint if the codepoint can be displayed with the current font. Any number of codepoints can be queried in a single query.

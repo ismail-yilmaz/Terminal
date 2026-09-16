@@ -51,6 +51,9 @@ void TerminalCtrl::ParseOperatingSystemCommands(const AnsiParser::Sequence& seq)
 	case 1337:	// iTerm2 protocols.
 		ParseiTerm2Protocols(seq);
 		break;
+	case 7771: // Mintty protocols
+		ParseMinttyFontGlyphCoverageRequest(seq);
+		break;
 	case 8100:  // TerminalCtrl protocols
 		ParseTerminalCtrlProtocols(seq);
 		break;
@@ -369,6 +372,23 @@ void TerminalCtrl::ParseConEmuMessageBoxMessage(const AnsiParser::Sequence& seq)
 	// https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC
 	
 	WhenMessage(seq.GetStr(3));
+}
+
+void TerminalCtrl::ParseMinttyFontGlyphCoverageRequest(const AnsiParser::Sequence& seq)
+{
+	// https://github.com/mintty/mintty/wiki/CtrlSeqs#font-glyph-coverage-enquiry
+
+	if(seq.GetStr(2) != "?")
+		return;
+	
+	Vector<String> reply;
+	for(int i = 2; i < seq.parameters.GetCount(); i++) {
+		const String& u = seq.parameters[i];
+		if(font.HasChar(ReadInt(u, 0)))
+			reply.Add(u);
+	}
+
+	PutOSC("7771;!;" << Join(reply, ";"));
 }
 
 }
