@@ -115,6 +115,7 @@ public:
 
 private:
     int             GetChr();
+
     void            CheckLoadData(const char *data, int size, String& err);
     void            NextState(State::Id sid);
     const State*    GetState(int c) const;
@@ -123,6 +124,8 @@ private:
 
     // Collectors.
     void            CollectChr(int c);
+    void            CollectAscii(int c);
+    void            CollectUnicode(int c);
     void            CollectIntermediate(int c);
     void            CollectParameter(const byte *start, int c);
     void            CollectPayload(const byte *start, int c);

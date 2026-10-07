@@ -777,43 +777,95 @@ int AnsiParser::GetChr()
 }
 
 force_inline
+void AnsiParser::CollectAscii(int c)
+{
+	WhenChr(&c, nullptr, 1);
+#ifdef CPU_SIMD
+	const byte* start = ptr;
+	const i8x16 lo = i8all(0x20);
+	const i8x16 hi = i8all(0x7E);
+	while(ptr + 64 <= end) {
+		i8x16 c0(ptr +  0), m0 = (c0 < lo) | (c0 > hi);
+		i8x16 c1(ptr + 16), m1 = (c1 < lo) | (c1 > hi);
+		i8x16 c2(ptr + 32), m2 = (c2 < lo) | (c2 > hi);
+		i8x16 c3(ptr + 48), m3 = (c3 < lo) | (c3 > hi);
+		if(AnyTrue(m0 | m1 | m2 | m3)) {
+			uint64 mask = (uint64)(uint16)  SimdAnsi::MoveMask(m0)
+						| ((uint64)(uint16) SimdAnsi::MoveMask(m1) << 16)
+						| ((uint64)(uint16) SimdAnsi::MoveMask(m2) << 32)
+						| ((uint64)(uint16) SimdAnsi::MoveMask(m3) << 48);
+			ptr += CountTrailingZeroBits64(mask);
+			goto EMIT_BATCH_ASCII;
+		}
+		ptr += 64;
+	}
+	while(ptr + 16 <= end) {
+		i8x16 chunk(ptr);
+		if(int m = SimdAnsi::MoveMask((chunk < lo) | (chunk > hi)); m != 0) {
+			ptr += CountTrailingZeroBits(m);
+			goto EMIT_BATCH_ASCII;
+		}
+		ptr += 16;
+	}
+EMIT_BATCH_ASCII:
+	if(ptr > start)
+		WhenChr(nullptr, start, (int)(ptr - start));
+#endif
+}
+
+// dont_inline
+void AnsiParser::CollectUnicode(int c)
+{
+	int unicodebatch[256], n = 0, cnt = __countof(unicodebatch);
+
+	unicodebatch[n++] = c;
+
+	// Never scan further than one batch could possibly consume (each codepoint is at most 4 bytes)
+	const byte *scanend = end - ptr > (cnt - n) * 4 ? ptr + (cnt - n) * 4 : end;
+	const byte *limit = scanend;
+
+#ifdef CPU_SIMD
+	const byte *scan = ptr;
+	while(scan + 64 <= scanend) {
+		uint64 mask = (uint64)(uint16) (~SimdAnsi::MoveMask(i8x16(scan +  0)) & 0xFFFF)
+					| ((uint64)(uint16)(~SimdAnsi::MoveMask(i8x16(scan + 16)) & 0xFFFF) << 16)
+					| ((uint64)(uint16)(~SimdAnsi::MoveMask(i8x16(scan + 32)) & 0xFFFF) << 32)
+					| ((uint64)(uint16)(~SimdAnsi::MoveMask(i8x16(scan + 48)) & 0xFFFF) << 48);
+		if(mask) {
+			limit = scan + CountTrailingZeroBits64(mask);
+			goto UNICODE_LIMIT_FOUND;
+		}
+		scan += 64;
+	}
+	while(scan + 16 <= scanend) {
+		if(int m = ~SimdAnsi::MoveMask(i8x16(scan)) & 0xFFFF; m != 0) {
+			limit = scan + CountTrailingZeroBits(m);
+			goto UNICODE_LIMIT_FOUND;
+		}
+		scan += 16;
+	}
+UNICODE_LIMIT_FOUND:
+	;
+#endif
+	while(ptr < limit && n < cnt) {
+		byte *q = ptr;
+		int c2 = GetChr();
+		if(!(c2 > 0x9F)) {
+			ptr = q;
+			break;
+		}
+		unicodebatch[n++] = c2;
+	}
+	WhenChr(unicodebatch, nullptr, n);
+}
+
+force_inline
 void AnsiParser::CollectChr(int c)
 {
 	byte *p = ptr;
 
 	do {
-		WhenChr(&c, nullptr, 1);
-#ifdef CPU_SIMD
-		const byte* start = ptr;
-		const i8x16 lo = i8all(0x20);
-		const i8x16 hi = i8all(0x7E);
-		while(ptr + 64 <= end) {
-			i8x16 c0(ptr +  0), m0 = (c0 < lo) | (c0 > hi);
-			i8x16 c1(ptr + 16), m1 = (c1 < lo) | (c1 > hi);
-			i8x16 c2(ptr + 32), m2 = (c2 < lo) | (c2 > hi);
-			i8x16 c3(ptr + 48), m3 = (c3 < lo) | (c3 > hi);
-			if(AnyTrue(m0 | m1 | m2 | m3)) {
-				uint64 mask = (uint64)(uint16)  SimdAnsi::MoveMask(m0)
-							| ((uint64)(uint16) SimdAnsi::MoveMask(m1) << 16)
-							| ((uint64)(uint16) SimdAnsi::MoveMask(m2) << 32)
-							| ((uint64)(uint16) SimdAnsi::MoveMask(m3) << 48);
-				ptr += CountTrailingZeroBits64(mask);
-				goto EMIT_BATCH_ASCII;
-			}
-			ptr += 64;
-		}
-		while(ptr + 16 <= end) {
-			i8x16 chunk(ptr);
-			if(int m = SimdAnsi::MoveMask((chunk < lo) | (chunk > hi)); m != 0) {
-				ptr += CountTrailingZeroBits(m);
-				goto EMIT_BATCH_ASCII;
-			}
-			ptr += 16;
-		}
-EMIT_BATCH_ASCII:
-		if(ptr > start)
-			WhenChr(nullptr, start, (int)(ptr - start));
-#endif
+		c < 0x80 ? CollectAscii(c) : CollectUnicode(c);
 		p = ptr;
 		c = GetChr();
 	}
@@ -841,7 +893,7 @@ force_inline
 void AnsiParser::CollectParameter(const byte *start, int c)
 {
 	LTIMING("VtInStream::CollectParameter()");
-	
+
 	sCollectInto(collected, start, ptr, end, ParameterPolicy{});
 }
 
@@ -849,7 +901,7 @@ force_inline
 void AnsiParser::CollectPayload(const byte *start, int c)
 {
 	LTIMING("VtInStream::CollectPayload()");
-	
+
 	sCollectInto(sequence.payload, start, ptr, end, PayloadPolicy{});
 }
 
@@ -857,7 +909,7 @@ force_inline
 void AnsiParser::CollectString(const byte *start, int c)
 {
 	LTIMING("VtInStream::CollectString()");
-	
+
 	sCollectInto(sequence.payload, start, ptr, end, StringPolicy{ utf8mode });
 }
 
@@ -968,34 +1020,34 @@ void AnsiParser::Sequence::Clear()
 
 String AnsiParser::Sequence::ToString() const
 {
-    String txt;
+	String txt;
 
-    txt << decode(type,
-        Type::PM,  "PM  ",
-        Type::SOS, "SOS ",
-        Type::APC, "APC ",
-        Type::OSC, "OSC ",
-        Type::DCS, "DCS ",
-        Type::CSI, "CSI ",
-        "ESC "
-    );
+	txt << decode(type,
+		Type::PM,  "PM  ",
+		Type::SOS, "SOS ",
+		Type::APC, "APC ",
+		Type::OSC, "OSC ",
+		Type::DCS, "DCS ",
+		Type::CSI, "CSI ",
+		"ESC "
+	);
 
-    if(intermediate[0] > 0) txt << intermediate[0] << " ";
-    if(intermediate[1] > 0) txt << intermediate[1] << " ";
+	if(intermediate[0] > 0) txt << intermediate[0] << " ";
+	if(intermediate[1] > 0) txt << intermediate[1] << " ";
 
-    if(findarg(type, Type::CSI, Type::DCS) >= 0)
-        txt << parameters.ToString();
+	if(findarg(type, Type::CSI, Type::DCS) >= 0)
+		txt << parameters.ToString();
 
-    if(findarg(type, Type::ESC, Type::CSI, Type::DCS, Type::APC) >= 0)
-        txt << AsString(opcode) << " ";
+	if(findarg(type, Type::ESC, Type::CSI, Type::DCS, Type::APC) >= 0)
+		txt << AsString(opcode) << " ";
 
-    if(mode)
-        txt << "(private) ";
+	if(mode)
+		txt << "(private) ";
 
-    if(!IsNull(payload))
-        txt << "Payload: " << payload.ToString();
+	if(!IsNull(payload))
+		txt << "Payload: " << payload.ToString();
 
-    return txt;
+	return txt;
 }
 
 const AnsiParser::State& AnsiParser::State::GetVoid()
