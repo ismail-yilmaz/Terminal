@@ -816,7 +816,8 @@ EMIT_BATCH_ASCII:
 // dont_inline
 void AnsiParser::CollectUnicode(int c)
 {
-	int unicodebatch[256], n = 0, cnt = __countof(unicodebatch);
+	int unicodebatch[256], n = 0;
+	const int cnt = __countof(unicodebatch);
 
 	unicodebatch[n++] = c;
 

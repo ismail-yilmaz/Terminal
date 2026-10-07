@@ -256,7 +256,7 @@ void TerminalCtrl::ParseSixelGraphics(const AnsiParser::Sequence& seq)
 	if(!modes[XTSPREG])
 		imgs.palette = &sixelpalette;
 
-	RenderImage(imgs, !modes[DECSDM]);
+	RenderImage(imgs, modes[DECSDM]);
 }
 
 void TerminalCtrl::ReportXTermCapabilities(const AnsiParser::Sequence& seq)
@@ -416,16 +416,27 @@ void TerminalCtrl::ReportXTermCapabilities(const AnsiParser::Sequence& seq)
 
 		// Optionals
 		if(decoded == "Ms") {
-			if(IsClipboardAccessPermitted()) out.Add(query);
-			else err.Add(query);
+			if(IsClipboardAccessPermitted())
+				out.Add(query);
+			else
+				err.Add(query);
 			continue;
 		}
 		if(decoded == "Hls") {
-			if(HasHyperlinks()) out.Add(query);
-			else err.Add(query);
+			if(HasHyperlinks())
+				out.Add(query);
+			else
+				err.Add(query);
 			continue;
 		}
-
+		if(decoded == "Pst") {
+			if(WhenProgramStatus)
+				out.Add(query) << "=" << HexEncode("\\E]7501;%p1%s\\E\\");
+			else
+				err.Add(query);
+			continue;
+		}
+		
 		bool found = false;
 		for(const auto& q : capabilities) {
 			if(decoded == q.key) {

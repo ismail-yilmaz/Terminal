@@ -1248,8 +1248,12 @@ System Commands]&]
 :: [s0; [G Display inline images. (iTerm2)]]
 :: [s0; [G Level 1]]
 :: [s0; [C@5$(245) OSC 1337 ; args ST]]
+:: [s0; [G 7501]]
+:: [s0; [G Program status report. (Ghostty)]]
+:: [s0; [G Level 1]]
+:: [s0; [C@5$(245) OSC 7501 ; args ST]]
 :: [s0; [G 7771]]
-:: [s0; [G Font glyph coverage inquiy (mintty)]]
+:: [s0; [G Font glyph coverage inquiry. (mintty)]]
 :: [s0; [G Level 1]]
 :: [s0; [C@5$(245) OSC 7771;`[?`|!`] ;codepoint; ... ST]]}}&]
 [s0;b20;a20;pht300; [*G Notes]&]
@@ -1953,4 +1957,40 @@ a decimal unicode codepoint. TerminalCtrl will return the same
 decimal codepoint if the codepoint can be displayed with the 
 current font. Any number of codepoints can be queried in a single 
 query.]&]
-[s0;G ]]
+[s0;b20;a20;pht300; [*G Program Status Protocol]&]
+[ {{3333:5301:1366B20;A20;G(220)@(220.225.230) [s0; [G Sequence]]
+:: [s0; [G Description]]
+:: [s0; [G Device Level]]
+::@2 [s0; [C@5$(245) OSC 7501 ; `[parameters`] ST]]
+:: [s0; [G Notifies the client code of the current state of a running 
+host program or shell command.]]
+:: [s0; [G Level 1]]}}&]
+[s0;b20;a20;pht300; [*G Notes]&]
+[s0;l200;i200;b20;O0; [G Implements the OSC 7501 program status reporting 
+protocol.]&]
+[s0;l200;i200;b20;O0; [C@5$(245) parameters][G  are colon`-separated 
+][C@5$(245) key`=value][G  pairs.]&]
+[s0;l200;i200;b20;O0; [G If the ][C@5$(245) parameters][G  string is exactly 
+][C@5$(245) ?][G , TerminalCtrl will reply with ][C@5$(245) OSC 7501 
+; ? ST][G  to indicate support for the protocol.]&]
+[s0;l200;i200;b20;O0; [G The ][C@5$(245) state][G  key is mandatory and 
+its value must be one of the following exact strings: ][C@5$(245) idle][G , 
+][C@5$(245) working][G , ][C@5$(245) done][G , ][C@5$(245) blocked][G , ][C@5$(245) error][G , 
+or ][C@5$(245) clear][G . If the ][C@5$(245) state][G  key is missing 
+or contains an unrecognized value, the entire status report is 
+ignored.]&]
+[s0;l200;i200;b20;O0; [G The ][C@5$(245) msg][G  key is optional. Its value 
+must be a Base64`-encoded string representing a single line of 
+human`-readable text. It must not contain control characters.]&]
+[s0;l200;i200;b20;O0; [G Keys must consist only of lowercase letters 
+(][C@5$(245) a`-z][G ).]&]
+[s0;l200;i200;b20;O0; [G Values must consist only of alphanumeric characters 
+and the symbols ][C@5$(245) `_ . , `+ / `= `-][G .]&]
+[s0;l200;i200;b20;O0; [G Any key`-value pair that violates the character 
+restrictions is ignored, but the rest of the report continues 
+to be processed.]&]
+[s0;l200;i200;b20;O0; [G If a key is repeated in a single sequence, 
+the last value overwrites the previous ones.]&]
+[s0;l200;i200;b20;O0; [G TerminalCtrl does not maintain persistence 
+of the program status. It is up to the client code to manage 
+the state and display it in the user interface.]]]

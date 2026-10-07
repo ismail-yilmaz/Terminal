@@ -117,6 +117,7 @@ public:
     Event<const String&> WhenBackgroundChange;
     Gate<Point, String&> WhenAnnotation;
     Gate<dword>          WhenSelectorScan;
+    Event<const VectorMap<String, String>&> WhenProgramStatus;
 
     Event<VectorMap<int, VTLine>&> WhenHighlight;
 
@@ -840,6 +841,8 @@ private:
     void        ParseConEmuWorkingDirectoryChangeRequest(const AnsiParser::Sequence& seq);
     void        ParseConEmuMessageBoxMessage(const AnsiParser::Sequence& seq);
 
+	void        ParseProgramStatus(const AnsiParser::Sequence& seq);
+	
     void        ParseMinttyFontGlyphCoverageRequest(const AnsiParser::Sequence& seq);
 
     void        SetCaretStyle(const AnsiParser::Sequence& seq);

@@ -51,6 +51,9 @@ void TerminalCtrl::ParseOperatingSystemCommands(const AnsiParser::Sequence& seq)
 	case 1337:	// iTerm2 protocols.
 		ParseiTerm2Protocols(seq);
 		break;
+	case 7501:	// Program status protocol.
+		ParseProgramStatus(seq);
+		break;
 	case 7771: // Mintty protocols
 		ParseMinttyFontGlyphCoverageRequest(seq);
 		break;
@@ -70,14 +73,14 @@ void TerminalCtrl::ParseJexerGraphics(const AnsiParser::Sequence& seq)
 
 	if(!jexerimages)
 		return;
-	
+
 	int type = seq.GetInt(2, Null);
 	if(type > 2 || IsNull(type))	// V1 defines 3 types (0-based).
 		return;
 
 	ImageString simg;
 	simg.FmtRaster().Encoded();
-	
+
 	bool scroll = false;
 
 	if(type == 0) {	// Bitmap
@@ -100,7 +103,7 @@ void TerminalCtrl::ParseiTerm2Protocols(const AnsiParser::Sequence& seq)
 {
 	if(ParseItem2FeatureReport(seq))
 		return;
-	
+
 	if(iterm2images
 		&& ParseiTerm2Graphics(seq))
 			return;
@@ -110,13 +113,13 @@ void TerminalCtrl::ParseiTerm2Protocols(const AnsiParser::Sequence& seq)
 // if(annotations
 //		&& ParseiTerm2Annotations(seq))
 //			return;
-	
+
 }
 
 bool TerminalCtrl::ParseItem2FeatureReport(const AnsiParser::Sequence& seq)
 {
 	// https://iterm2.com/feature-reporting/
-	
+
 	String req = seq.GetStr(2);
 	int i = ToLower(req).Find("capabilities");
 	if(i >= 0) {
@@ -173,7 +176,7 @@ bool TerminalCtrl::ParseiTerm2Graphics(const AnsiParser::Sequence& seq)
 
 	simg.size.Clear();
 	bool show = false;
-	
+
 	for(const String& s : Split(options.Mid(pos), ';', false)) {
 		String key, val;
 		if(SplitTo(ToLower(s), '=', false, key, val)) {
@@ -190,13 +193,13 @@ bool TerminalCtrl::ParseiTerm2Graphics(const AnsiParser::Sequence& seq)
 				simg.KeepRatio(val == "1");
 		}
 	}
-	
+
 	if(show) {
 		if(simg.size.cx == 0 && simg.size.cy == 0)
 			simg.size.SetNull();
 		RenderImage(simg);
 	}
-	
+
 	return true;
 }
 
@@ -234,8 +237,8 @@ void TerminalCtrl::ParseHyperlinks(const AnsiParser::Sequence& seq)
 	else {
 		uri = UrlDecode(uri);
 		cellattrs.Image(false)
-				 .Annotation(false)
-				 .Hyperlink(true).data = RenderHypertext(uri);
+				.Annotation(false)
+				.Hyperlink(true).data = RenderHypertext(uri);
 	}
 }
 
@@ -243,7 +246,7 @@ void TerminalCtrl::ParseClipboardRequests(const AnsiParser::Sequence& seq)
 {
 	// For more information on application clipboard access, see:
 	// https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
-	
+
 	if(!IsClipboardAccessPermitted() || !HasFocus())
 		return;
 
@@ -251,7 +254,7 @@ void TerminalCtrl::ParseClipboardRequests(const AnsiParser::Sequence& seq)
 	{
 		return !IsAlNum(c) && c != '=' && c != '+' && c != '/';
 	};
-	
+
 	String params = seq.GetStr(2);	// We don't support multiple clipboard buffers...
 	String data   = seq.GetStr(3);
 
@@ -285,7 +288,7 @@ void TerminalCtrl::ParseSemanticInformation(const AnsiParser::Sequence& seq)
 
 	if(!semanticinformation)
 		return;
-	
+
 	String s = seq.GetStr(2);
 
 	// ATM, we only care about a minimal subset of this protocol.
@@ -308,22 +311,22 @@ void TerminalCtrl::ParseTerminalCtrlAnnotations(const AnsiParser::Sequence& seq)
 {
 	if(!annotations || seq.parameters.GetCount() != 4)
 		return;
-	
+
 	constexpr const int MAX_ANNOTATION_LENGTH = 65536;
 
 	String type = seq.GetStr(3);
 	String anno = seq.GetStr(4);
 
 	anno = Base64Decode(anno);
-	
+
 	if(IsNull(anno) || anno.GetLength() > MAX_ANNOTATION_LENGTH) {
 		cellattrs.Annotation(false);
 		cellattrs.data = 0;
 	}
 	else {
 		cellattrs.Image(false)
-				 .Hyperlink(false)
-				 .Annotation(true).data = RenderHypertext(anno);
+				.Hyperlink(false)
+				.Annotation(true).data = RenderHypertext(anno);
 	}
 }
 
@@ -331,9 +334,9 @@ void TerminalCtrl::ParseConEmuProtocols(const AnsiParser::Sequence& seq)
 {
 	// For more information on ConEMU specific commands, see:
 	// https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC
-	
+
 	int opcode = seq.GetInt(2, 0);
-	
+
 	switch(opcode) {
 	case 2: ParseConEmuMessageBoxMessage(seq);             break;
 	case 4: ParseConEmuProgressEvent(seq);                 break;
@@ -348,9 +351,9 @@ void TerminalCtrl::ParseConEmuProgressEvent(const AnsiParser::Sequence& seq)
 
 	if(!notifyprogress)
 		return;
-	
+
 	int n = seq.GetInt(4, 0);
-           
+
 	switch(seq.GetInt(3, 0)) {
 	case 1: WhenProgress(PROGRESS_NORMAL, clamp(n, 0, 100));  break;
 	case 2: WhenProgress(PROGRESS_ERROR, n);   break;
@@ -363,14 +366,14 @@ void TerminalCtrl::ParseConEmuProgressEvent(const AnsiParser::Sequence& seq)
 void TerminalCtrl::ParseConEmuWorkingDirectoryChangeRequest(const AnsiParser::Sequence& seq)
 {
 	// https://learn.microsoft.com/en-us/windows/terminal/tutorials/new-tab-same-directory
-	
+
 	WhenDirectoryChange(seq.GetStr(3));
 }
 
 void TerminalCtrl::ParseConEmuMessageBoxMessage(const AnsiParser::Sequence& seq)
 {
 	// https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC
-	
+
 	WhenMessage(seq.GetStr(3));
 }
 
@@ -380,7 +383,7 @@ void TerminalCtrl::ParseMinttyFontGlyphCoverageRequest(const AnsiParser::Sequenc
 
 	if(seq.GetStr(2) != "?")
 		return;
-	
+
 	Vector<String> reply;
 	for(int i = 2; i < seq.parameters.GetCount(); i++) {
 		const String& u = seq.parameters[i];
@@ -389,6 +392,60 @@ void TerminalCtrl::ParseMinttyFontGlyphCoverageRequest(const AnsiParser::Sequenc
 	}
 
 	PutOSC("7771;!;" << Join(reply, ";"));
+}
+
+void TerminalCtrl::ParseProgramStatus(const AnsiParser::Sequence& seq)
+{
+	// https://www.superlogical.com/rex/docs/build/program-status
+
+	if(!WhenProgramStatus)
+		return;
+
+	String payload = seq.GetStr(2);
+
+	// Feature detection.
+	if(payload == "?") {
+		PutOSC("7501;?");
+		return;
+	}
+
+	auto InvalidKey = [](int c) { return c < 'a' || c > 'z'; };
+	auto InvalidVal = [](int c) { return !IsAlNum(c) && c != '_' && c != '.' && c != ',' && c != '+' && c != '/' && c != '=' && c != '-'; };
+	auto IsCtl      = [](int c) { return (c >= 0x00 && c <= 0x1F) || c == 0x7F || (c >= 0x80 && c <= 0x9F); };
+
+	VectorMap<String, String> status;
+
+	for(const String& p : Split(payload, ':', false)) {
+		int eq = p.Find('=');
+		if(eq < 0)
+			continue;
+
+		String key = TrimBoth(p.Mid(0, eq));
+		String val = TrimBoth(p.Mid(eq + 1));
+
+		if(IsNull(key) || FindMatch(key, InvalidKey) >= 0 || FindMatch(val, InvalidVal) >= 0)
+			continue;
+
+		if(key == "msg") {
+			if(IsNull(val)) {
+				status.GetAdd(key) = String();
+				continue;
+			}
+			String decoded = Base64Decode(val);
+			if(IsNull(decoded) || FindMatch(decoded, IsCtl) >= 0)
+				continue;
+
+			val = decoded;
+		}
+
+		status.GetAdd(key) = val;
+	}
+
+	int si = status.Find("state");
+	if(si < 0 || findarg(status[si], "idle", "working", "done", "blocked", "error", "clear") < 0)
+		return; // Unrecognized or missing state causes the whole report to be ignored
+
+	WhenProgramStatus(status);
 }
 
 }

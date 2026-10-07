@@ -286,6 +286,28 @@ custom actions while in selector mode. The currently pressed
 key is provided as parameter.&]
 [s3; &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenProgramStatus:%- Event<[@(0.0.255) const] 
+VectorMap<String, String>[@(0.0.255) `&]> [* WhenProgramStatus]&]
+[s6; This event is a part of the Superlogical `& Ghostty`'s protocol 
+extension.&]
+[s0;l288; This event is dispatched when a running host program or 
+shell command wants to notify the user about its current operational 
+state. It passes the parsed protocol parameters as a key`-value 
+map. &]
+[s0;l288; &]
+[s0;l288;i150;O0; The map is guaranteed to contain a valid `"[C@5 state]`" 
+key, which will strictly be one of `"[C@5 idle]`", `"[C@5 working]`", 
+`"[C@5 done]`", `"[C@5 blocked]`", `"[C@5 error]`", or `"[C@5 clear]`".&]
+[s2;i150;O0; If the application provides a `"[C@5 msg]`" key, its value 
+will be passed already Base64`-decoded and verified to contain 
+no control characters.&]
+[s2;i150;O0; Other valid alphanumeric key`-value pairs provided by 
+the application will be passed through as parsed. &]
+[s2;i150;O0; TerminalCtrl does not maintain persistence of this state; 
+the host application is responsible for retaining the status 
+and updating its user interface accordingly.&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenProgress:%- Event<[@(0.0.255) int], 
 [@(0.0.255) int]> [* WhenProgress]&]
 [s6;%- This event is a part of ConEmu `& Windows Terminal`'s protocol 

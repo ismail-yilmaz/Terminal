@@ -336,6 +336,7 @@
 | 133 | Semantic information. | Level 1 | `OSC 133 ; Pt ST` |
 | 444 | Display inline images. (Jexer) | Level 1 | `OSC 444 ; P1 ; P2 ; ... ST`|
 | 1337 | Display inline images. (iTerm2) | Level 1 | `OSC 1337 ; args ST` |
+| 7501 | Program status protocol. (ghostty) | Level 1 | `OSC 7501 ; [args] ST` |
 | 7771 | Font glyph coverage inquiry (mintty) | Level 1 | `OSC 7771 ; [?|!] ; ucodepoint | ... ST`
 
 #### Notes
@@ -702,3 +703,22 @@
 
 * Applications (in) must set the `mode` to `?` for inquiry. TerminalCtrl (out) will set it to `!`;
 * `codepoint` must be represented as a decimal unicode codepoint. TerminalCtrl will return the same decimal codepoint if the codepoint can be displayed with the current font. Any number of codepoints can be queried in a single query.
+
+### Program Status Protocol
+
+| Sequence | Description | Device Level |
+| --- | --- | --- |
+| `OSC 7501 ; [parameters] ST` | Notifies the client code of the current state of a running host program or shell command. | Level 1 |
+
+#### Notes
+
+* Implements the OSC 7501 program status reporting protocol.
+* `parameters` are colon-separated `key=value` pairs.
+* If the `parameters` string is exactly `?`, TerminalCtrl will reply with `OSC 7501 ; ? ST` to indicate support for the protocol.
+* The `state` key is mandatory and its value must be one of the following exact strings: `idle`, `working`, `done`, `blocked`, `error`, or `clear`. If the `state` key is missing or contains an unrecognized value, the entire status report is ignored.
+* The `msg` key is optional. Its value must be a Base64-encoded string representing a single line of human-readable text. It must not contain control characters.
+* Keys must consist only of lowercase letters (`a-z`).
+* Values must consist only of alphanumeric characters and the symbols `_ . , + / = -`.
+* Any key-value pair that violates the character restrictions is ignored, but the rest of the report continues to be processed.
+* If a key is repeated in a single sequence, the last value overwrites the previous ones.
+* TerminalCtrl does not maintain persistence of the program status. It is up to the client code to manage the state and display it in the user interface.
