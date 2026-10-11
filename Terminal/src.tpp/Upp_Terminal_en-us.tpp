@@ -185,6 +185,14 @@ onstant identifying the LED(s)]. Second argument is the toggle.
 True when a LED is switched on.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:WhenReset:%- Event<[@(0.0.255) bool]> [* WhenReset]&]
+[s2; This event is dispatched when the host app or client`-code performs 
+a soft or hard reset. TerminalCtrl will pass true on hard reset 
+and false otherwise. See also [C^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:SoftReset`(`)^ S
+oftReset()] and [C^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:HardReset`(`)^ H
+ardReset()].&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:WhenBar:%- [_^Upp`:`:Event^ Event]<Bar[@(0.0.255) `&]>_[* WhenB
 ar]&]
 [s2; This event is dispatched when user clicks the terminal widget 

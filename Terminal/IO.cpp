@@ -85,6 +85,7 @@ void TerminalCtrl::Reset(bool full)
 	caret.WhenAction = [this] { ScheduleRefresh(); };
 
 	CancelOut();
+	WhenReset(full);
 }
 
 void TerminalCtrl::Backup(bool tpage, bool csets, bool attrs)

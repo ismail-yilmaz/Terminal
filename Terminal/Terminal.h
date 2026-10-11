@@ -108,6 +108,7 @@ public:
     Event<>              WhenRefresh;
     Event<>              WhenScroll;
     Event<int, bool>     WhenLED;
+    Event<bool>          WhenReset;
     Event<int, int>      WhenProgress;
     Gate<PasteClip&>     WhenClip;
     Event<const String&> WhenLink;
