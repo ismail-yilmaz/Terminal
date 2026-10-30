@@ -396,56 +396,66 @@ void TerminalCtrl::ParseMinttyFontGlyphCoverageRequest(const AnsiParser::Sequenc
 
 void TerminalCtrl::ParseProgramStatus(const AnsiParser::Sequence& seq)
 {
-	// https://www.superlogical.com/rex/docs/build/program-status
+    // https://www.superlogical.com/rex/docs/build/program-status
 
-	if(!WhenProgramStatus)
-		return;
+    if(!WhenProgramStatus)
+        return;
 
-	String payload = seq.GetStr(2);
+    if(seq.payload.GetCount() > 4096)
+        return;
 
-	// Feature detection.
-	if(payload == "?") {
-		PutOSC("7501;?");
-		return;
-	}
+    String payload = seq.GetStr(2);
 
-	auto InvalidKey = [](int c) { return c < 'a' || c > 'z'; };
-	auto InvalidVal = [](int c) { return !IsAlNum(c) && c != '_' && c != '.' && c != ',' && c != '+' && c != '/' && c != '=' && c != '-'; };
-	auto IsCtl      = [](int c) { return (c >= 0x00 && c <= 0x1F) || c == 0x7F || (c >= 0x80 && c <= 0x9F); };
+    // Feature detection.
+    if(payload == "?") {
+        PutOSC("7501;?");
+        return;
+    }
 
-	VectorMap<String, String> status;
+    auto InvalidKey = [](int c) { return c < 'a' || c > 'z'; };
+    auto InvalidVal = [](int c) { return !IsAlNum(c) && c != '_' && c != '.' && c != ',' && c != '+' && c != '/' && c != '=' && c != '-'; };
+    auto IsCtl      = [](int c) { return (c >= 0x00 && c <= 0x1F) || c == 0x7F || (c >= 0x80 && c <= 0x9F); };
 
-	for(const String& p : Split(payload, ':', false)) {
-		int eq = p.Find('=');
-		if(eq < 0)
-			continue;
+    VectorMap<String, String> status;
 
-		String key = TrimBoth(p.Mid(0, eq));
-		String val = TrimBoth(p.Mid(eq + 1));
+    for(const String& p : Split(payload, ':', false)) {
+        int eq = p.Find('=');
+        if(eq < 0)
+            continue;
 
-		if(IsNull(key) || FindMatch(key, InvalidKey) >= 0 || FindMatch(val, InvalidVal) >= 0)
-			continue;
+        String key = TrimBoth(p.Mid(0, eq));
+        String val = TrimBoth(p.Mid(eq + 1));
 
-		if(key == "msg") {
-			if(IsNull(val)) {
-				status.GetAdd(key) = String();
-				continue;
-			}
-			String decoded = Base64Decode(val);
-			if(IsNull(decoded) || FindMatch(decoded, IsCtl) >= 0)
-				continue;
+        if(IsNull(key) || key.GetCount() > 16 || FindMatch(key, InvalidKey) >= 0 || FindMatch(val, InvalidVal) >= 0)
+            continue;
 
-			val = decoded;
-		}
+        if(key == "app" && val.GetCount() > 32)
+            return;
 
-		status.GetAdd(key) = val;
-	}
+        if(key == "id" && (val.GetCount() > 128 || Split(val, '/').GetCount() > 8))
+            return;
 
-	int si = status.Find("state");
-	if(si < 0 || findarg(status[si], "idle", "working", "done", "blocked", "error", "clear") < 0)
-		return; // Unrecognized or missing state causes the whole report to be ignored
+        if(key == "msg" || key == "title") {
+            if(IsNull(val)) {
+                status.GetAdd(key) = String();
+                continue;
+            }
+            String decoded = Base64Decode(val);
+            int maxlen = (key == "title") ? 192 : 2048;
+            if(IsNull(decoded) || decoded.GetCount() > maxlen || FindMatch(decoded, IsCtl) >= 0)
+                return;
 
-	WhenProgramStatus(status);
+            val = decoded;
+        }
+
+        status.GetAdd(key) = val;
+    }
+
+    int si = status.Find("state");
+    if(si < 0 || findarg(status[si], "idle", "working", "done", "blocked", "error", "clear") < 0)
+        return; // Unrecognized or missing state causes the whole report to be ignored
+
+    WhenProgramStatus(status);
 }
 
 }
