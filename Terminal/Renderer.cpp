@@ -243,6 +243,8 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 	Size psz = GetPageSize();
 	Size csz = GetCellSize();
 
+	ImageParts ip;
+
 	w.Clip(wsz);
 
 	LTIMING("TerminalCtrl::Paint");
@@ -318,13 +320,10 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 		}
 		{
 			if(icount) {
-				// Render inline images, if any.
-				ImageParts ip;
 				for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
 					if(line[j].IsImage())
 						CollectImage(ip, x, y, line.Get(j, GetAttrs()), csz);
 				}
-				PaintImages(w, ip, csz);
 			}
 		}
 	};
@@ -354,6 +353,10 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 
 	}
 
+	// Paint inline-images, if any.
+	if(!ip.IsEmpty())
+		PaintImages(w, ip, csz);
+	
 	// Paint a steady (non-blinking) caret, if enabled.
 	if(IsSelectorMode() || (modes[DECTCEM] && HasFocus() && (print || !caret.IsBlinking())))
 		w.DrawRect(caretrect, InvertColor);
@@ -392,6 +395,8 @@ void TerminalCtrl::PaintImages(Draw& w, ImageParts& parts, const Size& csz)
 	InlineImage im;
 	dword lastid = -1;
 
+    OptimizeImageParts(parts);
+    
 	for(const ImagePart& part : parts) {
 		const dword& id = part.a;
 		const Point& pt = part.b;
@@ -426,6 +431,46 @@ void TerminalCtrl::CollectImage(ImageParts& ip, int x, int y, const VTCell& cell
 	ip.Add(MakeTuple(id, coords, ir));
 }
 
+void TerminalCtrl::OptimizeImageParts(ImageParts& ip)
+{
+	if(ip.GetCount() < 2)
+		return;
+
+	LTIMING("TerminalCtrl::OptimizeImageParts");
+
+	constexpr const dword DELETED = (dword) -1;
+
+	for(int i = 0; i < ip.GetCount(); i++) {
+		ImagePart& top = ip[i];
+		if(top.a == DELETED)
+			continue;
+		for(int j = i + 1; j < ip.GetCount(); j++) {
+			ImagePart& bottom = ip[j];
+			if(bottom.a == DELETED)
+				continue;
+			if(top.a != bottom.a
+			|| top.b.x != bottom.b.x
+			|| top.c.left != bottom.c.left
+			|| top.c.right != bottom.c.right) {
+				continue;
+			}
+			if(top.b.y + top.c.GetHeight() == bottom.b.y && top.c.bottom == bottom.c.top) {
+				top.c.bottom = bottom.c.bottom;
+				bottom.a = DELETED;
+			}
+		}
+	}
+
+	// Sweep deleted parts in-place.
+	int tail = 0;
+	for(int k = 0; k < ip.GetCount(); k++) {
+		if(ip[k].a != DELETED)
+			ip[tail++] = ip[k];
+	}
+
+	ip.Trim(tail);
+}
+
 void TerminalCtrl::RenderImage(const ImageString& imgs, bool scroll)
 {
 	bool encoded = !imgs.IsSixel(); // Sixel images are not base64 encoded.
@@ -439,7 +484,7 @@ void TerminalCtrl::RenderImage(const ImageString& imgs, bool scroll)
 
 	Size fsz = GetCellSize();
 	dword id = FoldHash(CombineHash(imgs, fsz));
-	const InlineImage& imd = GetCachedImageData(id, imgs, fsz);
+	InlineImage imd = GetCachedImageData(id, imgs, fsz);
 	if(!IsNull(imd.image)) {
 		page->AddImage(imd.cellsize, id, scroll, encoded);
 		RefreshDisplay();
@@ -551,15 +596,19 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 	return imagedata.image.GetLength() * 4;
 }
 
-const TerminalCtrl::InlineImage& TerminalCtrl::GetCachedImageData(dword id, const ImageString& imgs, const Size& csz)
+TerminalCtrl::InlineImage TerminalCtrl::GetCachedImageData(dword id, const ImageString& imgs, const Size& csz)
 {
 	Mutex::Lock __(sImageCacheLock);
-
 	LTIMING("TerminalCtrl::GetCachedImageData");
 
 	InlineImageMaker im(id, imgs, csz);
 	sInlineImagesCache.Shrink(sCachedImageMaxSize, sCachedImageMaxCount);
-	return sInlineImagesCache.Get(im);
+
+	// Drop the lock while doing heavy image decoding, just like MakeValue does
+	return sInlineImagesCache.Get(im,
+		[] { sImageCacheLock.Leave(); },
+		[] { sImageCacheLock.Enter(); }
+	);
 }
 
 void TerminalCtrl::ClearImageCache()
@@ -593,12 +642,12 @@ String TerminalCtrl::GetCachedHypertext(dword id, const String& data)
 		RawCat(h, id);
 		return String(h);
 	};
-	
+
 	auto sCacheValFn = [&](Value& v) -> int {
 		v = data;
 		return data.GetLength();
 	};
-	
+
 	return MakeValue(sCacheKeyFn, sCacheValFn);
 }
 

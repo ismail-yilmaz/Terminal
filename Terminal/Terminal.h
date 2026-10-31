@@ -643,9 +643,10 @@ private:
 
     void        PaintImages(Draw& w, ImageParts& parts, const Size& csz);
     void        CollectImage(ImageParts& ip, int x, int y, const VTCell& cell, const Size& sz);
-
+    void        OptimizeImageParts(ImageParts& ip);
+    
     void        RenderImage(const ImageString& simg, bool scroll = true);
-    const InlineImage& GetCachedImageData(dword id, const ImageString& simg, const Size& csz);
+    InlineImage GetCachedImageData(dword id, const ImageString& simg, const Size& csz);
 
     dword       RenderHypertext(const String& uri);
     String      GetCachedHypertext(dword id, const String& data = Null);
