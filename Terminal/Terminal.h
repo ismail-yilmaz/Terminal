@@ -477,9 +477,6 @@ public:
     static void     ClearImageCache();
     static void     SetImageCacheMaxSize(int maxsize, int maxcount);
 
-    static void     ClearHyperlinkCache();
-    static void     SetHyperlinkCacheMaxSize(int maxcount);
-
 protected:
     virtual void    PreParse()                                      { }
     virtual void    PostParse()                                     { ScheduleRefresh(); }
@@ -637,18 +634,6 @@ private:
         : id(i)
         , fontsize(sz)
         , imgs(s)
-        {
-        }
-    };
-
-    struct HypertextMaker : ValueMaker {
-        dword id;
-        const String& txt;
-        String Key() const override;
-        int    Make(Value& obj) const override;
-        HypertextMaker(int i, const String& s)
-        : id(i)
-        , txt(s)
         {
         }
     };

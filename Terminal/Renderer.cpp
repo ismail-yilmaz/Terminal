@@ -582,39 +582,24 @@ dword TerminalCtrl::RenderHypertext(const String& uri)
 	return h;
 }
 
-// Shared hypertext cache support.
-
-String TerminalCtrl::HypertextMaker::Key() const
-{
-	StringBuffer h;
-	RawCat(h, id);
-	return String(h); // Make MSVC happy...
-}
-
-int TerminalCtrl::HypertextMaker::Make(Value& obj) const
-{
-	LTIMING("TerminalCtrl::HypertextMaker::Make");
-
-	obj = txt;
-	return txt.GetLength();
-}
+// Shared hypertext cache support (Using global value cache).
 
 String TerminalCtrl::GetCachedHypertext(dword id, const String& data)
 {
 	LTIMING("TerminalCtrl::GetCachedHypertext");
 
-	HypertextMaker m(id, data);
-	return MakeValue(m);
-}
-
-void TerminalCtrl::ClearHyperlinkCache()
-{
-	// TODO: Obsolete. Remove
-}
-
-void TerminalCtrl::SetHyperlinkCacheMaxSize(int maxcount)
-{
-	// TODO: Obsolete. Remove
+	auto sCacheKeyFn = [&]() -> String {
+		StringBuffer h;
+		RawCat(h, id);
+		return String(h);
+	};
+	
+	auto sCacheValFn = [&](Value& v) -> int {
+		v = data;
+		return data.GetLength();
+	};
+	
+	return MakeValue(sCacheKeyFn, sCacheValFn);
 }
 
 // Image display support.
