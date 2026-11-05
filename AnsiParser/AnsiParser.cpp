@@ -481,9 +481,8 @@ struct StringPolicy {
 };
 
 template<class Policy, class T> force_inline
-void sCollectInto(T& out, const byte *start, byte*& ptr, const byte* end, const Policy& policy)
+void sCollectInto(T& out, const byte *start, byte*& ptr, const byte* end, const Policy& policy, int limit)
 {
-
 #ifdef CPU_SIMD
 	while(ptr + 64 <= end) {
 		i8x16 m0 = policy.GetInvalidMask(i8x16(ptr +  0));
@@ -496,8 +495,7 @@ void sCollectInto(T& out, const byte *start, byte*& ptr, const byte* end, const 
 						| ((uint64)(uint16) SimdAnsi::MoveMask(m2) << 32)
 						| ((uint64)(uint16) SimdAnsi::MoveMask(m3) << 48);
 			ptr += CountTrailingZeroBits64(mask);
-			out.Cat(start, (int)(ptr - start));
-			return;
+			goto EMIT;
 		}
 		ptr += 64;
 	}
@@ -505,8 +503,7 @@ void sCollectInto(T& out, const byte *start, byte*& ptr, const byte* end, const 
 		i8x16 chunk(ptr);
 		if(i8x16 mask = policy.GetInvalidMask(chunk); AnyTrue(mask)) {
 			ptr += CountTrailingZeroBits(SimdAnsi::MoveMask(mask));
-			out.Cat(start, (int)(ptr - start));
-			return;
+			goto EMIT;
 		}
 		ptr += 16;
 	}
@@ -514,7 +511,17 @@ void sCollectInto(T& out, const byte *start, byte*& ptr, const byte* end, const 
 	while((ptr < end) && policy.ScalarCheck(*ptr))
 		ptr++;
 
-	out.Cat(start, (int)(ptr - start));
+#ifdef CPU_SIMD
+EMIT:
+#endif
+	int len = (int)(ptr - start);
+	int allow = limit - out.GetCount();
+
+	if(len > allow)
+		len = max(0, allow);
+
+	if(len > 0)
+		out.Cat(start, len);
 }
 
 force_inline
@@ -895,7 +902,7 @@ void AnsiParser::CollectParameter(const byte *start, int c)
 {
 	LTIMING("VtInStream::CollectParameter()");
 
-	sCollectInto(collected, start, ptr, end, ParameterPolicy{});
+	sCollectInto(collected, start, ptr, end, ParameterPolicy{}, maxparamlen);
 }
 
 force_inline
@@ -903,7 +910,7 @@ void AnsiParser::CollectPayload(const byte *start, int c)
 {
 	LTIMING("VtInStream::CollectPayload()");
 
-	sCollectInto(sequence.payload, start, ptr, end, PayloadPolicy{});
+	sCollectInto(sequence.payload, start, ptr, end, PayloadPolicy{}, maxpayloadlen);
 }
 
 force_inline
@@ -911,7 +918,7 @@ void AnsiParser::CollectString(const byte *start, int c)
 {
 	LTIMING("VtInStream::CollectString()");
 
-	sCollectInto(sequence.payload, start, ptr, end, StringPolicy{ utf8mode });
+	sCollectInto(sequence.payload, start, ptr, end, StringPolicy{ utf8mode }, maxpayloadlen);
 }
 
 force_inline
@@ -988,6 +995,8 @@ AnsiParser::AnsiParser()
 , begin(nullptr)
 , end(nullptr)
 , parametrize(false)
+, maxparamlen(64 * 1024)
+, maxpayloadlen(256 * 1024 * 1024)
 {
 	Reset();
 }

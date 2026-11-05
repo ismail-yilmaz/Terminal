@@ -92,6 +92,9 @@ public:
 
     AnsiParser& ParametrizePayload(bool b = true)               { parametrize = b; return *this; }
     AnsiParser& DontParametrizePayload()                        { return ParametrizePayload(false); }
+    
+    AnsiParser& MaxParameterStringLength(int length)            { maxparamlen = max(16, length);  return *this; }
+    AnsiParser& MaxPayloadLength(int length)                    { maxpayloadlen = max(16, length); return *this; }
 
     void        Parse(const void *data, int size, bool utf8);
     void        Parse(const String& data, bool utf8)            { Parse(~data, data.GetLength(), utf8); }
@@ -137,6 +140,8 @@ private:
     bool        waschr:1;
     bool        utf8mode:1;
     bool        parametrize:1;
+    int         maxparamlen;
+    int         maxpayloadlen;
     String      collected, buffer;
     const Vector<AnsiParser::State>*  state;
 };

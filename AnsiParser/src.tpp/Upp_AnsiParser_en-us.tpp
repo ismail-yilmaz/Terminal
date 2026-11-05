@@ -75,6 +75,25 @@ rule. Returns `*this for method chaining. Disabled by default.&]
 [s2; Disables automatic splitting and parametrizing of the OSC, APC, 
 SOS and PM payloads. Return `*this for method chaining.&]
 [s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:AnsiParser`:`:MaxParameterStringLength`(int`):%- AnsiParser[@(0.0.255) `&] 
+[* MaxParameterStringLength]([@(0.0.255) int] [*@3 length])&]
+[s2; Sets the maximum allowed accumulation [%-*@3 length] in bytes 
+for CSI and DCS parameter strings, clamping values less than 
+16 to 16. Default is [C@5 65536 ](64 KB).This protects the parser 
+against memory exhaustion from unterminated or maliciously long 
+parameter sequences. Returns `*this for method chaining.&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:AnsiParser`:`:MaxPayloadLength`(int`):%- AnsiParser[@(0.0.255) `&] 
+[* MaxPayloadLength]([@(0.0.255) int] [*@3 length])&]
+[s2; Sets the maximum allowed accumulation [%-*@3 length] in bytes 
+for OSC, APC, PM, and SOS payloads, clamping values less than 
+16 to 16. Default is [C@5 268435456 ](256 MB). This safely truncates 
+excessive payload streams, such as massive base64 clipboard copies, 
+to prevent memory exhaustion without desyncing the state machine. 
+Returns `*this for method chaining.&]
+[s3; &]
 [s4; &]
 [s5;:Upp`:`:AnsiParser`:`:WhenChr:%- [_^Upp`:`:Event^ Event]<const 
 [@(0.0.255) int`*, const] byte [@(0.0.255) `*], [@(0.0.255) int]>_[* WhenChr]&]
