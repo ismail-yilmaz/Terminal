@@ -683,8 +683,9 @@ VTPage& VTPage::RepeatCell(int n)
 {
 	LLOG("RepeatCell(" << n << ")");
 
+	int rep = min(n, 65535);
 	VTCell cell = GetCell(cursor.x - 1, cursor.y);
-	for(int i = 0, w = cell.GetWidth(ambiguouscellwidth); i < n; i++)
+	for(int i = 0, w = cell.GetWidth(ambiguouscellwidth); i < rep; i++)
 		CellAdd(cell, w);
 	return *this;
 }
