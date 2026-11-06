@@ -54,9 +54,14 @@ TerminalCtrl::TerminalCtrl()
 , notifyprogress(false)
 , ambiguouschartowide(false)
 , semanticinformation(false)
+, allowscreenchecksum(false)
 , page(&dpage)
 , streamfill(false)
 {
+#ifdef _DEBUG
+	PermitScreenChecksum();
+#endif
+
 	Unicode();
 	SetLevel(LEVEL_4);
 	SetCharset(CHARSET_UNICODE);

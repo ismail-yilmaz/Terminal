@@ -506,6 +506,8 @@ void TerminalCtrl::Serialize(Stream& s)
 		s % ambiguouschartowide;
 		s % notifyprogress;
 		s % brightness;
+		s % semanticinformation;
+		s % allowscreenchecksum;
 
 	}
 
@@ -552,6 +554,7 @@ void TerminalCtrl::Jsonize(JsonIO& jio)
 		("Hyperlinks",          hyperlinks)
 		("Annotations",         annotations)
 		("SemanticInformation", semanticinformation)
+		("AllowScreenChecksum", allowscreenchecksum)
 		("ClipboardAccess",     clipaccess)
 		("DelayedRefresh",      delayedrefresh)
 		("LazyResize",          lazyresize)

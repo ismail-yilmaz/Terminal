@@ -1286,6 +1286,37 @@ applications that support the clipboard access and manipulation
 protocol.&]
 [s3;%- &]
 [s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:PermitScreenChecksum`(bool`):%- TerminalCtrl[@(0.0.255) `&] 
+[* PermitScreenChecksum]([@(0.0.255) bool] [*@3 b] [@(0.0.255) `=] [@(0.0.255) true])&]
+[s2; Enables or disables host apps requests for a checksum of the 
+specified rectangular area in the terminal`'s page buffer (DECRQCARA). 
+TerminalCtrl returns a checksum report (DECCKSR) in response 
+to this request. Returns `*this for method chaining. By default 
+this feature is disabled in release mode and enabled in debug 
+mode. &]
+[s2; &]
+[s2; [/ Note that enabling this feature in untrusted environments mat 
+pose a security risk.]&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:ForbidScreenChecksum`(`):%- TerminalCtrl[@(0.0.255) `&] 
+[* ForbidScreenChecksum]()&]
+[s2; Disables host app requests for a checksum of the specified rectangular 
+area in the terminal`'s page  buffer (DECRQCARA). TerminalCtrl 
+returns a checksum report (DECCKSR) in response to this request. 
+Returns `*this for method chaining. By default this feature is 
+disabled in release mode and enabled in debug mode.&]
+[s2; &]
+[s2; [/ Note that enabling this feature in untrusted environments mat 
+pose a security risk.]&]
+[s3;%- &]
+[s4;%- &]
+[s5;:Upp`:`:TerminalCtrl`:`:IsScreenChecksumPermitted`(`)const:%- [@(0.0.255) bool] 
+[* IsScreenChecksumPermitted]() [@(0.0.255) const]&]
+[s2; Returns true if TerminalCtrl allows rectangle area checksum 
+reports (DECRQCARA).&]
+[s3;%- &]
+[s4;%- &]
 [s5;:Upp`:`:TerminalCtrl`:`:PermitClipboardAccess`(bool`):%- [_^topic`:`/`/Terminal`/src`/Upp`_Terminal`_en`-us`#Upp`:`:TerminalCtrl`:`:class^ T
 erminalCtrl][@(0.0.255) `&]_[* PermitClipboardAccess]([@(0.0.255) bool]_[*@3 b]_`=_[@(0.0.255) t
 rue])&]

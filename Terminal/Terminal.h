@@ -319,6 +319,10 @@ public:
     TerminalCtrl&   PermitClipboardWrite(bool b = true)             { if(b) clipaccess |= CLIP_WRITE; else clipaccess &= ~CLIP_WRITE; return *this; }
     TerminalCtrl&   ForbidClipboardWrite()                          { return PermitClipboardWrite(false); }
     bool            IsClipboardWritePermitted() const               { return clipaccess & CLIP_WRITE; }
+    
+    TerminalCtrl&   PermitScreenChecksum(bool b = true)             { allowscreenchecksum = b; return *this; }
+    TerminalCtrl&   ForbidScreenChecksum()                          { return PermitScreenChecksum(false); }
+    bool            IsScreenChecksumPermitted() const               { return allowscreenchecksum; }
 
     TerminalCtrl&   NotifyProgress(bool b = true)                   { notifyprogress = b; return *this; }
     TerminalCtrl&   NoNotifyProgress()                              { return NotifyProgress(false); }
@@ -730,6 +734,7 @@ private:
     bool        notifyprogress;
     bool        ambiguouschartowide;
     bool        semanticinformation;
+    bool        allowscreenchecksum;
 
 // Down below is the emulator stuff, formerley known as "Console"...
 

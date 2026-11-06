@@ -664,6 +664,9 @@ void TerminalCtrl::ChangeRectAreaAttrs(const AnsiParser::Sequence& seq, bool inv
 
 void TerminalCtrl::ReportRectAreaChecksum(const AnsiParser::Sequence& seq)
 {
+	if(!allowscreenchecksum)
+		return;
+	
 	int id = seq.GetInt(1);
 	//int pn = seq.GetInt(2, 0);
 
