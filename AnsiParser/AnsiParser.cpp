@@ -980,7 +980,6 @@ void AnsiParser::Reset()
 {
 	Reset0(&Ground);
 	waschr = false;
-	utf8mode = false;
 }
 
 void AnsiParser::Reset0(const Vector<AnsiParser::State>* st)
@@ -994,6 +993,7 @@ AnsiParser::AnsiParser()
 : ptr(nullptr)
 , begin(nullptr)
 , end(nullptr)
+, utf8mode(false)
 , parametrize(false)
 , maxparamlen(64 * 1024)
 , maxpayloadlen(256 * 1024 * 1024)
