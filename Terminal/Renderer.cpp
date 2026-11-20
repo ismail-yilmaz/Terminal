@@ -322,7 +322,7 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 			if(icount) {
 				for(int j = 0, x = 0; j < psz.cx; j++, x += csz.cx) {
 					if(line[j].IsImage())
-						CollectImage(ip, x, y, line.Get(j, GetAttrs()), csz);
+						CollectImage(ip, x + padding.cx, y + padding.cy, line.Get(j, GetAttrs()), csz);
 				}
 			}
 		}
@@ -350,13 +350,12 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 			if(const VTLine& line = page->FetchLine(i); !line.IsVoid())
 				PaintLine(line, i);
 		}
-
 	}
 
 	// Paint inline-images, if any.
 	if(!ip.IsEmpty())
 		PaintImages(w, ip, csz);
-	
+
 	// Paint a steady (non-blinking) caret, if enabled.
 	if(IsSelectorMode() || (modes[DECTCEM] && HasFocus() && (print || !caret.IsBlinking())))
 		w.DrawRect(caretrect, InvertColor);
@@ -395,8 +394,8 @@ void TerminalCtrl::PaintImages(Draw& w, ImageParts& parts, const Size& csz)
 	InlineImage im;
 	dword lastid = -1;
 
-    OptimizeImageParts(parts);
-    
+	OptimizeImageParts(parts);
+
 	for(const ImagePart& part : parts) {
 		const dword& id = part.a;
 		const Point& pt = part.b;
@@ -423,7 +422,10 @@ void TerminalCtrl::CollectImage(ImageParts& ip, int x, int y, const VTCell& cell
 	Rect  ir = RectC(cell.object.col * sz.cx, cell.object.row * sz.cy, sz.cx, sz.cy);
 	if(!ip.IsEmpty()) {
 		ImagePart& part = ip.Top();
-		if(id == part.a && part.b.y == coords.y && part.c.right == ir.left) {
+		if(id == part.a
+		&& part.b.y == coords.y
+		&& part.c.right == ir.left
+		&& (part.b.x + part.c.GetWidth()) == coords.x) {
 			part.c.right = ir.right;
 			return;
 		}
@@ -658,8 +660,11 @@ public:
 	virtual void Paint(Draw& w, const Rect& r, const Value& q, Color ink, Color paper, dword style) const
 	{
 		const auto& im = q.To<TerminalCtrl::InlineImage>();
-		if(!IsNull(im.image))
+		if(!IsNull(im.image)) {
+			w.Clip(r);
 			w.DrawImage(r.left, r.top, im.image, im.paintrect);
+			w.End();
+		}
 	}
 	virtual Size GetStdSize(const Value& q) const
 	{
@@ -676,9 +681,10 @@ public:
 	{
 		const auto& im = q.To<TerminalCtrl::InlineImage>();
 		if(!IsNull(im.image)) {
-			Size csz = im.cellsize;
-			Size fsz = im.fontsize;
-			w.DrawImage(r, CachedRescale(im.image, csz * fsz), im.paintrect);
+			Size tsz = im.cellsize * im.fontsize;
+			w.Clip(r);
+			w.DrawImage(r, im.image.GetSize() == tsz ? im.image : CachedRescale(im.image, tsz), im.paintrect);
+			w.End();
 		}
 	}
 	virtual Size GetStdSize(const Value& q) const
