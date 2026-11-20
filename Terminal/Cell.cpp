@@ -174,7 +174,6 @@ static constexpr CompactRange sUnicodeWidthTable[] = {
 	{ 0x0FC6, 0x0FC6, 0, 0 },
 	{ 0x102D, 0x1030, 0, 0 },
 	{ 0x1032, 0x1037, 0, 0 },
-	{ 0x1038, 0x10A3A, 0, 0 },
 	{ 0x1039, 0x103A, 0, 0 },
 	{ 0x103D, 0x103E, 0, 0 },
 	{ 0x1058, 0x1059, 0, 0 },
@@ -239,7 +238,6 @@ static constexpr CompactRange sUnicodeWidthTable[] = {
 	{ 0x1CF8, 0x1CF9, 0, 0 },
 	{ 0x1DC0, 0x1DFF, 0, 0 },
 	{ 0x200B, 0x200F, 0, 0 },
-	{ 0x200C, 0x200D, 0, 0 },
 	{ 0x2010, 0x2010, 1, 2 },
 	{ 0x2013, 0x2016, 1, 2 },
 	{ 0x2018, 0x2019, 1, 2 },
@@ -703,9 +701,9 @@ static constexpr CompactRange sUnicodeWidthTable[] = {
 	{ 0x100000, 0x10FFFD, 1, 2 },
 };
 
-static const int sUnicodeTableSize = 694;
-
 #include <Core/Core.h>
+
+static constexpr int sUnicodeTableSize = __countof(sUnicodeWidthTable);
 
 struct WidthCache {
 	dword chr = 0xFFFFFFFF;
