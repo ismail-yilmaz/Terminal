@@ -488,7 +488,7 @@ void TerminalCtrl::RenderImage(const ImageString& imgs, bool scroll)
 	dword id = FoldHash(CombineHash(imgs, fsz));
 	InlineImage imd = GetCachedImageData(id, imgs, fsz);
 	if(!IsNull(imd.image)) {
-		page->AddImage(imd.cellsize, id, scroll, encoded);
+		page->AddImage(imd.cellsize, id, scroll, true);
 		RefreshDisplay();
 	}
 }

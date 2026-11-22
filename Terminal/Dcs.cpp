@@ -256,7 +256,7 @@ void TerminalCtrl::ParseSixelGraphics(const AnsiParser::Sequence& seq)
 	if(!modes[XTSPREG])
 		imgs.palette = &sixelpalette;
 
-	RenderImage(imgs, modes[DECSDM]);
+	RenderImage(imgs, !modes[DECSDM]);
 }
 
 void TerminalCtrl::ReportXTermCapabilities(const AnsiParser::Sequence& seq)

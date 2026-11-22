@@ -73,17 +73,18 @@ void SixelStream::Clear()
 	if(!paletteptr)
 		paletteptr = &private_palette;
 
-	if(paletteptr == &private_palette)
+	if(paletteptr == &private_palette || paletteptr->IsEmpty())
 		paletteptr->Init();
 
-	size    = Size(0, 0);
-	cursor  = Point(0, 1);
-	repeat  = 0;
-	ink     = (*paletteptr)[0];
-	ink.a   = 0xFF;
-	paper   = ink;
+	size       = Size(0, 0);
+	rastersize = Size(0, 0);
+	cursor     = Point(0, 1);
+	repeat     = 0;
+	ink        = (*paletteptr)[0];
+	ink.a      = 0xFF;
+	paper      = ink;
 	if(!background)
-		paper.a = 0;
+		paper = { 0, 0, 0, 0 };
 
 	Zero(params);
 
@@ -101,10 +102,13 @@ int SixelStream::ReadParams()
 	Zero(params);
 	int c = 0, n = 0, i = 0;
 	for(;;) {
-		while((c = *ptr) > 0x2F && c < 0x3A)
-			n = n * 10 + (*ptr++ - 0x30);
+		while(ptr < rdlim && (c = *ptr) > 0x2F && c < 0x3A) {
+			if(n < 1000000)
+				n = n * 10 + (*ptr - 0x30);
+			ptr++;
+		}
 		params[i++ & 7] = n;
-		if(c != ';')
+		if(ptr >= rdlim || c != ';')
 			break;
 		n = 0;
 		ptr++;
@@ -132,14 +136,15 @@ void SixelStream::LineFeed()
 	size.cx = max(size.cx, cursor.x);
 	cursor.x =  0;
 	cursor.y += 6;
-	size.cy = max(size.cy, cursor.y);
 	CalcYOffests();
 }
 
 static Color sHSLColor(int h, int s, int l)
 {
-	if(s == 0)
-		return Color(l, l, l);
+	if(s == 0) {
+		int v = clamp((l * 255 + 50) / 100, 0, 255);
+		return Color(v, v, v);
+	}
 
 	double h1 = fmod(h / 60.0, 6.0);
 	double l1 = l * 0.01;
@@ -161,9 +166,9 @@ static Color sHSLColor(int h, int s, int l)
 
 	double m = l1 - (c * 0.5);
 	return Color(
-		(int) clamp((r + m) * 100.0 + 0.5, 0.0, 100.0),
-		(int) clamp((g + m) * 100.0 + 0.5, 0.0, 100.0),
-		(int) clamp((b + m) * 100.0 + 0.5, 0.0, 100.0));
+		(int) clamp((r + m) * 255.0 + 0.5, 0.0, 255.0),
+		(int) clamp((g + m) * 255.0 + 0.5, 0.0, 255.0),
+		(int) clamp((b + m) * 255.0 + 0.5, 0.0, 255.0));
 }
 
 force_inline
@@ -172,13 +177,14 @@ void SixelStream::SetPalette()
 	LTIMING("SixelStream::SetPalette");
 
 	int n = ReadParams();
+	int idx = clamp(params[0], 0, 4095);
 	if(n == 5) {
 		switch(params[1]) {
 		case 2: { // RGB
-			RGBA& rgba = paletteptr->At(params[0]);
-			rgba.r = (params[2] * 255 + 99) / 100;
-			rgba.g = (params[3] * 255 + 99) / 100;
-			rgba.b = (params[4] * 255 + 99) / 100;
+			RGBA& rgba = paletteptr->At(idx);
+			rgba.r = (clamp(params[2], 0, 100) * 255 + 50) / 100;
+			rgba.g = (clamp(params[3], 0, 100) * 255 + 50) / 100;
+			rgba.b = (clamp(params[4], 0, 100) * 255 + 50) / 100;
 			rgba.a = 0xFF;
 			break;
 		}
@@ -186,7 +192,7 @@ void SixelStream::SetPalette()
 			int h = params[2];
 			int l = params[3];
 			int s = params[4];
-			paletteptr->At(params[0]) = sHSLColor(h, s, l);
+			paletteptr->At(idx) = sHSLColor(h, s, l);
 			break;
 		}
 		default:
@@ -195,7 +201,7 @@ void SixelStream::SetPalette()
 	}
 	else
 	if(n == 1) {
-		ink = paletteptr->At(params[0]);
+		ink = paletteptr->At(idx);
 		ink.a = 0xFF;
 	}
 }
@@ -204,7 +210,10 @@ force_inline
 void SixelStream::GetRasterInfo()
 {
 	LTIMING("SixelStream::GetRasterInfo");
-	ReadParams(); // We don't use the raster info.
+
+	int n = ReadParams();
+	if(n >= 4 && params[2] > 0 && params[3] > 0)
+		rastersize = Size(min(params[2], 4096), min(params[3], 4096));
 }
 
 force_inline
@@ -221,8 +230,11 @@ void SixelStream::AdjustBufferSize()
 	LTIMING("AdjustBufferSize");
 	if((cursor.x + repeat >= 4096) || (cursor.y + 6 >= 4096))
 		throw Exc("Sixel canvas size is too big > (4096 x 4096)");
-	ImageBuffer ibb(buffer.GetSize() += 512);
-	Copy(ibb, Point(0, 0), buffer, buffer.GetSize());
+	Size sz = buffer.GetSize();
+	Size nsz = sz + 512;
+	ImageBuffer ibb(nsz);
+	Fill(ibb, nsz, paper);
+	Copy(ibb, Point(0, 0), buffer, sz);
 	buffer = ibb;
 	CalcYOffests();
 }
@@ -231,8 +243,7 @@ void SixelStream::PaintSixel(int c)
 {
 	LTIMING("SixelStream::PaintSixel");
 
-	Size sz = buffer.GetSize();
-	if((sz.cx < cursor.x + repeat) || (sz.cy < cursor.y))
+	while((buffer.GetWidth() < cursor.x + max(1, repeat)) || (buffer.GetHeight() < cursor.y + 6))
 		AdjustBufferSize();
 
 	if(!repeat) {
@@ -250,6 +261,7 @@ void SixelStream::PaintSixel(int c)
 		size.cx = max(size.cx, cursor.x += repeat);
 		repeat = 0;
 	}
+	size.cy = max(size.cy, cursor.y + 5);
 }
 
 SixelStream::operator Image()
@@ -333,7 +345,10 @@ SCALAR_FALLBACK:
 	}
 
 Finalize:
-	return Crop(buffer, 0, 1, size.cx, max(size.cy, 6));
-}
-}
+	int cy = max(size.cy, 6);
+	if(rastersize.cy > 0 && cy > rastersize.cy)
+		cy = rastersize.cy;
 
+	return Crop(buffer, 0, 1, size.cx, cy);
+}
+}

@@ -38,6 +38,7 @@ private:
     int             params[8];
     int             coords[6];
     Size            size;
+    Size            rastersize;
     Point           cursor;
     bool            background:1;
 };
