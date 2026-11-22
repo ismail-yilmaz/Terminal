@@ -208,7 +208,7 @@ public:
     VTPage&         FillStream(const Rect& r, const VTCell& filler, dword flags);
     VTPage&         FillStream(const Rect& r, dword chr);
 
-    VTPage&         AddImage(Size sz, dword imageid, bool scroll, bool relpos = false);
+    VTPage&         AddImage(Size sz, dword imageid, bool scroll, bool nextline = true);
 
     VTPage&         SetTabAt(int col, bool b = true)         { SetTabStop(col, b); return *this; }
     VTPage&         SetTab(bool b = true)                    { SetTabStop(cursor.x, b); return *this; }

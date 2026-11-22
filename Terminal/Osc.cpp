@@ -172,7 +172,7 @@ bool TerminalCtrl::ParseiTerm2Graphics(const AnsiParser::Sequence& seq)
 	};
 
 	ImageString simg(pick(enc));
-	simg.FmtRaster().Encoded();
+	simg.FmtRaster().Encoded().KeepRatio();
 
 	simg.size.Clear();
 	bool show = false;
@@ -190,7 +190,7 @@ bool TerminalCtrl::ParseiTerm2Graphics(const AnsiParser::Sequence& seq)
 				simg.size.cy = GetVal(val, GetPageSize().cy, GetCellSize().cy);
 			else
 			if(key.IsEqual("preserveaspectratio"))
-				simg.KeepRatio(val == "1");
+				simg.KeepRatio(val != "0");
 		}
 	}
 

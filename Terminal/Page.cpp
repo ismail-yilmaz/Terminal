@@ -1684,28 +1684,38 @@ VTPage& VTPage::FillStream(const Rect& r, dword chr)
 	return FillStream(r, filler, VTCell::FILL_NORMAL);
 }
 
-VTPage& VTPage::AddImage(Size sz, dword imageid, bool scroll, bool relpos)
+VTPage& VTPage::AddImage(Size sz, dword imageid, bool scroll, bool nextline)
 {
 	LTIMING("VTPage::AddImage");
 
-	if(!scroll) sz = min(sz, size);
-	for(int i = 0; i < sz.cy; i++) {
-		Point pt = scroll || relpos ? cursor - 1 : Point(0, i);
+	Point cp = cursor;
+	int   cx = min(sz.cx, size.cx - (cp.x - 1));
+	int   cy = scroll ? sz.cy : min(sz.cy, size.cy - (cp.y - 1));
+
+	if(cx <= 0 || cy <= 0)
+		return *this;
+
+	for(int i = 0; i < cy; i++) {
+		Point pt(cp.x - 1, scroll ? cursor.y - 1 : cp.y - 1 + i);
 		VTLine& line = lines[pt.y];
-		for(int j = 0; j < sz.cx; j++) {
-			VTCell& cell = line[min(pt.x + j, size.cx - 1)];
+		for(int j = 0; j < cx; j++) {
+			VTCell& cell = line[pt.x + j];
 			cell.Image();
 			cell.chr = imageid;
 			cell.object.col = j;
 			cell.object.row = i;
 		}
 		line.Invalidate();
-		if(scroll)
+		if(scroll && (nextline || i + 1 < cy))
 			NextLine();
-		else
-		if(relpos)
-			MoveDown();
 	}
+
+	if(scroll) {
+		if(!nextline)
+			cursor.x = min(cp.x + sz.cx, size.cx);
+	}
+	else
+		cursor = cp;
 
 	return *this;
 }

@@ -393,6 +393,7 @@ void TerminalCtrl::PaintImages(Draw& w, ImageParts& parts, const Size& csz)
 
 	InlineImage im;
 	dword lastid = -1;
+	int   maxw = GetPageSize().cx * csz.cx;
 
 	OptimizeImageParts(parts);
 
@@ -400,14 +401,20 @@ void TerminalCtrl::PaintImages(Draw& w, ImageParts& parts, const Size& csz)
 		const dword& id = part.a;
 		const Point& pt = part.b;
 		const Rect&  rr = part.c;
-		Rect r(pt, rr.GetSize());
+
 		if(id != lastid) { // Optimization: cached inline-image to reduce mutex locking.
 			im = GetCachedImageData(id, Null, csz);
 			lastid = id;
 		}
 		if(!IsNull(im.image)) {
-			im.paintrect = rr;    // Keep it updated.
-			im.fontsize  = csz;    // Keep it updated.
+			if(im.cellsize.cx > 1 && rr.left == 0 && rr.GetWidth() == csz.cx && pt.x + csz.cx < maxw)
+				continue;
+			Rect ir = rr & Rect(im.image.GetSize());
+			if(ir.IsEmpty())
+				continue;
+			Rect r(pt + ir.TopLeft() - rr.TopLeft(), ir.GetSize());
+			im.paintrect = ir;    // Keep it updated.
+			im.fontsize  = csz;   // Keep it updated.
 			imgdisplay->Paint(w, r, im, colortable[COLOR_INK], colortable[COLOR_PAPER], 0);
 		}
 	}
@@ -488,7 +495,7 @@ void TerminalCtrl::RenderImage(const ImageString& imgs, bool scroll)
 	dword id = FoldHash(CombineHash(imgs, fsz));
 	InlineImage imd = GetCachedImageData(id, imgs, fsz);
 	if(!IsNull(imd.image)) {
-		page->AddImage(imd.cellsize, id, scroll, true);
+		page->AddImage(imd.cellsize, id, scroll, !encoded);
 		RefreshDisplay();
 	}
 }
@@ -511,39 +518,21 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 {
 	LTIMING("TerminalCtrl::ImageDataMaker::Make");
 
-	auto ToCellSize = [this](Size sz) -> Size
+	auto ToCellSize = [this](Size sr, Size req) -> Size
 	{
 		Size fs(fontsize);
-
-		sz.cx = (sz.cx + fs.cx - 1) / fs.cx;
-		sz.cy = (sz.cy + fs.cy - 1) / fs.cy;
-
-		return Size(max(1, sz.cx), max(1, sz.cy));
-	};
-
-	auto AdjustSize = [this](Size sr, Size sz) -> Size
-	{
-		if(imgs.IsKeepRatio()) {
-			if(sr.cx == 0 && sr.cy > 0)
-				sr.cx = max(1, sr.cy * sz.cx / sz.cy);
-			else
-			if(sr.cy == 0 && sr.cx > 0)
-				sr.cy = max(1, sr.cx * sz.cy / sz.cx);
-		}
-		else {
-			if(sr.cx <= 0)
-				sr.cx = sz.cx;
-			if(sr.cy <= 0)
-				sr.cy = sz.cy;
-		}
-
-		return sr != sz ? sr : Null;
+		int  cx = req.cx > 0 ? idivfloor(sr.cx + fs.cx / 2, fs.cx) : idivceil(sr.cx, fs.cx);
+		int  cy = req.cy > 0 ? idivfloor(sr.cy + fs.cy / 2, fs.cy) : idivceil(sr.cy, fs.cy);
+		return Size(max(1, cx), max(1, cy));
 	};
 
 	auto RawToImage = [](const String& raw, Size sz, bool rgba) -> Image
 	{
+		if(sz.cx <= 0 || sz.cy <= 0)
+			return Null;
+
 		int stride = sz.cx * (rgba ? 4 : 3);
-		if(raw.GetLength() < stride * sz.cy)
+		if(raw.GetLength() < (int64) stride * sz.cy)
 			return Null;
 
 		ImageBuffer ib(sz);
@@ -585,16 +574,25 @@ int TerminalCtrl::InlineImageMaker::Make(InlineImage& imagedata) const
 	if(IsNull(img))
 		return 0;
 
-	if(IsNull(imgs.size)) {
-		imagedata.image = img;
+	Size isz = img.GetSize();
+	imagedata.fontsize = fontsize;
+
+	if(IsNull(imgs.size) || (imgs.IsRaw() && imgs.size == isz)) {
+		imagedata.image    = img;
+		imagedata.cellsize = max(Size(1, 1), idivceil(isz, fontsize));
 	}
 	else {
-		Size sz = AdjustSize(imgs.size, img.GetSize());
-		imagedata.image = IsNull(sz) ? img : Rescale(img, sz);
+		Size sr = imgs.IsKeepRatio()
+		        ? GetRatioSize(isz, max(0, imgs.size.cx), max(0, imgs.size.cy))
+		        : Size(imgs.size.cx > 0 ? imgs.size.cx : isz.cx, imgs.size.cy > 0 ? imgs.size.cy : isz.cy);
+
+		imagedata.cellsize = ToCellSize(sr, imgs.size);
+
+		Size bx = imagedata.cellsize * fontsize;
+		Size sz = max(Size(1, 1), imgs.IsKeepRatio() ? GetFitSize(isz, bx.cx, bx.cy) : bx);
+		imagedata.image = sz != isz ? Rescale(img, sz) : img;
 	}
 
-	imagedata.fontsize = fontsize;
-	imagedata.cellsize = ToCellSize(imagedata.image.GetSize());
 	return imagedata.image.GetLength() * 4;
 }
 
